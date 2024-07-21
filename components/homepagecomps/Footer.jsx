@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="container max-w-7xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 text-sm">
         <div className="grid gap-1">
           <h3 className="font-semibold">Company</h3>
-          <Link href="#" prefetch={false}>
+          <Link href="/about" prefetch={false}>
             About Us
           </Link>
           <Link href="#" prefetch={false}>
@@ -15,65 +15,68 @@ export default function Footer() {
           <Link href="#" prefetch={false}>
             Careers
           </Link>
-          <Link href="#" prefetch={false}>
-            News
+          <Link href="/contact" prefetch={false}>
+            Contact Us
           </Link>
         </div>
         <div className="grid gap-1">
-          <h3 className="font-semibold">Programs</h3>
-          <Link href="#" prefetch={false}>
-            Undergraduate
+          <h3 className="font-semibold">Destinations</h3>
+          <Link href="/distinations&programs" prefetch={false}>
+            India
           </Link>
           <Link href="#" prefetch={false}>
-            Graduate
+            U.S.A
           </Link>
           <Link href="#" prefetch={false}>
-            Summer
+            U.K
           </Link>
           <Link href="#" prefetch={false}>
-            Gap Year
+            Georgia
           </Link>
         </div>
         <div className="grid gap-1">
           <h3 className="font-semibold">Resources</h3>
-          <Link href="#" prefetch={false}>
+          <Link href="/blog" prefetch={false}>
             Blog
           </Link>
-          <Link href="#" prefetch={false}>
+          <Link href="/schorlarships" prefetch={false}>
             Scholarships
           </Link>
-          <Link href="#" prefetch={false}>
-            FAQs
+          <Link href="/onBarding/consultationForm" prefetch={false}>
+            Book Consultation
           </Link>
-          <Link href="#" prefetch={false}>
+          <Link href="/contact" prefetch={false}>
             Contact
           </Link>
         </div>
         <div className="grid gap-1">
           <h3 className="font-semibold">Legal</h3>
-          <Link href="#" prefetch={false}>
+          <Link href="/privacyPolicy" prefetch={false}>
             Privacy Policy
           </Link>
-          <Link href="#" prefetch={false}>
+          <Link href="/termsOfService" prefetch={false}>
             Terms of Service
           </Link>
-          <Link href="#" prefetch={false}>
+          <Link href="/cookie" prefetch={false}>
             Cookie Policy
           </Link>
         </div>
         <div className="grid gap-1">
           <h3 className="font-semibold">Connect</h3>
-          <Link href="#" prefetch={false}>
+          <Link
+            href="https://www.instagram.com/studyjetglobal_official?igsh=MWpuOGh3cG5tZzI2NA=="
+            prefetch={false}
+          >
             Instagram
           </Link>
           <Link href="#" prefetch={false}>
             Facebook
           </Link>
-          <Link href="#" prefetch={false}>
+          <Link
+            href="https://x.com/StudyJetGlobal_?t=Gi5aGQkERmKqKKleahTDew&s=08"
+            prefetch={false}
+          >
             Twitter
-          </Link>
-          <Link href="#" prefetch={false}>
-            LinkedIn
           </Link>
         </div>
       </div>
@@ -82,20 +85,14 @@ export default function Footer() {
           &copy; 2024 Study Abroad Agency. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link
-            href="#"
-            className="text-xs hover:underline underline-offset-4"
-            prefetch={false}
-          >
-            Terms of Service
-          </Link>
-          <Link
-            href="#"
-            className="text-xs hover:underline underline-offset-4"
-            prefetch={false}
-          >
-            Privacy
-          </Link>
+          <p>
+            made with love by{" "}
+            <span>
+              <Link href="https://x.com/Par_me_nas?t=-p7HZiWOMdK627hKN0cWnw&s=08" prefetch={false}>
+                (papiichulzzz)...
+              </Link>
+            </span>
+          </p>
         </nav>
       </div>
     </footer>
