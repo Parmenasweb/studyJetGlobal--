@@ -73,7 +73,7 @@ export default function Navbar() {
               height={50}
               alt=""
               src="/logotrans.jpeg"
-              className=" w-auto"
+              className=" w-auto rounded-md"
             />
           </Link>
         </div>
@@ -173,18 +173,18 @@ export default function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                     key={item.name}
                     href={item.href}
-                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-200"
                   >
                     {item.name}
                   </Link>
                 ))}
               </div>
-              <div className="py-6">
-                <div className="flex items-center justify-between ">
+              <div className="py-6 space-y-3">
+                <div className="flex items-start flex-col justify-between ">
                   <Button asChild>
                     <Link
                       href="/partnership"
-                      className="text-sm font-semibold leading-6 text-gray-900"
+                      className="text-sm font-semibold leading-6 text-gray-900 flex justify-start"
                     >
                       Partnerships
                     </Link>
@@ -204,7 +204,7 @@ export default function Navbar() {
                     onClick={() => {
                       signOut();
                     }}
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base my-3 font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                   >
                     LogOut
                   </Link>

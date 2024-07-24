@@ -82,24 +82,27 @@ export default function ConsultationForm() {
     ) {
       setError("All Field is required");
     } else {
-      startTransition(async () => {
-        const res = await fetch(`/api/onBoarding?query=consultation`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify(consultationInfo),
+      try {
+        startTransition(async () => {
+          const res = await fetch(`/api/onBoarding?query=consultation`, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+            },
+            body: JSON.stringify(consultationInfo),
+          });
+          if (res.status === 200) {
+            const okResponse = await res.json();
+            cleanUpInput(consultationInfo);
+            setSuccess(
+              "🎉congrats!..Your application has been submitted successfully"
+            );
+          } else {
+            const errorData = await res.json();
+            setError(errorData.message);
+          }
         });
-        if (res.status === 200) {
-          cleanUpInput(consultationInfo);
-          setSuccess(
-            "🎉congrats!..Your application has been submitted successfully"
-          );
-        } else {
-          // cleanUpInput(info);
-          setError("internal server error ... kindly try submitting again ");
-        }
-      });
+      } catch (err) {}
     }
   }
 
@@ -265,7 +268,7 @@ export default function ConsultationForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <div className="flex flex-col w-[90%] mx-auto items-center pt-4 justify-center ">
+          <div className="flex flex-col w-[95%] mx-auto items-center pt-4 justify-start ">
             <FormError message={error} />
             <FormSuccess message={success} />
             <Button

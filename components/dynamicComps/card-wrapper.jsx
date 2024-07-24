@@ -13,7 +13,7 @@ function CardWrapper({
   showSocial,
 }) {
   return (
-    <Card className="sm:w-[75%] md:w-[40%] max-h-[90vh] mx-auto p-4 shadow-md">
+    <Card className="sm:w-[90%] md:w-[40%] max-h-[100vh] mx-auto p-4 shadow-md">
       <CardHeader>
         <Header label={headerLabel} />
       </CardHeader>

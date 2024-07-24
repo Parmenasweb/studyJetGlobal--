@@ -56,18 +56,19 @@ export async function POST(req, res) {
           { Error: "Please fill all the fields" },
           { status: 400 }
         );
-      }
-      // connnnect to the DB
-      await connectDB();
+      } else {
+        // connnnect to the DB
+        await connectDB();
 
-      // create a new application in the database with the application schema
-      data.applicantName = capitalizedName;
-      const newApplication = await new Application(data);
-      await newApplication.save();
-      return NextResponse.json(
-        { success: "your application has been submitted successfully" },
-        { status: 200 }
-      );
+        // create a new application in the database with the application schema
+        data.applicantName = capitalizedName;
+        const newApplication = await new Application(data);
+        await newApplication.save();
+        return NextResponse.json(
+          { success: "your application has been submitted successfully" },
+          { status: 200 }
+        );
+      }
     } catch (err) {
       return NextResponse.json(
         { Error: "Error occurred while submitting your application" },
@@ -107,18 +108,19 @@ export async function POST(req, res) {
           { Error: "Please fill all the fields" },
           { status: 400 }
         );
-      }
-      // connnnect to the DB
-      await connectDB();
+      } else {
+        // connnnect to the DB
+        await connectDB();
 
-      // create a new application in the database with the application schema
-      data.consulteeName = capitalizedName;
-      const newConsultation = await new Consultation(data);
-      await newConsultation.save();
-      return NextResponse.json(
-        { success: "consultation scheduled successfully" },
-        { status: 200 }
-      );
+        // create a new application in the database with the application schema
+        data.consulteeName = capitalizedName;
+        const newConsultation = await new Consultation(data);
+        await newConsultation.save();
+        return NextResponse.json(
+          { success: "consultation scheduled successfully" },
+          { status: 200 }
+        );
+      }
     } catch (err) {
       return NextResponse.json(
         { Error: "Error occurred while submitting your application" },

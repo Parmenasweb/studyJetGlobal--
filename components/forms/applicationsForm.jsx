@@ -102,8 +102,8 @@ export default function ApplicationForm() {
           cleanUpInput(applicantInfo);
           setSuccess("Your application has been submitted successfully");
         } else {
-          // cleanUpInput(info);
-          setError("internal server error ... kindly try submitting again ");
+          const errorData = await res.json();
+          setError(errorData.message);
         }
       });
     }
@@ -219,7 +219,7 @@ export default function ApplicationForm() {
 
           {/* destination and programs details */}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
               <Label htmlFor="duration">study country of choice</Label>
               <Select
@@ -293,6 +293,7 @@ export default function ApplicationForm() {
                   value={applicantInfo.parentName}
                   onChange={handleChange}
                   placeholder="select your home country"
+                  className="w-[90%] mx-auto"
                 />
               </div>
               <div className="space-y-2">
@@ -304,6 +305,7 @@ export default function ApplicationForm() {
                   value={applicantInfo.parentOccupation}
                   onChange={handleChange}
                   placeholder="parent main source of income "
+                  className="w-[90%] mx-auto"
                 />
               </div>
               <div className="space-y-2">
@@ -355,7 +357,7 @@ export default function ApplicationForm() {
               </Link>
             </Label>
           </div>
-          <div className="flex my-4 w-[90%] mx-auto flex-col items-center ">
+          <div className="flex my-4 w-[95%] mx-auto flex-col items-center ">
             <FormError message={error} />
             <FormSuccess message={success} />
             <Button

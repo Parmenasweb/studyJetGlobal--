@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="bg-muted p-6 md:py-12 w-full">
-      <div className="container max-w-7xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 text-sm">
+      <div className="container w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 text-sm">
         <div className="grid gap-1">
           <h3 className="font-semibold">Company</h3>
           <Link href="/about" prefetch={false}>
@@ -69,7 +69,10 @@ export default function Footer() {
           >
             Instagram
           </Link>
-          <Link href="#" prefetch={false}>
+          <Link
+            href="https://www.facebook.com/profile.php?id=61562265136097"
+            prefetch={false}
+          >
             Facebook
           </Link>
           <Link
@@ -85,10 +88,13 @@ export default function Footer() {
           &copy; 2024 Study Abroad Agency. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <p>
+          <p className="text-xs text-muted-foreground">
             made with love by{" "}
             <span>
-              <Link href="https://x.com/Par_me_nas?t=-p7HZiWOMdK627hKN0cWnw&s=08" prefetch={false}>
+              <Link
+                href="https://x.com/Par_me_nas?t=-p7HZiWOMdK627hKN0cWnw&s=08"
+                prefetch={false}
+              >
                 (papiichulzzz)...
               </Link>
             </span>
