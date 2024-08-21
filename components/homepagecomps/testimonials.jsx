@@ -32,31 +32,32 @@ export default function Testimonials() {
 const testimonials = [
   {
     quote:
-      "It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity, it was the season of Light, it was the season of Darkness, it was the spring of hope, it was the winter of despair.",
-    name: "Charles Dickens",
-    title: "A Tale of Two Cities",
+      "Choosing studyjetglobal was the best decision i made for my study journey. Their counselors guided me through every step, from selecting the perfect university to securing my visa. The 24/7 support was invaluable, and i felt confident knowing i had a dedicated team behind me. I highly recommend studyjetglobal to anyone looking to study abroad",
+    name: "Nathaniel Tengbeh",
+    title: "(Sierra Leone)",
   },
   {
     quote:
-      "To be, or not to be, that is the question: Whether 'tis nobler in the mind to suffer The slings and arrows of outrageous fortune, Or to take Arms against a Sea of troubles, And by opposing end them: to die, to sleep.",
-    name: "William Shakespeare",
-    title: "Hamlet",
-  },
-  {
-    quote: "All that we see or seem is but a dream within a dream.",
-    name: "Edgar Allan Poe",
-    title: "A Dream Within a Dream",
+      "studyjeyglobal made my dream of studying abroad a reality, their instant application process was incredibly efficient, and i received timely updates on my application status. The budget management advice helped me plan my finances wisely. and i never felt overwhelmed. Thank you studyjetglobal for your exceptional services.",
+    name: "Bakare Fatimah s.",
+    title: "(Nigeria)",
   },
   {
     quote:
-      "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
-    name: "Jane Austen",
-    title: "Pride and Prejudice",
+      "The personalized counselling i received from studyjetglobal was outstanding. They took the time to understand my goals and helped me choose a university that was a perfect fit. The comprehensive support, from application to pre-departure. made the entire process smooth and stress-free. I couldn't have done it without their help",
+    name: "kpanto s.boi",
+    title: "(Liberia)",
   },
   {
     quote:
-      "Call me Ishmael. Some years ago—never mind how long precisely—having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world.",
-    name: "Herman Melville",
-    title: "Moby-Dick",
+      "I'm so grateful for the support i received from studyjetglobal. Their team was always available to answer my questions, and guidance on scholarship opportunities and budget management was particularly helpful. Thanks to studyjetglobal, i am now studying at my dream country UK!",
+    name: "Michael N.",
+    title: "(Nigeria)",
+  },
+  {
+    quote:
+      "From the moment i contacted studyjetglobal, i know i was in good hands. Their professional and friendly counselors made the entire process seamless. The real-time updates on my application status were a game-changer, and the client support from Mr wisdom korsor gave me peace of mind. I highly recommend studyjetglobal to any aspiring international student.",
+    name: "Pollard Konti. S",
+    title: "(Liberia)",
   },
 ];

@@ -4,28 +4,67 @@ import { NextResponse } from "next/server";
 
 // GET REQUEST
 export async function GET(req, res) {
-  // GET ALL THE DESTINATION IN THE DATABASE
-  try {
-    // CONNECT TO THE DATABASE
-    await connectDB();
-    // REQUEST ALL THE RPOGRAMS FROM THE MONGO DB
-    const allDestination = await Destination.find();
-    // RETURN ALL PROGRAMS WITH A VALID STATUS
-    return NextResponse.json(allDestination, { status: 200 });
-  } catch (err) {
-    return NextResponse.json(
-      {
-        message: "Error occurred while fetching destinations from the database",
-      },
-      { status: 500 }
-    );
+  const searchParams = req.nextUrl.searchParams;
+  const countryName = searchParams.get("countryName");
+  if (countryName) {
+    try {
+      // CONNECT TO THE DATABASE
+      await connectDB();
+      // GET THE SPECIFIC COUNTRY FROM THE MONGO DB
+      const country = await Destination.findOne({ countryName });
+      // RETURN ALL PROGRAMS WITH A VALID STATUS
+      return NextResponse.json(country, { status: 200 });
+    } catch (err) {
+      return NextResponse.json(
+        {
+          message:
+            "Error occurred while fetching destinations from the database",
+        },
+        { status: 500 }
+      );
+    }
+  } else {
+    // GET ALL THE DESTINATION IN THE DATABASE
+    try {
+      // CONNECT TO THE DATABASE
+      await connectDB();
+      // REQUEST ALL THE PROGRAMS FROM THE MONGO DB
+      const allDestination = await Destination.find();
+      // RETURN ALL PROGRAMS WITH A VALID STATUS
+      return NextResponse.json(allDestination, { status: 200 });
+    } catch (err) {
+      return NextResponse.json(
+        {
+          message:
+            "Error occurred while fetching destinations from the database",
+        },
+        { status: 500 }
+      );
+    }
   }
 }
 
 export async function POST(request) {
   const data = await request.json();
+  const {
+    destinationName,
+    description,
+    destinationCapital,
+    studyCost,
+    accommodationFee,
+    imageUrl,
+    flagUrl,
+  } = data;
 
-  if (!data) {
+  if (
+    !destinationName ||
+    !description ||
+    !destinationCapital ||
+    !studyCost ||
+    !accommodationFee ||
+    !imageUrl ||
+    !flagUrl
+  ) {
     return NextResponse.json(
       { Error: "received data wasnt valid" },
       { status: 400 }
@@ -34,9 +73,8 @@ export async function POST(request) {
     try {
       // connect to the database
       await connectDB();
+
       // capitalize the name of the country
-      const { destinationName } = data;
-      //  capitalize the name provided
       const nameArray = destinationName.split(" ");
 
       const capitalizedName = nameArray
@@ -44,7 +82,10 @@ export async function POST(request) {
           return name[0].toUpperCase() + name.slice(1).toLowerCase();
         })
         .join(" ");
+
+      // create a new destination object with the received data
       data.destinationName = capitalizedName;
+
       const newDestination = await new Destination(data);
       await newDestination.save();
       return NextResponse.json(
@@ -52,10 +93,7 @@ export async function POST(request) {
         { status: 200 }
       );
     } catch (err) {
-      return NextResponse.json(
-        { message: "Error occurred while adding destination to the database" },
-        { status: 500 }
-      );
+      return NextResponse.json({ message: { err } }, { status: 500 });
     }
   }
 }

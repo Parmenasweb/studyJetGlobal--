@@ -3,11 +3,16 @@ import mongoose from "mongoose";
 const destinationSchema = new mongoose.Schema(
   {
     destinationName: { type: String, required: true },
-    destinationcapital: { type: String, required: true },
+    description: { type: String, required: true },
+    destinationCapital: { type: String, required: true },
     studyCost: { type: String, required: true },
-
-    livingCost: { type: String, required: true },
-    imageUrl: { type: String },
+    accommodationFee: { type: String, required: true },
+    programs: { type: Array },
+    scholarships: { type: Array },
+    partners: { type: Array },
+    universities: { type: Array },
+    imageUrl: { type: String, required: true },
+    flagUrl: { type: String, required: true },
   },
   { timestamps: true }
 );

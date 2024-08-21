@@ -11,6 +11,8 @@ import { CiMenuFries } from "react-icons/ci";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 // import {
 //   Dialog,
 //   DialogContent,
@@ -52,6 +54,8 @@ const navigation = [
   // },
 ];
 
+export const queryClient = new QueryClient();
+
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session } = useSession();
@@ -60,10 +64,10 @@ export default function Navbar() {
 
   // const hrefName = usePathname();
   return (
-    <header className=" inset-x-0 fixed bg-primary-foreground top-0 z-50">
+    <div className=" ">
       <nav
         aria-label="Global"
-        className="flex items-center justify-between p-6 lg:px-8"
+        className="flex items-center justify-between p-5 lg:px-5"
       >
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5">
@@ -87,7 +91,7 @@ export default function Navbar() {
             <Bars3Icon aria-hidden="true" className="h-6 w-6" />
           </button>
         </div>
-        <div className="hidden lg:flex lg:gap-x-12">
+        <div className="hidden lg:flex lg:gap-x-8">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -180,7 +184,7 @@ export default function Navbar() {
                 ))}
               </div>
               <div className="py-6 space-y-3">
-                <div className="flex items-start flex-col justify-between ">
+                <div className="flex items-start flex-col justify-between space-y-3 ">
                   <Button asChild>
                     <Link
                       href="/partnership"
@@ -221,7 +225,7 @@ export default function Navbar() {
           </div>
         </DialogPanel>
       </Dialog>
-    </header>
+    </div>
   );
 }
 
