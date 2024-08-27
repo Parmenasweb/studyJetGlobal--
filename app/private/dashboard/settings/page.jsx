@@ -3,7 +3,7 @@
 
 import DataTable from "../students/components/data-table";
 import React from "react";
-import PageTitle from "@/components/PageTitle";
+import PageTitle from "@/components/pageTitle";
 // import { cn } from "@/lib/utils";
 
 

@@ -2,8 +2,7 @@
 import React from "react";
 
 import  DataTable  from "./components/data-table";
-import PageTitle from "@/components/PageTitle";
-import Image from "next/image";
+import PageTitle from "@/components/pageTitle";
 import { MoreHorizontal, ArrowUpDown  } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
