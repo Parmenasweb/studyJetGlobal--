@@ -7,11 +7,8 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import FormError from "./form-error";
 import FormSuccess from "./form-success";
-// import FormError from "../form-error";
-// import FormSuccess from "../form-success";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-// import { auth, signIn } from "@/auth";
 import { signIn } from "next-auth/react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -48,8 +45,9 @@ function LoginForm() {
           ...userInfo,
           redirect: false,
         });
+        console.log(res)
 
-        if (!res.ok) {
+        if (res.error) {
           setError("Invalid email or password");
         } else {
           setSuccess("logged In successfully");

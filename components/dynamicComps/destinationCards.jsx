@@ -34,7 +34,7 @@ export function DestinationCard({
           style={{ backgroundImage: `url(${imageUrl})` }}
           className={cn(
             " cursor-pointer overflow-hidden relative h-64 rounded-md shadow-xl space-y-3  flex flex-col justify-between p-4 w-full ",
-            " bg-cover "
+            " bg-cover " 
           )}
         >
           <div className="absolute w-full h-full top-0 left-0 transition duration-300 hover:bg-black opacity-30"></div>

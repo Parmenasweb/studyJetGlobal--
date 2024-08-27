@@ -4,11 +4,15 @@ import { useState } from "react";
 import { Nav } from "./nav";
 
 import {
-  ShoppingCart,
+  DollarSign,
   LayoutDashboard,
   UsersRound,
   Settings,
-  ChevronRight,
+  Globe ,
+  NotebookPen,
+  CalendarClock ,
+  FileText ,
+  Headset 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -18,7 +22,7 @@ export default function SideNavbar({}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const onlyWidth = useWindowWidth();
-  const mobileWidth = onlyWidth < 768;
+  const mobileWidth = onlyWidth < 900;
 
   function toggleSidebar() {
     setIsCollapsed(!isCollapsed);
@@ -26,7 +30,7 @@ export default function SideNavbar({}) {
 
   return (
     <div className="relative min-w-[80px] border-r px-4  pb-10 sm:pt-24 md:pt-0 lg:pt-1">
-      {!mobileWidth && (
+      {/* {!mobileWidth && (
         <div className="absolute right-[-20px] -top-5">
           <Button
             onClick={toggleSidebar}
@@ -36,7 +40,7 @@ export default function SideNavbar({}) {
             <ChevronRight />
           </Button>
         </div>
-      )}
+      )} */}
       <Nav
         isCollapsed={mobileWidth ? true : isCollapsed}
         links={[
@@ -47,20 +51,50 @@ export default function SideNavbar({}) {
             variant: "default",
           },
           {
-            title: "Users",
-            href: "/users",
+            title: "Students",
+            href: "/private/dashboard/students",
             icon: UsersRound,
             variant: "ghost",
           },
           {
-            title: "Orders",
-            href: "/orders",
-            icon: ShoppingCart,
+            title: "Applications",
+            href: "/private/dashboard/applications",
+            icon: NotebookPen,
             variant: "ghost",
           },
           {
-            title: "Settingssettings",
-            href: "/settings",
+            title: "Consultations",
+            href: "/private/dashboard/consultations",
+            icon: Headset ,
+            variant: "ghost",
+          },
+          {
+            title: "Destinations",
+            href: "/private/dashboard/destinations",
+            icon: Globe ,
+            variant: "ghost",
+          },
+          {
+            title: "Finances",
+            href: "/private/dashboard/finances",
+            icon: DollarSign,
+            variant: "ghost",
+          },
+          {
+            title: "Blogs",
+            href: "/private/dashboard/blogs",
+            icon: FileText ,
+            variant: "ghost",
+          },
+          {
+            title: "Deadlines",
+            href: "/private/dashboard/finances",
+            icon: CalendarClock ,
+            variant: "ghost",
+          },
+          {
+            title: "Settings",
+            href: "/private/dashboard/settings",
             icon: Settings,
             variant: "ghost",
           },

@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-muted p-6 md:py-12 w-full">
-      <div className="container w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 text-sm">
+    <footer className="bg-slate-100  w-full">
+      <div className=" w-full p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 text-sm">
         <div className="grid gap-1">
           <h3 className="font-semibold">Company</h3>
           <Link href="/about" prefetch={false}>

@@ -9,16 +9,12 @@ export default async function DashBoardLayout({ children }) {
   const session = await auth();
   // const {session} = useSession();
   return (
-    <body className={cn(" ")}>
-      {/* sidebar */}
-      <div className="min-h-screen w-full bg-white text-black mt-[15%] flex justify-between ">
-        <div className=" fixed w-[15%]">
+    // <body className={cn(" ")}>
+      (<div className="min-h-screen w-full pt-12 bg-white overflow-hidden text-black flex justify-between ">
+        <div className=" fixed w-[18%] z-50 ">
           <SideNavbar />
         </div>
-
-        {/* main page */}
-        <div className="p-8 w-[85%] ml-auto">{children}</div>
-      </div>
-    </body>
+        <div className=" w-[80%] relative left-[9%]  overflow-x-hidden mx-auto z-10">{children}</div>
+      </div>)
   );
 }

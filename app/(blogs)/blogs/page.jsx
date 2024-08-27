@@ -86,6 +86,7 @@ export default function Component() {
                   title={item.title}
                   content={item.content}
                   imageUrl={item.imageUrl}
+                  slug={item.slug}
                 />
               );
             })}

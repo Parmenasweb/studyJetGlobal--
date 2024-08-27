@@ -19,18 +19,18 @@ import { Button } from "@/components/ui/button";
 // skeleton for loading each country
 export function ProgramSkeleton() {
   return (
-    <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3 items-center  justify-around w-[90%] mx-auto p-8 ">
+    <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3 items-center  justify-around w-[90%] mx-auto p-8">
       {/* ----------------------------------card 1 -------------- */}
 
-      <Card className="sm:w-[98%] lg:w-[92%] shadow-md hover:scale-105 hover:shadow-lg ">
+      <Card className=" shadow-md hover:scale-105 hover:shadow-lg ">
         <CardContent>
           <div
             className={cn(
-              " cursor-pointer overflow-hidden relative h-64 rounded-md shadow-xl space-y-3 bg-slate-400 animate-pulse flex flex-col justify-between p-4 w-full "
+              " cursor-pointer overflow-hidden relative h-64 rounded-md shadow-xl space-y-3 bg-slate-400 animate-pulse flex flex-col justify-between p-4 w-72 "
             )}
           >
             <div className="absolute w-full h-full top-0 left-0 transition duration-300 hover:bg-black opacity-30"></div>
-            <div className="flex flex-row items-center h-12 w-12 bg-slate-300 animate-pulse justify-between space-x-4 z-10 rounded-md"></div>
+            <div className="flex flex-row items-center h-12 w-full bg-slate-300 animate-pulse justify-between space-x-4 z-10 rounded-md"></div>
           </div>
           <Card className="w-full p-4 pt-0 pb-2 ">
             <CardHeader>
@@ -68,15 +68,15 @@ export function ProgramSkeleton() {
           </Card>
         </CardContent>
       </Card>
-      <Card className="sm:w-[98%] lg:w-[92%] shadow-md hover:scale-105 hover:shadow-lg ">
+      <Card className=" shadow-md hover:scale-105 hover:shadow-lg ">
         <CardContent>
           <div
             className={cn(
-              " cursor-pointer overflow-hidden relative h-64 rounded-md shadow-xl space-y-3 bg-slate-400 animate-pulse flex flex-col justify-between p-4 w-full "
+              " cursor-pointer overflow-hidden relative h-64 rounded-md shadow-xl space-y-3 bg-slate-400 animate-pulse flex flex-col justify-between p-4 w-72 "
             )}
           >
             <div className="absolute w-full h-full top-0 left-0 transition duration-300 hover:bg-black opacity-30"></div>
-            <div className="flex flex-row items-center h-12 w-12 bg-slate-300 animate-pulse justify-between space-x-4 z-10 rounded-md"></div>
+            <div className="flex flex-row items-center h-12 w-full bg-slate-300 animate-pulse justify-between space-x-4 z-10 rounded-md"></div>
           </div>
           <Card className="w-full p-4 pt-0 pb-2 ">
             <CardHeader>
@@ -114,15 +114,15 @@ export function ProgramSkeleton() {
           </Card>
         </CardContent>
       </Card>
-      <Card className="sm:w-[98%] lg:w-[92%] shadow-md hover:scale-105 hover:shadow-lg ">
+      <Card className="shadow-md hover:scale-105 hover:shadow-lg ">
         <CardContent>
           <div
             className={cn(
-              " cursor-pointer overflow-hidden relative h-64 rounded-md shadow-xl space-y-3 bg-slate-400 animate-pulse flex flex-col justify-between p-4 w-full "
+              " cursor-pointer overflow-hidden relative h-64 rounded-md shadow-xl space-y-3 bg-slate-400 animate-pulse flex flex-col justify-between p-4 w-72 "
             )}
           >
             <div className="absolute w-full h-full top-0 left-0 transition duration-300 hover:bg-black opacity-30"></div>
-            <div className="flex flex-row items-center h-12 w-12 bg-slate-300 animate-pulse justify-between space-x-4 z-10 rounded-md"></div>
+            <div className="flex flex-row items-center h-12 w-full bg-slate-300 animate-pulse justify-between space-x-4 z-10 rounded-md"></div>
           </div>
           <Card className="w-full p-4 pt-0 pb-2 ">
             <CardHeader>
@@ -195,11 +195,11 @@ export default function Programs() {
           explore our top study abroad destinations and find the perfect fit for
           your academic and cultural goals
         </p>
-        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3 items-center  justify-around w-[90%] mx-auto p-8 ">
           {destinationQuery.isPending ? (
             <ProgramSkeleton />
-          ) : (
-            destinationQuery.data?.map((country, ind) => (
+          ) : ( 
+            <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3 items-center  justify-around w-[90%] mx-auto p-8 ">
+            {destinationQuery.data?.map((country, ind) => (
               <DestinationCard
                 key={ind}
                 destinationName={country.destinationName}
@@ -210,9 +210,9 @@ export default function Programs() {
                 description={country.description}
                 countryId={country._id}
               />
-            ))
-          )}
+            ))}
         </div>
+          )}
       </div>
     </main>
   );

@@ -10,7 +10,7 @@ import Link from "next/link";
 export default function NavHero() {
   return (
     <div className="bg-white">
-      <div className="relative isolate px-6 pt-10 lg:px-8">
+      <div className="relative isolate px-6  lg:px-8">
         <div
           aria-hidden="true"
           className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -23,7 +23,7 @@ export default function NavHero() {
             className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
           />
         </div>
-        <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+        <div className="mx-auto max-w-2xl pt-32 md:pt-40 pb-20">
           <div className="hidden sm:mb-8 sm:flex sm:justify-center">
             <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
               Announcing our new round of scholarship.{" "}
@@ -37,7 +37,7 @@ export default function NavHero() {
             </div>
           </div>
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
               unlock the world{" "}
               <GiJetFighter className=" inline-block text-green-500 font-l animate-bounce" />{" "}
               <br /> with{" "}
@@ -45,7 +45,7 @@ export default function NavHero() {
                 {"Studyjet."}
               </span>
             </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600">
+            <p className="mt-6 md:text-lg text-base leading-8 text-gray-600">
               Discover new cultures, expand your horizons and gain a global
               perspective , with our top rated study abroad programs into
               transforming your future...

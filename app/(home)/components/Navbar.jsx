@@ -64,7 +64,7 @@ export default function Navbar() {
 
   // const hrefName = usePathname();
   return (
-    <div className=" ">
+    <div className="h-full ">
       <nav
         aria-label="Global"
         className="flex items-center justify-between p-5 lg:px-5"

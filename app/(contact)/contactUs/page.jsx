@@ -1,12 +1,9 @@
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import Image from "next/image";
-import Footer from "@/components/homepagecomps/Footer";
 
-export default function Component() {
+import Link from "next/link";
+import Footer from "@/components/homepagecomps/Footer";
+import ContactForm from "./components/contactForm";
+
+export default function Page() {
   return (
     <div className="w-full">
       <section className="bg-gradient-to-r from-primary to-primary-foreground py-20 md:py-32 p-12">
@@ -23,35 +20,8 @@ export default function Component() {
       </section>
 
       <section className="w-full py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6 grid gap-6 lg:grid-cols-[1fr_300px] lg:gap-12">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tighter mb-6">
-              Get in Touch
-            </h2>
-            <form className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="John Doe" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="m@example.com" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea
-                  id="message"
-                  rows={5}
-                  placeholder="How can we help you?"
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                Submit
-              </Button>
-            </form>
-          </div>
+        <div className=" px-2 md:px-2 grid gap-6 lg:grid-cols-[1fr_300px] lg:gap-12">
+          <ContactForm />
           <div className="space-y-6">
             <div className="space-y-2">
               <h3 className="text-xl font-bold">Contact Information</h3>
@@ -78,27 +48,35 @@ export default function Component() {
               <h3 className="text-xl font-bold">Follow Us</h3>
               <div className="flex items-center gap-4">
                 <Link
-                  href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                  href="https://www.facebook.com/profile.php?id=61562265136097"
                   className="text-muted-foreground hover:text-primary"
                   prefetch={false}
                 >
                   <FacebookIcon className="h-6 w-6" />
                 </Link>
                 <Link
-                  href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                  href="https://x.com/StudyJetGlobal_?t=Gi5aGQkERmKqKKleahTDew&s=08"
                   className="text-muted-foreground hover:text-primary"
                   prefetch={false}
                 >
                   <TwitterIcon className="h-6 w-6" />
                 </Link>
                 <Link
-                  href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                  href="https://www.instagram.com/studyjetglobal_official?igsh=MWpuOGh3cG5tZzI2NA=="
                   className="text-muted-foreground hover:text-primary"
                   prefetch={false}
                 >
                   <InstagramIcon className="h-6 w-6" />
                 </Link>
                 <Link
+                target="_blank"
+                rel="noopener noreferrer"
                   href="#"
                   className="text-muted-foreground hover:text-primary"
                   prefetch={false}

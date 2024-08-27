@@ -43,7 +43,7 @@ export default async function RootLayout({ children }) {
                 <Navbar />
                 <DialogAct />
               </div>
-              <div className=" mt-[15%]">{children}</div>
+              <div className=" mt-[5%] pt-5">{children}</div>
               {/* <Toaster /> */}
             </ThemeProvider>
           </AuthProvider>

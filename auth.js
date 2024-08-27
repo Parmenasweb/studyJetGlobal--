@@ -1,22 +1,22 @@
-import NextAuth from "next-auth";
+import NextAuth , { CredentialsSignin } from "next-auth";
 // import Credentials from "next-auth/providers/credentials";
 // import Google from "next-auth/providers/google";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import User from "./models/User";
-// import User from "./models/User";
 import connectDB from "./lib/db";
 import { compare } from "bcryptjs";
 // import bcrypt from "bcryptjs";
 // import google from "next-auth/providers/google";
 
-// class InvalidloginError extends CredentialsSignin {
-//   code = "invalid Email or password";
-// }
+class InvalidloginError extends CredentialsSignin {
+  code = "invalid Email or password";
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     GoogleProvider({
+      name: "google",
       profile(profile) {
         let userRole = "user";
         return {
@@ -36,28 +36,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const foundUser = await User.findOne({
             email: credentials.email,
           }).exec();
+          
           if (foundUser) {
             const passwordMatch = await compare(
               credentials.password,
               foundUser.password
-            );
+            )
             if (!passwordMatch) {
-              throw new Error("Invalid email or password");
+               throw new InvalidloginError()
+            } else {
+
+              const userData = {
+                id: foundUser._id,
+                firstName: foundUser.firstName,
+                lastName: foundUser.lastName,
+                email: foundUser.email,
+                role: foundUser.role,
+              };
+              return userData;
             }
-            const userData = {
-              id: foundUser._id,
-              firstName: foundUser.firstName,
-              lastName: foundUser.lastName,
-              email: foundUser.email,
-              role: foundUser.role,
-            };
-            return userData;
+          } else {
+            throw new InvalidloginError()
           }
         } catch (err) {
-          console.log(`errorr: ${err}`);
-          // throw new InvalidloginError();
+          return null
         }
-        return null;
       },
     }),
     // CredentialsProvider({
@@ -148,7 +151,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider == "credentials") {
         return true;
       }
-      if (account?.provider == "google") {
+      if (account?.provider === "google") {
         await connectDB();
         try {
           const existingUser = await User.findOne({ email: user.email });
@@ -161,7 +164,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             });
 
             await newUser.save();
-            return true;
           }
           return true;
         } catch (err) {

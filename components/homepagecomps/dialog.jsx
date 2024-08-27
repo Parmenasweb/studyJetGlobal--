@@ -1,8 +1,12 @@
+"use client";
+
 import { XMarkIcon } from "@heroicons/react/20/solid";
+import { useState } from "react";
 
 export default function DialogAct() {
+const [display, setDisplay] = useState("flex");
   return (
-    <div className="relative isolate flex items-center gap-x-6 overflow-hidden bg-gray-50 px-6 py-2.5 pt-6 sm:px-3.5 sm:before:flex-1">
+    <div className={`relative isolate ${display} items-center gap-x-6 overflow-hidden bg-gray-50 px-6 py-2.5 pt-6 sm:px-3.5 sm:before:flex-1`}>
       <div
         aria-hidden="true"
         className="absolute left-[max(-7rem,calc(50%-52rem))] top-1/2 -z-10 -translate-y-1/2 transform-gpu blur-2xl"
@@ -28,8 +32,7 @@ export default function DialogAct() {
         />
       </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <p className="text-sm leading-6 text-gray-900">
-          <strong className="font-semibold">Notice</strong>
+        <p className="text-xs leading-6 flex items-center justify-center md:text-sm text-gray-900">
           <svg
             viewBox="0 0 2 2"
             aria-hidden="true"
@@ -46,7 +49,7 @@ export default function DialogAct() {
           Register now <span aria-hidden="true">&rarr;</span>
         </a> */}
       </div>
-      <div className="flex flex-1 justify-end">
+      <div onClick={()=> setDisplay("hidden")} className="flex flex-1 justify-end">
         <button
           type="button"
           className="-m-3 p-3 focus-visible:outline-offset-[-4px]"

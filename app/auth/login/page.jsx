@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { auth, signIn } from "@/auth";
-import { login } from "@/action/user";
 import LoginForm from "@/components/dynamicComps/login-form";
 import { redirect } from "next/navigation";
 
