@@ -10,7 +10,7 @@ import DialogAct from "@/components/homepagecomps/dialog";
 
 import { ReactQueryClientProvider } from "@/components/ReactQueryClientProvider";
 // import { useSession } from "next-auth/react";
-// import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
 const jetBrainsMono = JetBrains_Mono({
@@ -44,7 +44,7 @@ export default async function RootLayout({ children }) {
                 <DialogAct />
               </div>
               <div className=" mt-[5%] pt-5">{children}</div>
-              {/* <Toaster /> */}
+              <Toaster />
             </ThemeProvider>
           </AuthProvider>
         </body>
