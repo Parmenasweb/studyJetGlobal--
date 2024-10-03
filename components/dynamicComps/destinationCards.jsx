@@ -11,7 +11,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export function DestinationCard({
   destinationName,
@@ -21,10 +21,11 @@ export function DestinationCard({
   accommodationFee,
   description,
 }) {
+  // const router = useRouter();
   // handleClick function for redire
   // async function handleClick(e) {
   //   // redirect to the page containing each contryies universities
-  //   redirect(`/programs/${destinationName}`);
+  //   router.push(`/programs&destinations/${country.name}`);
   // }
 
   return (
@@ -34,7 +35,7 @@ export function DestinationCard({
           style={{ backgroundImage: `url(${imageUrl})` }}
           className={cn(
             " cursor-pointer overflow-hidden relative h-64 rounded-md shadow-xl space-y-3  flex flex-col justify-between p-4 w-full ",
-            " bg-cover " 
+            " bg-cover "
           )}
         >
           <div className="absolute w-full h-full top-0 left-0 transition duration-300 hover:bg-black opacity-30"></div>

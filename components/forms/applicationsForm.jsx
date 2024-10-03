@@ -123,7 +123,8 @@ export default function ApplicationForm() {
           Application Form - study abroad with studyJetGlobal
         </CardTitle>
         <CardDescription className="flex my-2 items-center justify-center font-bold">
-          Apply for our international study abroad programs.
+          Apply for our international study abroad programs. <br />
+          Our consultant will reach out to you after filling form
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit} action={application}>

@@ -1,36 +1,42 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+import { useState, useMemo } from "react";
+
 export default function SearchDestinations() {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredDestinations = useMemo(() => {
+    const destinations = [
+      "Europe",
+      "Asia",
+      "Latin America",
+      "Oceania",
+      "Africa",
+    ];
+    return destinations.filter((destination) =>
+      destination.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
+
   return (
     <div className="space-y-2">
-      <Input placeholder="Search destinations" className="w-full" />
+      <Input
+        placeholder="Search destinations"
+        className="w-full"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
       <div className="grid gap-2">
-        <Button variant="outline" className="justify-start">
-          <FlagIcon className="mr-2 w-4 h-4" />
-          Europe
-        </Button>
-        <Button variant="outline" className="justify-start">
-          <FlagIcon className="mr-2 w-4 h-4" />
-          Asia
-        </Button>
-        <Button variant="outline" className="justify-start">
-          <FlagIcon className="mr-2 w-4 h-4" />
-          Latin America
-        </Button>
-        <Button variant="outline" className="justify-start">
-          <FlagIcon className="mr-2 w-4 h-4" />
-          Oceania
-        </Button>
-        <Button variant="outline" className="justify-start">
-          <FlagIcon className="mr-2 w-4 h-4" />
-          Africa
-        </Button>
+        {filteredDestinations.map((destination) => (
+          <Button key={destination} variant="outline" className="justify-start">
+            <FlagIcon className="mr-2 w-4 h-4" />
+            {destination}
+          </Button>
+        ))}
       </div>
     </div>
   );

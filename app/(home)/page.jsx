@@ -12,7 +12,7 @@ import NavHero from "./components/Nav+Hero";
 export default function Home() {
   return (
     <main className="overflow-hidden">
-      <div className="max-w-7xl w-[99%] mx-auto  sm:pt-5 ">
+      <div className=" w-[99%] mx-auto  sm:pt-5 ">
         {/* <Navbar /> */}
         <NavHero />
         <br />

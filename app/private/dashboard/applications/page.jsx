@@ -4,7 +4,7 @@ import React from "react";
 import DataTable from "../students/components/data-table";
 import PageTitle from "@/components/pageTitle";
 import Image from "next/image";
-import { MoreHorizontal, ArrowUpDown  } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 const columns = [
@@ -33,23 +33,23 @@ const columns = [
           <p>{row.getValue("name")} </p>
         </div>
       );
-    }
+    },
   },
   {
     accessorKey: "email",
-    header: "Email"
+    header: "Email",
   },
   {
     accessorKey: "nationality",
-    header: "Nationality"
+    header: "Nationality",
   },
   {
     accessorKey: "destination",
-    header: "Destination"
+    header: "Destination",
   },
   {
     accessorKey: "program",
-    header: "Program"
+    header: "Program",
   },
   {
     accessorKey: "status",
@@ -59,15 +59,16 @@ const columns = [
       return (
         <div
           className={cn("font-medium w-fit px-4 py-2 rounded-lg", {
-            "bg-orange-200": row.getValue("status") === "Submitted" || "In-Review",
+            "bg-orange-200":
+              row.getValue("status") === "Submitted" || "In-Review",
             "bg-red-200": row.getValue("status") === "Rejected",
-            "bg-green-200": row.getValue("status") === "Approved"
+            "bg-green-200": row.getValue("status") === "Approved",
           })}
         >
           {row.getValue("status")}
         </div>
       );
-    }
+    },
   },
   {
     accessorKey: "date",
@@ -80,7 +81,7 @@ const columns = [
           Date
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
   },
   // for displaying more actions
@@ -88,8 +89,8 @@ const columns = [
     id: "actions",
     cell: ({ row }) => {
       // we wuse the row.original to get the data of the row being displayed
-      const student = row.original
- 
+      const student = row.original;
+
       return (
         <DropdownMenu className="">
           <DropdownMenuTrigger asChild>
@@ -109,13 +110,13 @@ const columns = [
             <DropdownMenuItem>View Application details</DropdownMenuItem>
             <DropdownMenuItem>Edit </DropdownMenuItem>
             <DropdownMenuItem>
-            <Button variant="danger" className="h-8 w-8 p-0">
-              Delete
-            </Button>
+              <Button variant="danger" className="h-8 w-8 p-0">
+                Delete
+              </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
 ];
@@ -128,7 +129,7 @@ const data = [
     destination: "India",
     program: "B.tech",
     status: "Approved",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Alice smith",
@@ -137,7 +138,7 @@ const data = [
     destination: "India",
     program: "Social work",
     status: "Rejected",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "joshua poo",
@@ -146,7 +147,7 @@ const data = [
     destination: "India",
     program: "BBA",
     status: "Approved",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Darius Block",
@@ -155,7 +156,7 @@ const data = [
     destination: "India",
     program: "Radiology",
     status: "Rejected",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Stephen Namibs",
@@ -164,7 +165,7 @@ const data = [
     destination: "India",
     program: "Optometry",
     status: "Submitted",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Michael Nweke",
@@ -173,7 +174,7 @@ const data = [
     destination: "India",
     program: "B tech",
     status: "Approved",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Fatimah Bakare",
@@ -182,7 +183,7 @@ const data = [
     destination: "India",
     program: "MBA",
     status: "Submitted",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Grace Ibeji",
@@ -191,7 +192,7 @@ const data = [
     destination: "India",
     program: "BBA",
     status: "Approved",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Maria Namibs",
@@ -200,7 +201,7 @@ const data = [
     destination: "Canada",
     program: "BBA",
     status: "Submitted",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Anatalah Shangola",
@@ -209,7 +210,7 @@ const data = [
     destination: "UK",
     program: "B.pharm",
     status: "In-review",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Tahsha shangs",
@@ -218,7 +219,7 @@ const data = [
     destination: "USA",
     program: "BBA",
     status: "Submitted",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Lepota Boitatelo",
@@ -227,7 +228,7 @@ const data = [
     destination: "India",
     program: "BBA",
     status: "In-review",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Sabusiswa Mahtlambi",
@@ -236,7 +237,7 @@ const data = [
     destination: "India",
     program: "BBA",
     status: "Submitted",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "Akoldit Manyuat",
@@ -245,7 +246,7 @@ const data = [
     destination: "India",
     program: "BBA",
     status: "Rejected",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
   {
     name: "pollard shijji",
@@ -254,14 +255,13 @@ const data = [
     destination: "India",
     program: "BBA",
     status: "Approved",
-    date: "2023-02-15"
+    date: "2023-02-15",
   },
-  
 ];
 
 export default function ApplicationPage({}) {
   return (
-    <div className="flex flex-col gap-5  w-full ">
+    <div className="container flex flex-col gap-5   ">
       <PageTitle text="Student Applications" />
       <DataTable columns={columns} data={data} />
     </div>

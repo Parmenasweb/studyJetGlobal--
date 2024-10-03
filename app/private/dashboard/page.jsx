@@ -34,69 +34,65 @@ const cardData = [
     icon: Activity,
     content: "+573",
     description: "+201 since last hour",
-  }
+  },
 ];
 
-const uesrSalesData = [
+const userSalesData = [
   {
     name: "Olivia Martin",
     email: "olivia.martin@email.com",
-    saleAmount: "+$1,999.00"
+    saleAmount: "+$1,999.00",
   },
   {
     name: "Jackson Lee",
     email: "isabella.nguyen@email.com",
-    saleAmount: "+$1,999.00"
+    saleAmount: "+$1,999.00",
   },
   {
     name: "Isabella Nguyen",
     email: "isabella.nguyen@email.com",
-    saleAmount: "+$39.00"
+    saleAmount: "+$39.00",
   },
   {
     name: "William Kim",
     email: "will@email.com",
-    saleAmount: "+$299.00"
+    saleAmount: "+$299.00",
   },
   {
     name: "Sofia Davis",
     email: "sofia.davis@email.com",
-    saleAmount: "+$39.00"
-  }
+    saleAmount: "+$39.00",
+  },
 ];
 
 const Dashboard = async () => {
-    const session = await auth();
-    const user = session?.user;
-  
+  const session = await auth();
+  const user = session?.user;
 
   // role based authorization
   // if (user.role !== "admin") return redirect("/private/dashboard");
 
-  
-
-    if (!user) return redirect("/auth/login");
-
+  if (!user) return redirect("/auth/login");
 
   return (
-  <div>
-    <PageTitle text="studyJetGlobal Dashboard" />
-    <br />
-    <DashboardCards />
-    <br />
-    <section className="grid grid-cols-1  gap-4 transition-all lg:grid-cols-2">
-      <CardContainer>
-            <p className="p-4 font-semibold">Overview</p>
-            <BarChart />
-          </CardContainer>
-          <CardContainer className="flex justify-between gap-4">
+    <div>
+      <PageTitle text="studyJetGlobal Dashboard" />
+      <br />
+      <DashboardCards />
+      <br />
+      <section className="grid grid-cols-1  gap-4 transition-all lg:grid-cols-2">
+        <CardContainer>
+          <p className="p-4 font-semibold">Overview</p>
+          <BarChart />
+        </CardContainer>
+        <CardContainer className="flex justify-between gap-4">
           <section>
             <p>Recent Applications</p>
             <p className="text-sm text-gray-400">
               We have 11 applications this month
             </p>
           </section>
-          {uesrSalesData.map((d, i) => (
+          {userSalesData.map((d, i) => (
             <StudentsCard
               key={i}
               email={d.email}
@@ -105,9 +101,9 @@ const Dashboard = async () => {
             />
           ))}
         </CardContainer>
-    </section>
-
-  </div>)
+      </section>
+    </div>
+  );
 };
 
 export default Dashboard;

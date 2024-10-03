@@ -1,9 +1,15 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-export default function ProgramsCard({ name, description, imageUrl }) {
+export default function ProgramsCard({name, programName, description, imageUrl }) {
+  const router = useRouter();
   return (
-    <div className="rounded-lg border bg-card p-4 shadow-sm transition-all hover:scale-105 hover:shadow-md">
+    <div
+      onClick={() => router.push(`/programs/${programName}`)}
+      className="rounded-lg border bg-card p-4 shadow-sm transition-all hover:scale-105 hover:shadow-md cursor-pointer"
+    >
       <Image
         src={imageUrl}
         width={300}
@@ -13,6 +19,12 @@ export default function ProgramsCard({ name, description, imageUrl }) {
       />
       <h3 className="text-lg font-semibold">{name} </h3>
       <p className="text-muted-foreground">{description}</p>
+      <Link
+        className="text-primary mt-4 block text-right"
+        href={`/programs/${programName}`}
+      >
+        Learn More
+      </Link>
     </div>
   );
 }

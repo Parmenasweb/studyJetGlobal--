@@ -7,11 +7,29 @@ import { useQuery } from "@tanstack/react-query";
 import { unstable_noStore as noStore } from "next/cache";
 import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
+import ApplicationForm from "@/components/forms/applicationsForm";
+import { countries } from "@/lib/countrydetails";
+import QuickFacts from "@/app/(ProgramsPage)/programs/components/QuickFacts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import DetailedFacts from "./components/DetailedFact";
+import DestinationFacts from "./components/DestinationFacts";
+import FullDetailsTabs from "./components/FullDetails";
+import DestinationStatistics from "./components/Statistics";
+import AdmissionRequirements from "./components/AdmissionRequire";
+import LivingCost from "./components/LivingCost";
+import RelatedBlog from "@/components/RelatedBlog";
 
-export default function UniversityPage() {
+export default function DestinationPage() {
   noStore();
   const searchParams = useSearchParams();
   const countryName = searchParams.get("destinationName");
+  const country = countries.find((country) => country.name === countryName);
 
   const [isPending, startTransition] = useTransition();
 
@@ -35,39 +53,81 @@ export default function UniversityPage() {
     },
   });
   return (
-    <section className="w-full py-12 md:py-16 lg:py-20">
-      <div className=" w-full grid gap-20">
-        <div className="grid w-full gap-4 py-24 md:py-24 lg:py-32 text-center bg-gradient-to-tr from-primary to-primary-foreground md:text-left">
-          <h2 className="text-4xl font-bold tracking-tight text-center text-secondary sm:text-4xl md:text-5xl">
-            Study in {countryName}
-          </h2>
+    <section className="w-full py-12 md:py-16">
+      <div className="  grid gap-20">
+        <div className="mb-8 w-[90%] mx-auto relative rounded-lg">
+          <Image
+            src={country.backgroundUrl}
+            alt="study abroad agency @studyJetGlobal"
+            width={900}
+            height={500}
+            className="w-full h-[400px] object-cover rounded-lg"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-8 rounded-lg">
+            <h1 className=" flex items-center justify-center text-5xl font-extrabold mb-4 text-white">
+              Study in {country.name}
+            </h1>
+            {/* show the basic facts about each programs sub category */}
+            <DestinationFacts
+              capital={country.capital}
+              quickFacts={country.quickFacts}
+            />
+          </div>
         </div>
+
         {/* destination description goes here */}
         <div>
-          <h2>{countryName}</h2>
-          <div>
-            <div>
-              <h3>studies in {countryName}</h3>
-              <div>
-                <p>Tuition Fees(per year) - $2500</p>
-                <p>accommodation Fees(per year) - $2500</p>
-              </div>
+          <div className="w-[95%] mx-auto p-4 flex flex-col items-center ">
+            {/* Destination Quickfacts and Overview */}
+            <Card className="mb-8 w-[90%] mx-auto p-4 flex items-center flex-col justify-center rounded-lg">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold">
+                  Destination Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-md">{country.description}</p>
+              </CardContent>
+            </Card>
+            <div className="w-full flex flex-col items-center justify-center">
+              <h2 className=" flex items-center font-bold text-xl mx-auto text-center">
+                Quick Facts
+              </h2>
+              <p>
+                Learn the fundamentals of what it takes to be an international
+                student in {country.name}
+              </p>
+              <DetailedFacts details={country.details} />
             </div>
-            <h3>Popular Programmes</h3>
-            <ul>
-              <li>computer Science Engineering</li>
-              <li>Electrical and electronics Engineering</li>
-              <li>computer Science Engineering</li>
-              <li>computer Science Engineering</li>
-            </ul>
+            <br />
+            <br />
+            <FullDetailsTabs
+              tabContent={country.tabContent}
+              name={countryName}
+            />
+            <DestinationStatistics name={countryName} />
+            <AdmissionRequirements name={countryName} />
+            <LivingCost
+              name={countryName}
+              livingCost={country.livingCost}
+              feedingCost={country.feedingCost}
+              transportCost={country.transportCost}
+              miscCost={country.miscCost}
+            />
+            <div className="w-full flex items-center justify-center">
+              <h2 className=" flex items-center font-bold text-xl mx-auto text-center">
+                Apply to study in {countryName}{" "}
+              </h2>
+            </div>
+            <ApplicationForm />
+            <RelatedBlog />
           </div>
         </div>
-        {/* university display for each destination */}
-        <div className="w-[90%] mx-auto">
-          <div>
-            <h2></h2>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-3">
+      </div>
+      {/* university display for each destination */}
+      {/* <div className="w-[90%] mx-auto"> */}
+      {/* <div> */}
+      {/* <div className="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-3">
             <div className="relative group overflow-hidden rounded-lg shadow-lg">
               <Link href="#" className="absolute inset-0 z-10" prefetch={false}>
                 <span className="sr-only">View Program</span>
@@ -234,9 +294,9 @@ export default function UniversityPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </div> */}
+      {/* </div> */}
+      {/* </div> */}
     </section>
   );
 }

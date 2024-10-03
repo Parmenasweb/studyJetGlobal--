@@ -1,381 +1,999 @@
 "use client";
-
-import Activities from "./components/activities";
-import { FaRupeeSign } from "react-icons/fa";
-import { FaUsers } from "react-icons/fa6";
-
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import React, { useState } from "react";
+import { Bar, Line } from "react-chartjs-2";
+import "chart.js/auto";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import FormError from "@/components/dynamicComps/form-error";
-import FormSuccess from "@/components/dynamicComps/form-success";
-import { Suspense, useState, useTransition } from "react";
-// import LoadingSpinner from "@/components/loadingspinner";
-import { useQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
-import { unstable_noStore as noStore } from "next/cache";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  CreditCard,
+  Calendar,
+  ArrowUpRight,
+  ArrowDownRight,
+  Wallet,
+  RefreshCcw,
+  PieChart,
+  Plus,
+  Edit,
+  Trash2,
+  Package2,
+  Bell,
+  Home,
+  ShoppingCart,
+  Package,
+  Landmark,
+  LineChart,
+  Search,
+  CalendarClock,
+  Download,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
+import Image from "next/image";
 
-export function FinanceSkeleton() {
-    return <Skeleton className="h-4 w-[100px]" />;
-  }
+// Mock data for charts
+const revenueData = {
+  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  datasets: [
+    {
+      label: "Revenue",
+      data: [12000, 19000, 15000, 22000, 18000, 25000],
+      backgroundColor: "rgba(75, 192, 192, 0.6)",
+    },
+  ],
+};
 
-function Finances() {
-  noStore();
-  const { data: session, status } = useSession();
-  const [isPending, startTransition] = useTransition();
+const expensesData = {
+  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  datasets: [
+    {
+      label: "Expenses",
+      data: [8000, 11000, 9000, 13000, 10000, 14000],
+      backgroundColor: "rgba(255, 99, 132, 0.6)",
+    },
+  ],
+};
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [contribution, setContribution] = useState({
-    type: "contribution",
-    studentName: "",
-    amount: Number,
-  });
-  const [expenses, setExpenses] = useState({
-    type: "expenses",
-    amount: Number,
-    purpose: "",
-  });
+const forecastData = {
+  labels: ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  datasets: [
+    {
+      label: "Revenue Forecast",
+      data: [27000, 29000, 32000, 35000, 38000, 42000],
+      borderColor: "rgba(75, 192, 192, 1)",
+      fill: false,
+    },
+    {
+      label: "Expense Forecast",
+      data: [15000, 16000, 17000, 18000, 19000, 20000],
+      borderColor: "rgba(255, 99, 132, 1)",
+      fill: false,
+    },
+  ],
+};
 
-  async function getFinance() {
-    const response = await fetch(`/api/finance`);
-    const data = await response.json();
-    return data;
-  }
+// interface CashFlowItem {
+//   id: number;
+//   category: string;
+//   amount: number;
+//   type: 'Inflow' | 'Outflow';
+// }
 
-  const { isFetching, isError, data } = useQuery({
-    queryKey: ["finances"],
-    queryFn: getFinance,
-  });
+// interface PaymentItem {
+//   id: number;
+//   student: string;
+//   amount: number;
+//   date: string;
+//   status: 'Paid' | 'Pending' | 'Overdue';
+// }
 
-  const totalContributions = data?.[0].contributions.reduce(
-    (acc, mov) => acc + Number(mov.amount),
-    0
-  );
+export default function Component() {
+  const [cashFlowItems, setCashFlowItems] = useState([
+    { id: 1, category: "Student Tuition", amount: 95000, type: "Inflow" },
+    { id: 2, category: "Program Fees", amount: 16000, type: "Inflow" },
+    { id: 3, category: "Staff Salaries", amount: 45000, type: "Outflow" },
+    { id: 4, category: "Marketing Expenses", amount: 12000, type: "Outflow" },
+    { id: 5, category: "Operational Costs", amount: 8000, type: "Outflow" },
+  ]);
 
-  const totalExpenses = data?.[0].expenses.reduce(
-    (acc, mov) => acc + Number(mov.amount),
-    0
-  );
+  const [paymentItems, setPaymentItems] = useState([
+    {
+      id: 1,
+      student: "Alice Johnson",
+      amount: 5000,
+      date: "2023-06-15",
+      status: "Paid",
+    },
+    {
+      id: 2,
+      student: "Bob Smith",
+      amount: 4500,
+      date: "2023-06-14",
+      status: "Pending",
+    },
+    {
+      id: 3,
+      student: "Charlie Brown",
+      amount: 5500,
+      date: "2023-06-13",
+      status: "Overdue",
+    },
+  ]);
 
-  function handleContributionChange(e) {
-    const { name, value } = e.target;
-    setContribution((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  }
-  function handleExpensesChange(e) {
-    const { name, value } = e.target;
-    setExpenses((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  }
+  const [editingCashFlow, setEditingCashFlow] = useState(null);
+  const [editingPayment, setEditingPayment] = useState(null);
 
-  async function handleContributionSubmit(e) {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    startTransition(async () => {
-      if (!contribution.studentName || !contribution.amount) {
-        setError("All fields are required");
-      } else if (contribution.amount < 200) {
-        setError("Amount is lesser than minimum contribution(200rps)");
-      } else {
-        try {
-          const response = await fetch(
-            `/api/finance?query=${contribution.type}`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(contribution),
-            }
-          );
-          if (response.status === 200) {
-            setContribution({
-              type: "",
-              studentName: "",
-              amount: Number,
-            });
-            setSuccess("contribution added successfully 🎉");
-          } else {
-            setContribution({
-              type: "",
-              studentName: "",
-              amount: Number,
-            });
-            setError("A server error occurred ..try later");
-          }
-        } catch (error) {
-          setError(error.message);
-        }
-      }
-    });
-  }
-  async function handleExpenseSubmit(e) {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    startTransition(async () => {
-      if (!expenses.amount || !expenses.purpose) {
-        setError("All fields are required");
-      } else if (expenses.amount <= 0) {
-        setError("enter a valid amount");
-      } else {
-        try {
-          const response = await fetch(`/api/finance?query=${expenses.type}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(expenses),
-          });
-          if (response.status === 200) {
-            setExpenses({
-              type: "",
-              amount: Number,
-              purpose: "",
-            });
-            setSuccess("Expenses updated successfully");
-          } else {
-            setExpenses({
-              type: "",
-              amount: Number,
-              purpose: "",
-            });
-            setError("A server error occurred... try later!");
-          }
-        } catch (error) {
-          setError(error.message);
-        }
-      }
-    });
-  }
+  const handleAddCashFlow = (item) => {
+    const newItem = { ...item, id: Date.now() };
+    setCashFlowItems([...cashFlowItems, newItem]);
+  };
+
+  const handleUpdateCashFlow = (item) => {
+    setCashFlowItems(cashFlowItems.map((i) => (i.id === item.id ? item : i)));
+    setEditingCashFlow(null);
+  };
+
+  const handleDeleteCashFlow = (id) => {
+    setCashFlowItems(cashFlowItems.filter((item) => item.id !== id));
+  };
+
+  const handleAddPayment = (item) => {
+    const newItem = { ...item, id: Date.now() };
+    setPaymentItems([...paymentItems, newItem]);
+  };
+
+  const handleUpdatePayment = (item) => {
+    setPaymentItems(paymentItems.map((i) => (i.id === item.id ? item : i)));
+    setEditingPayment(null);
+  };
+
+  const handleDeletePayment = (id) => {
+    setPaymentItems(paymentItems.filter((item) => item.id !== id));
+  };
 
   return (
-    <main>
-      <div className="grid gap-4 md:grid-cols-2 w-[90%] mx-auto my-7 ">
-        {/* ------------------------------------------------------------------------- */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">
-              Total contribution
-            </CardTitle>
-            -<h3 className="font-bold text-xl dark:text-gray-400">INR</h3>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold flex items-center justify-start">
-              <FaRupeeSign />
-              {totalContributions ? +totalContributions : <FinanceSkeleton />}
+    <div className="grid min-h-screen w-full ">
+      {/* <div className="hidden border-r bg-muted/40 lg:block">
+        <div className="flex h-full max-h-screen flex-col gap-2">
+           <div className="flex-1 overflow-auto py-2">
+             <nav className="grid items-start px-4 text-sm font-medium">
+              <Link
+                href="/"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <Home className="h-4 w-4" />
+                Home
+              </Link>
+              <Link
+                href="#"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Orders
+              </Link>
+              <Link
+                href="#"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <Package className="h-4 w-4" />
+                Products
+              </Link>
+              <Link
+                href="#"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <Users className="h-4 w-4" />
+                Customers
+              </Link>
+              <Link
+                href="#"
+                className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
+              >
+                <Landmark className="h-4 w-4" />
+                Finances
+              </Link>
+              <Link
+                href="#"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <LineChart className="h-4 w-4" />
+                Analytics
+              </Link>
+            </nav> 
+          </div> 
+        </div> 
+      </div>  */}
+      <div className="flex flex-col w-[100%] ">
+        <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-muted/40 px-6">
+          <Link href="#" className="lg:hidden">
+            <Package2 className="h-6 w-6" />
+            <span className="sr-only">Home</span>
+          </Link>
+          <div className="w-full flex-1">
+            <form>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search"
+                  className="w-full bg-background shadow-none appearance-none pl-8 md:w-2/3 lg:w-1/3"
+                />
+              </div>
+            </form>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full border w-8 h-8"
+              >
+                <Image
+                  src="/placeholder.svg?height=32&width=32"
+                  width="32"
+                  height="32"
+                  className="rounded-full"
+                  alt="Avatar"
+                />
+                <span className="sr-only">Toggle user menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon">
+              <ArrowUpRight className="h-4 w-4" />
+              <span className="sr-only">Back</span>
+            </Button>
+            <h1 className="font-semibold text-lg md:text-xl">Finances</h1>
+            <div className="ml-auto flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="date"
+                    variant="outline"
+                    className="w-[280px] justify-start text-left font-normal"
+                  >
+                    <CalendarClock className="mr-2 h-4 w-4" />
+                    June 01, 2023 - June 30, 2023
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <CalendarComponent
+                    initialFocus
+                    mode="range"
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              total amount contributed
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* ------------------------------------------------------------------------- */}
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">
-              Total expenses
-            </CardTitle>
-            <h3 className="font-bold text-xl dark:text-gray-400">INR</h3>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold flex items-center justify-start">
-              <FaRupeeSign />
-              {totalExpenses ? -totalExpenses : <FinanceSkeleton />}
+          </div>
+          <div className="grid gap-6">
+            {/* Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Revenue
+                  </CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$111,000</div>
+                  <p className="text-xs text-muted-foreground">
+                    +20.1% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Expenses
+                  </CardTitle>
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$65,000</div>
+                  <p className="text-xs text-muted-foreground">
+                    +12.5% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Net Profit
+                  </CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$46,000</div>
+                  <p className="text-xs text-muted-foreground">
+                    +32.5% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Active Students
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">1,234</div>
+                  <p className="text-xs text-muted-foreground">
+                    +7.2% from last month
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              total amount spent
-            </p>
-          </CardContent>
-        </Card>
 
-        {/* ------------------------------------------------------------------------- */}
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">
-              Revenue Balance
-            </CardTitle>
-            -<h3 className="font-bold text-xl dark:text-gray-400">INR</h3>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold flex items-center justify-start">
-              <FaRupeeSign />
-              {isFetching ? <FinanceSkeleton /> : data[0].total}
+            {/* Revenue and Expenses Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue Overview</CardTitle>
+                  <CardDescription>
+                    Monthly revenue for the past 6 months
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Bar data={revenueData} options={{ responsive: true }} />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Expenses Overview</CardTitle>
+                  <CardDescription>
+                    Monthly expenses for the past 6 months
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Bar data={expensesData} options={{ responsive: true }} />
+                </CardContent>
+              </Card>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Grand total
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* ----------------------- add new contribution and expenses ----------------------*/}
-
-      <div className="w-[90%] m-auto">
-        {session?.user.role === "user" ? (
-          <>
-            <Card className="w-[98%] m-auto">
+            {/* Payment Tracking with CRUD */}
+            <Card>
               <CardHeader>
-                <CardTitle>Create A New Finance</CardTitle>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Payment Tracking</CardTitle>
+                    <CardDescription>
+                      Recent student payments and status
+                    </CardDescription>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" /> Add Payment
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Payment</DialogTitle>
+                        <DialogDescription>
+                          Enter the details for the new payment.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const formData = new FormData(e.currentTarget);
+                          handleAddPayment({
+                            student: formData.get("student"),
+                            amount: Number(formData.get("amount")),
+                            date: formData.get("date"),
+                            status: formData.get("status"),
+                          });
+                          e.currentTarget.reset();
+                        }}
+                      >
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="student" className="text-right">
+                              Student
+                            </Label>
+                            <Input
+                              id="student"
+                              name="student"
+                              className="col-span-3"
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="amount" className="text-right">
+                              Amount
+                            </Label>
+                            <Input
+                              id="amount"
+                              name="amount"
+                              type="number"
+                              className="col-span-3"
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="date" className="text-right">
+                              Date
+                            </Label>
+                            <Input
+                              id="date"
+                              name="date"
+                              type="date"
+                              className="col-span-3"
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="status" className="text-right">
+                              Status
+                            </Label>
+                            <Select name="status" required>
+                              <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Paid">Paid</SelectItem>
+                                <SelectItem value="Pending">Pending</SelectItem>
+                                <SelectItem value="Overdue">Overdue</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button type="submit">Add Payment</Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paymentItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.student}</TableCell>
+                        <TableCell>${item.amount.toLocaleString()}</TableCell>
+                        <TableCell>{item.date}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`${
+                              item.status === "Paid"
+                                ? "text-green-600"
+                                : item.status === "Pending"
+                                ? "text-yellow-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Edit Payment</DialogTitle>
+                                  <DialogDescription>
+                                    Update the payment details.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const formData = new FormData(
+                                      e.currentTarget
+                                    );
+                                    handleUpdatePayment({
+                                      id: item.id,
+                                      student: formData.get("student"),
+                                      amount: Number(formData.get("amount")),
+                                      date: formData.get("date"),
+                                      status: formData.get("status"),
+                                    });
+                                  }}
+                                >
+                                  <div className="grid gap-4 py-4">
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label
+                                        htmlFor={`student-${item.id}`}
+                                        className="text-right"
+                                      >
+                                        Student
+                                      </Label>
+                                      <Input
+                                        id={`student-${item.id}`}
+                                        name="student"
+                                        defaultValue={item.student}
+                                        className="col-span-3"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label
+                                        htmlFor={`amount-${item.id}`}
+                                        className="text-right"
+                                      >
+                                        Amount
+                                      </Label>
+                                      <Input
+                                        id={`amount-${item.id}`}
+                                        name="amount"
+                                        type="number"
+                                        defaultValue={item.amount}
+                                        className="col-span-3"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label
+                                        htmlFor={`date-${item.id}`}
+                                        className="text-right"
+                                      >
+                                        Date
+                                      </Label>
+                                      <Input
+                                        id={`date-${item.id}`}
+                                        name="date"
+                                        type="date"
+                                        defaultValue={item.date}
+                                        className="col-span-3"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label
+                                        htmlFor={`status-${item.id}`}
+                                        className="text-right"
+                                      >
+                                        Status
+                                      </Label>
+                                      <Select
+                                        name="status"
+                                        defaultValue={item.status}
+                                      >
+                                        <SelectTrigger className="col-span-3">
+                                          <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="Paid">
+                                            Paid
+                                          </SelectItem>
+                                          <SelectItem value="Pending">
+                                            Pending
+                                          </SelectItem>
+                                          <SelectItem value="Overdue">
+                                            Overdue
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  <DialogFooter>
+                                    <Button type="submit">
+                                      Update Payment
+                                    </Button>
+                                  </DialogFooter>
+                                </form>
+                              </DialogContent>
+                            </Dialog>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleDeletePayment(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Currency Conversion */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Currency Conversion</CardTitle>
                 <CardDescription>
-                  Add a new contribution or expenses to the database
+                  Convert between different currencies
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="contribution" className="w-[80%] m-auto">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="contribution">
-                      New Contribution
-                    </TabsTrigger>
-                    <TabsTrigger value="expenses">New Expense</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="contribution">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Contribution</CardTitle>
-                        <CardDescription>
-                          Add a new contribution here, The amount entered will
-                          be added to the total revenue.
-                        </CardDescription>
-                      </CardHeader>
-                      <form onSubmit={handleContributionSubmit}>
-                        <CardContent className="space-y-2">
-                          <div className="space-y-1">
-                            <Label>Type</Label>
-                            <Input
-                              name="type"
-                              disabled
-                              defaultValue="contribution"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Name</Label>
-                            <Input
-                              onChange={handleContributionChange}
-                              name="studentName"
-                              value={contribution.studentName}
-                              placeholder="john doe"
-                              disabled={isPending}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label>amount</Label>
-                            <Input
-                              onChange={handleContributionChange}
-                              name="amount"
-                              value={contribution.amount}
-                              type="number"
-                              placeholder="Enter amount contributed"
-                              disabled={isPending}
-                            />
-                          </div>
-                        </CardContent>
-                        <CardFooter className="flex flex-col">
-                          <FormError message={error} />
-                          <FormSuccess message={success} />
-                          <Button disabled={isPending} type="submit">
-                            {isPending ? "wait a sec..." : "Add Contribution"}
-                          </Button>
-                        </CardFooter>
-                      </form>
-                    </Card>
-                  </TabsContent>
-                  <TabsContent value="expenses">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>New Expenses</CardTitle>
-                        <CardDescription>
-                          Add a new expenses here, the sum will be deducted from
-                          the total contributed.
-                        </CardDescription>
-                      </CardHeader>
-                      <form onSubmit={handleExpenseSubmit}>
-                        <CardContent className="space-y-2">
-                          <div className="space-y-1">
-                            <Label>Type</Label>
-                            <Input
-                              disabled
-                              defaultValue="expenses"
-                              name="type"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Amount</Label>
-                            <Input
-                              onChange={handleExpensesChange}
-                              name="amount"
-                              value={expenses.amount}
-                              type="number"
-                              placeholder="Enter Expense amount"
-                              disabled={isPending}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Purpose</Label>
-                            <Input
-                              onChange={handleExpensesChange}
-                              name="purpose"
-                              value={expenses.purpose}
-                              type="text"
-                              placeholder="purpose of the expense"
-                              disabled={isPending}
-                            />
-                          </div>
-                        </CardContent>
-                        <CardFooter className="flex flex-col">
-                          <FormError message={error} />
-                          <FormSuccess message={success} />
-                          <Button disabled={isPending} type="submit">
-                            {isPending ? "Adding Expenses..." : "Add Expense"}
-                          </Button>
-                        </CardFooter>
-                      </form>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <Input type="number" placeholder="Amount" />
+                  </div>
+                  <div className="flex-1">
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="From Currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="usd">USD</SelectItem>
+                        <SelectItem value="eur">EUR</SelectItem>
+                        <SelectItem value="gbp">GBP</SelectItem>
+                        <SelectItem value="jpy">JPY</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="To Currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="usd">USD</SelectItem>
+                        <SelectItem value="eur">EUR</SelectItem>
+                        <SelectItem value="gbp">GBP</SelectItem>
+                        <SelectItem value="jpy">JPY</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button>
+                    <RefreshCcw className="mr-2 h-4 w-4" /> Convert
+                  </Button>
+                </div>
+                <div className="mt-4 text-center text-2xl font-bold">
+                  1 USD = 0.85 EUR
+                </div>
               </CardContent>
             </Card>
-          </>
-        ) : (
-          "you are not authorized"
-        )}
+
+            {/* Financial Forecasting */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Financial Forecasting</CardTitle>
+                <CardDescription>
+                  Projected revenue and expenses for the next 6 months
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Line data={forecastData} options={{ responsive: true }} />
+              </CardContent>
+            </Card>
+
+            {/* Cash Flow Statement with CRUD */}
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Cash Flow Statement</CardTitle>
+                    <CardDescription>
+                      Summary of cash inflows and outflows
+                    </CardDescription>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" /> Add Cash Flow Item
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Cash Flow Item</DialogTitle>
+                        <DialogDescription>
+                          Enter the details for the new cash flow item.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const formData = new FormData(e.currentTarget);
+                          handleAddCashFlow({
+                            category: formData.get("category"),
+                            amount: Number(formData.get("amount")),
+                            type: formData.get("type"),
+                          });
+                          e.currentTarget.reset();
+                        }}
+                      >
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="category" className="text-right">
+                              Category
+                            </Label>
+                            <Input
+                              id="category"
+                              name="category"
+                              className="col-span-3"
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="amount" className="text-right">
+                              Amount
+                            </Label>
+                            <Input
+                              id="amount"
+                              name="amount"
+                              type="number"
+                              className="col-span-3"
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="type" className="text-right">
+                              Type
+                            </Label>
+                            <Select name="type" required>
+                              <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Inflow">Inflow</SelectItem>
+                                <SelectItem value="Outflow">Outflow</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button type="submit">Add Item</Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {cashFlowItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.category}</TableCell>
+                        <TableCell>${item.amount.toLocaleString()}</TableCell>
+                        <TableCell>
+                          {item.type === "Inflow" ? (
+                            <span className="text-green-600">
+                              <ArrowUpRight className="inline mr-1" /> Inflow
+                            </span>
+                          ) : (
+                            <span className="text-red-600">
+                              <ArrowDownRight className="inline mr-1" /> Outflow
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Edit Cash Flow Item</DialogTitle>
+                                  <DialogDescription>
+                                    Update the cash flow item details.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const formData = new FormData(
+                                      e.currentTarget
+                                    );
+                                    handleUpdateCashFlow({
+                                      id: item.id,
+                                      category: formData.get("category"),
+                                      amount: Number(formData.get("amount")),
+                                      type: formData.get("type"),
+                                    });
+                                  }}
+                                >
+                                  <div className="grid gap-4 py-4">
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label
+                                        htmlFor={`category-${item.id}`}
+                                        className="text-right"
+                                      >
+                                        Category
+                                      </Label>
+                                      <Input
+                                        id={`category-${item.id}`}
+                                        name="category"
+                                        defaultValue={item.category}
+                                        className="col-span-3"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label
+                                        htmlFor={`amount-${item.id}`}
+                                        className="text-right"
+                                      >
+                                        Amount
+                                      </Label>
+                                      <Input
+                                        id={`amount-${item.id}`}
+                                        name="amount"
+                                        type="number"
+                                        defaultValue={item.amount}
+                                        className="col-span-3"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label
+                                        htmlFor={`type-${item.id}`}
+                                        className="text-right"
+                                      >
+                                        Type
+                                      </Label>
+                                      <Select
+                                        name="type"
+                                        defaultValue={item.type}
+                                      >
+                                        <SelectTrigger className="col-span-3">
+                                          <SelectValue placeholder="Select type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="Inflow">
+                                            Inflow
+                                          </SelectItem>
+                                          <SelectItem value="Outflow">
+                                            Outflow
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  <DialogFooter>
+                                    <Button type="submit">Update Item</Button>
+                                  </DialogFooter>
+                                </form>
+                              </DialogContent>
+                            </Dialog>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleDeleteCashFlow(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Additional Financial Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Average Revenue per Student
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$4,500</div>
+                  <p className="text-xs text-muted-foreground">
+                    +5.2% from last quarter
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Operational Costs
+                  </CardTitle>
+                  <Wallet className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$35,000</div>
+                  <p className="text-xs text-muted-foreground">
+                    -2.5% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Profit Margin
+                  </CardTitle>
+                  <PieChart className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">41.4%</div>
+                  <p className="text-xs text-muted-foreground">
+                    +3.2% from last quarter
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
       </div>
-      {/* show all expenses and contributions */}
-      <h2 className="w-[80%] m-auto">
-        Show All expenses and contributions (experimental)
-      </h2>
-      {/* show all activities information and dates */}
-      <Suspense fallback="loading...">
-        <Activities
-          isFetching={isFetching}
-          activities={data && data[0]?.activities.reverse()}
-        />
-      </Suspense>
-    </main>
+    </div>
   );
 }
-
-export default Finances;

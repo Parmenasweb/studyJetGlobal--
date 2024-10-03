@@ -8,11 +8,11 @@ import {
   LayoutDashboard,
   UsersRound,
   Settings,
-  Globe ,
+  Globe,
   NotebookPen,
-  CalendarClock ,
-  FileText ,
-  Headset 
+  CalendarClock,
+  FileText,
+  Headset,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -65,13 +65,13 @@ export default function SideNavbar({}) {
           {
             title: "Consultations",
             href: "/private/dashboard/consultations",
-            icon: Headset ,
+            icon: Headset,
             variant: "ghost",
           },
           {
             title: "Destinations",
             href: "/private/dashboard/destinations",
-            icon: Globe ,
+            icon: Globe,
             variant: "ghost",
           },
           {
@@ -83,13 +83,13 @@ export default function SideNavbar({}) {
           {
             title: "Blogs",
             href: "/private/dashboard/blogs",
-            icon: FileText ,
+            icon: FileText,
             variant: "ghost",
           },
           {
             title: "Deadlines",
-            href: "/private/dashboard/finances",
-            icon: CalendarClock ,
+            href: "/private/dashboard/deadlines",
+            icon: CalendarClock,
             variant: "ghost",
           },
           {

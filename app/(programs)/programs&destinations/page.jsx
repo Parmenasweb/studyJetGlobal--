@@ -10,6 +10,7 @@ import FeaturedCards from "./components/featuredPrograms";
 import DestinationCard from "./components/DestinationsCard";
 import ProgramsCard from "./components/programsCard";
 import SearchDestinations from "./components/searchDestination";
+import DestinationsCard from "./components/DestinationsCard";
 
 export default function Destinations() {
   return (
@@ -17,21 +18,23 @@ export default function Destinations() {
       <div className="flex flex-col">
         {/* <Navbar /> */}
         <section className="w-full mx-auto sm:py-32 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-r from-primary to-primary-foreground px-4 md:px-6">
-          <div className="container mx-auto max-w-4xl text-center text-primary-foreground">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-4xl">
-              Unlock the World with Our Study Abroad Programs
-            </h1>
-            <p className="mt-4 text-lg w-[80%] mx-auto">
-              Discover life-changing experiences and expand your horizons with
-              our curated study abroad programs.
-            </p>
-            <Link
-              href="#"
-              className="mt-8 inline-flex items-center rounded-md bg-primary-foreground px-6 py-3 text-sm font-medium text-primary shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              prefetch={false}
-            >
-              Explore Programs
-            </Link>
+          <div className="w-full mx-auto sm:py-32 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-r from-primary to-primary-foreground px-4 md:px-6 animated-background">
+            <div className="container mx-auto max-w-4xl text-center text-primary-foreground">
+              <h1 className="text-4xl font-bold tracking-tight sm:text-4xl">
+                Unlock the World with Our Study Abroad Programs
+              </h1>
+              <p className="mt-4 text-lg w-[80%] mx-auto">
+                Discover life-changing experiences and expand your horizons with
+                our curated study abroad programs.
+              </p>
+              <Link
+                href="#"
+                className="mt-8 inline-flex items-center rounded-md bg-primary-foreground px-6 py-3 text-sm font-medium text-primary shadow-sm transition-all hover:bg-gradient-to-r hover:from-primary hover:to-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                prefetch={false}
+              >
+                Explore Programs
+              </Link>
+            </div>
           </div>
         </section>
         <section className="py-12 md:py-20">
@@ -52,6 +55,7 @@ export default function Destinations() {
                     name={prog.name}
                     imageUrl={prog.imageUrl}
                     description={prog.description}
+                    programName={prog.programName}
                   />
                 );
               })}
@@ -72,7 +76,7 @@ export default function Destinations() {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-4">
               {countries.map((country, ind) => {
                 return (
-                  <DestinationCard
+                  <DestinationsCard
                     key={ind}
                     name={country.name}
                     imageUrl={country.backgroundUrl}
@@ -86,7 +90,7 @@ export default function Destinations() {
 
         {/* ------------------------------------------------------- */}
 
-        <section className="w-full py-12 md:py-24 lg:py-32">
+        {/* <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
@@ -113,7 +117,7 @@ export default function Destinations() {
               })}
             </div>
           </div>
-        </section>
+        </section> */}
       </div>
       <Footer />
     </main>
