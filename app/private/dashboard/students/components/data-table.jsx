@@ -1,6 +1,7 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 import {
   ColumnDef,
@@ -16,6 +17,16 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ArrowUpDown, MoreHorizontal, PlusCircle } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { ExclamationTriangleIcon, EnvelopeClosedIcon } from "@radix-ui/react-icons"
 
 import {
   Table,
@@ -26,50 +37,68 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+export function DataTable({ data = [], columns }) {
+  const [sorting, setSorting] = useState([])
+  const [columnFilters, setColumnFilters] = useState([])
+  const router = useRouter()
 
-
-export default function DataTable({
-  columns,
-  data,
-}) {
-  // state for filtering 
-  const [columnFilters, setColumnFilters] = React.useState(
-    []
-  )
-  // state for sorting the date or email field
-  const [sorting, setSorting] = React.useState([])
+  useEffect(() => {
+    console.log("DataTable mounted with data:", data)
+  }, [data])
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     state: {
       sorting,
       columnFilters,
-    }
+    },
   })
+
+  if (!Array.isArray(data)) {
+    console.error("Invalid data provided to DataTable:", data)
+    return <div>Error: Invalid data format</div>
+  }
+
+  if (!data.length) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center rounded-md border border-dashed p-8 text-center animate-in fade-in-50">
+        <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
+          <EnvelopeClosedIcon className="h-10 w-10 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-semibold">No clients found</h3>
+          <p className="mb-4 mt-2 text-sm text-muted-foreground">
+            You haven&apos;t added any clients yet. Add one to get started.
+          </p>
+          <Button onClick={() => router.push("/private/dashboard/students/new")}>
+            Add Client
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* filter controls */}
-      <div className="flex items-center py-4">
+      <div className="flex items-center justify-between py-4">
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue()) ?? ""}
+          placeholder="Filter by name..."
+          value={(table.getColumn("name")?.getFilterValue()) ?? ""}
           onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
+        <Button onClick={() => router.push("/private/dashboard/students/new")}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Client
+        </Button>
       </div>
-      {/* ----------------------------------------------- */}
-
-      {/* tabkle display and ui  */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -99,14 +128,20 @@ export default function DataTable({
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No results.
                 </TableCell>
               </TableRow>
@@ -114,10 +149,6 @@ export default function DataTable({
           </TableBody>
         </Table>
       </div>
-
-{/* ------------------------------------------------------- */}
-
-      {/* pagination controls */}
       <div className="flex items-center justify-end space-x-2 py-4">
         <Button
           variant="outline"
@@ -137,5 +168,5 @@ export default function DataTable({
         </Button>
       </div>
     </div>
-)
+  )
 }

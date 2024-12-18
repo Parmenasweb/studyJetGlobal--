@@ -28,7 +28,6 @@ export default function Testimonials() {
     </main>
   );
 }
-
 const testimonials = [
   {
     quote:
@@ -61,3 +60,4 @@ const testimonials = [
     title: "(Liberia)",
   },
 ];
+

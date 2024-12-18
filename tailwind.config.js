@@ -14,7 +14,13 @@ module.exports = {
   theme: {
     container: {
       center: true,
-      padding: "15px",
+      padding: {
+        DEFAULT: '1rem',
+        sm: '2rem',
+        lg: '4rem',
+        xl: '5rem',
+        '2xl': '6rem',
+      },
     },
     screens: {
       sm: "270px",
@@ -81,6 +87,10 @@ module.exports = {
             transform: "translate(calc(-50% - 0.5rem))",
           },
         },
+        pulse: {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: .5 },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -88,10 +98,11 @@ module.exports = {
         move: "move 5s linear infinite",
         scroll:
           "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
+        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), addVariablesForColors, require('@tailwindcss/typography'),],
+  plugins: [require("tailwindcss-animate"), require("tailwindcss-animate"),  addVariablesForColors, require('@tailwindcss/typography'),],
 };
 
 function addVariablesForColors({ addBase, theme }) {

@@ -1,18 +1,8 @@
 "use client";
-import React, { useState } from "react";
-import {
-  Search,
-  FolderKanban,
-  GraduationCap,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Plus,
-  Edit,
-  Trash2,
-  FileText,
-} from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { Search, Plus, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,106 +13,131 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-// import { toast } from "@/components/ui/use-toast";
-
-// type DeadlineType = 'application' | 'visa' | 'scholarship'
-// type DeadlineStatus = 'upcoming' | 'urgent' | 'completed'
-
-// type Deadline = {
-//   id: number
-//   type: DeadlineType
-//   title: string
-//   date: string
-//   progress: number
-//   status: DeadlineStatus
-// }
-
-const initialDeadlines = [
-  {
-    id: 1,
-    type: "application",
-    title: "University of Oxford - Fall Semester",
-    date: "2024-03-15",
-    progress: 75,
-    status: "upcoming",
-  },
-  {
-    id: 2,
-    type: "visa",
-    title: "UK Student Visa Application",
-    date: "2024-05-01",
-    progress: 30,
-    status: "upcoming",
-  },
-  {
-    id: 3,
-    type: "scholarship",
-    title: "Fulbright Scholarship",
-    date: "2024-02-28",
-    progress: 90,
-    status: "urgent",
-  },
-  {
-    id: 4,
-    type: "application",
-    title: "ETH Zurich - Spring Semester",
-    date: "2024-09-30",
-    progress: 10,
-    status: "upcoming",
-  },
-  {
-    id: 5,
-    type: "visa",
-    title: "Schengen Visa Application",
-    date: "2024-11-15",
-    progress: 0,
-    status: "upcoming",
-  },
-  {
-    id: 6,
-    type: "scholarship",
-    title: "DAAD Scholarship",
-    date: "2024-10-15",
-    progress: 50,
-    status: "upcoming",
-  },
-  {
-    id: 7,
-    type: "application",
-    title: "University of Tokyo - Spring Semester",
-    date: "2023-11-30",
-    progress: 100,
-    status: "completed",
-  },
-  {
-    id: 8,
-    type: "visa",
-    title: "Japan Student Visa Application",
-    date: "2023-12-31",
-    progress: 100,
-    status: "completed",
-  },
-];
+import { useToast } from "@/components/ui/use-toast";
+import DeadlineForm from "./components/forms/DeadlineForm";
+import DeadlineCard from "./components/cards/DeadlineCard";
+import { mockDeadlines } from "./data/mock-deadlines";
 
 export default function DeadlinesPage() {
-  const [deadlines, setDeadlines] = useState(initialDeadlines);
+  const { data: session } = useSession();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [deadlines, setDeadlines] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentDeadline, setCurrentDeadline] = useState(null);
+
+  useEffect(() => {
+    // Simulate loading delay
+    const timer = setTimeout(() => {
+      setDeadlines(mockDeadlines);
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleCreateDeadline = async (data) => {
+    try {
+      // Simulate API call
+      const newDeadline = {
+        ...data,
+        id: String(Date.now()),
+        studentId: "user_1",
+      };
+
+      setDeadlines((prev) => [...prev, newDeadline]);
+      setIsDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Deadline created successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create deadline",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateDeadline = async (data) => {
+    try {
+      // Simulate API call
+      const updatedDeadline = {
+        ...currentDeadline,
+        ...data,
+      };
+
+      setDeadlines((prev) =>
+        prev.map((d) => (d.id === currentDeadline.id ? updatedDeadline : d))
+      );
+      setIsDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Deadline updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update deadline",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteDeadline = async (id) => {
+    try {
+      // Simulate API call
+      setDeadlines((prev) => prev.filter((d) => d.id !== id));
+      toast({
+        title: "Success",
+        description: "Deadline deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete deadline",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleProgressUpdate = async (id, progress) => {
+    try {
+      // Simulate API call
+      setDeadlines((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, progress } : d))
+      );
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update progress",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStatusUpdate = async (id, status) => {
+    try {
+      // Simulate API call
+      setDeadlines((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, status } : d))
+      );
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update status",
+        variant: "destructive",
+      });
+    }
+  };
 
   const filteredDeadlines = deadlines.filter(
     (deadline) =>
@@ -130,101 +145,72 @@ export default function DeadlinesPage() {
       (filterType === "all" || deadline.type === filterType)
   );
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "upcoming":
-        return "text-blue-500";
-      case "urgent":
-        return "text-red-500";
-      case "completed":
-        return "text-green-500";
-      default:
-        return "text-gray-500";
+  const sortedDeadlines = [...filteredDeadlines].sort((a, b) => {
+    // Sort by status (urgent first, then upcoming, then completed)
+    const statusOrder = { urgent: 0, upcoming: 1, completed: 2 };
+    if (statusOrder[a.status] !== statusOrder[b.status]) {
+      return statusOrder[a.status] - statusOrder[b.status];
     }
-  };
+    // Then sort by date
+    return new Date(a.date) - new Date(b.date);
+  });
 
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case "application":
-        return <FileText className="w-5 h-5 mr-2" />;
-      case "visa":
-        return <FolderKanban className="w-5 h-5 mr-2" />;
-      case "scholarship":
-        return <GraduationCap className="w-5 h-5 mr-2" />;
-    }
-  };
-
-  const handleAddDeadline = () => {
-    setCurrentDeadline(null);
-    setIsDialogOpen(true);
-  };
-
-  const handleEditDeadline = (deadline) => {
-    setCurrentDeadline(deadline);
-    setIsDialogOpen(true);
-  };
-
-  const handleDeleteDeadline = (id) => {
-    if (window.confirm("Are you sure you want to delete this deadline?")) {
-      setDeadlines(deadlines.filter((deadline) => deadline.id !== id));
-      toast({
-        title: "Deadline deleted",
-        description: "The deadline has been successfully deleted.",
-      });
-    }
-  };
-
-  const handleSubmitDeadline = (e) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    const newDeadline = {
-      id: currentDeadline ? currentDeadline.id : Date.now(),
-      type: formData.get("type"),
-      title: formData.get("title"),
-      date: formData.get("date"),
-      progress: parseInt(formData.get("progress")),
-      status: formData.get("status"),
-    };
-
-    if (currentDeadline) {
-      setDeadlines(
-        deadlines.map((d) => (d.id === currentDeadline.id ? newDeadline : d))
-      );
-      toast({
-        title: "Deadline updated",
-        description: "The deadline has been successfully updated.",
-      });
-    } else {
-      setDeadlines([...deadlines, newDeadline]);
-      toast({
-        title: "Deadline added",
-        description: "A new deadline has been successfully added.",
-      });
-    }
-
-    setIsDialogOpen(false);
+  // Calculate statistics
+  const stats = {
+    total: deadlines.length,
+    urgent: deadlines.filter((d) => d.status === "urgent").length,
+    upcoming: deadlines.filter((d) => d.status === "upcoming").length,
+    completed: deadlines.filter((d) => d.status === "completed").length,
+    byType: {
+      application: deadlines.filter((d) => d.type === "application").length,
+      visa: deadlines.filter((d) => d.type === "visa").length,
+      scholarship: deadlines.filter((d) => d.type === "scholarship").length,
+    },
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <header className="mb-8">
+    <div className="container ml-[6%] mx-auto px-4 py-8">
+      <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          StudyJetGlobal
+          Deadlines Dashboard
         </h1>
-        <h2 className="text-xl text-gray-600">Deadlines Dashboard</h2>
-      </header>
+        <p className="text-gray-600">
+          Track and manage all your application deadlines
+        </p>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <h3 className="text-sm font-medium text-gray-500">Total Deadlines</h3>
+          <p className="text-2xl font-bold">{stats.total}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <h3 className="text-sm font-medium text-red-500">Urgent</h3>
+          <p className="text-2xl font-bold">{stats.urgent}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <h3 className="text-sm font-medium text-blue-500">Upcoming</h3>
+          <p className="text-2xl font-bold">{stats.upcoming}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <h3 className="text-sm font-medium text-green-500">Completed</h3>
+          <p className="text-2xl font-bold">{stats.completed}</p>
+        </div>
+      </div>
 
       <div className="mb-8 flex flex-col md:flex-row gap-4">
         <div className="flex-grow">
-          <Input
-            type="text"
-            placeholder="Search deadlines..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
-            icon={<Search className="w-4 h-4 text-gray-500" />}
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <Input
+              type="text"
+              placeholder="Search deadlines..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-full md:w-[180px]">
@@ -237,207 +223,67 @@ export default function DeadlinesPage() {
             <SelectItem value="scholarship">Scholarship</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleAddDeadline} className="w-full md:w-auto">
-          <Plus className="w-4 h-4 mr-2" /> Add Deadline
+        <Button
+          onClick={() => {
+            setCurrentDeadline(null);
+            setIsDialogOpen(true);
+          }}
+          className="w-full md:w-auto"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Deadline
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Application Deadlines
-            </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {deadlines.filter((d) => d.type === "application").length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {
-                deadlines.filter(
-                  (d) => d.type === "application" && d.status !== "completed"
-                ).length
-              }{" "}
-              active
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Visa Deadlines
-            </CardTitle>
-            <FolderKanban className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {deadlines.filter((d) => d.type === "visa").length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {
-                deadlines.filter(
-                  (d) => d.type === "visa" && d.status !== "completed"
-                ).length
-              }{" "}
-              active
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Scholarship Deadlines
-            </CardTitle>
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {deadlines.filter((d) => d.type === "scholarship").length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {
-                deadlines.filter(
-                  (d) => d.type === "scholarship" && d.status !== "completed"
-                ).length
-              }{" "}
-              active
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-6">
-        {filteredDeadlines.map((deadline) => (
-          <Card key={deadline.id} className="overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-semibold flex items-center">
-                {getTypeIcon(deadline.type)}
-                {deadline.title}
-              </CardTitle>
-              <CardDescription
-                className={`font-medium ${getStatusColor(deadline.status)}`}
-              >
-                {deadline.status === "urgent" && (
-                  <AlertCircle className="w-4 h-4 inline mr-1" />
-                )}
-                {deadline.status === "completed" && (
-                  <CheckCircle className="w-4 h-4 inline mr-1" />
-                )}
-                {deadline.status === "upcoming" && (
-                  <Clock className="w-4 h-4 inline mr-1" />
-                )}
-                {deadline.status.charAt(0).toUpperCase() +
-                  deadline.status.slice(1)}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">
-                  Due: {deadline.date}
-                </span>
-                <span className="text-sm font-medium">
-                  {deadline.progress}% Complete
-                </span>
-              </div>
-              <Progress value={deadline.progress} className="w-full mb-4" />
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEditDeadline(deadline)}
-                >
-                  <Edit className="w-4 h-4 mr-2" /> Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteDeadline(deadline.id)}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" /> Delete
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="h-[300px] rounded-lg bg-gray-100 animate-pulse"
+            />
+          ))}
+        </div>
+      ) : sortedDeadlines.length === 0 ? (
+        <div className="text-center py-12">
+          <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-4 text-lg font-semibold text-gray-900">
+            No deadlines found
+          </h3>
+          <p className="mt-2 text-sm text-gray-500">
+            Get started by creating a new deadline
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sortedDeadlines.map((deadline) => (
+            <DeadlineCard
+              key={deadline.id}
+              deadline={deadline}
+              onEdit={(deadline) => {
+                setCurrentDeadline(deadline);
+                setIsDialogOpen(true);
+              }}
+              onDelete={handleDeleteDeadline}
+              onUpdateProgress={handleProgressUpdate}
+              onUpdateStatus={handleStatusUpdate}
+            />
+          ))}
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>
-              {currentDeadline ? "Edit Deadline" : "Add New Deadline"}
+              {currentDeadline ? "Edit Deadline" : "Create New Deadline"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmitDeadline} className="space-y-4">
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                name="title"
-                defaultValue={currentDeadline?.title}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="type">Type</Label>
-              <Select
-                name="type"
-                defaultValue={currentDeadline?.type || "application"}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="application">Application</SelectItem>
-                  <SelectItem value="visa">Visa</SelectItem>
-                  <SelectItem value="scholarship">Scholarship</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="date">Due Date</Label>
-              <Input
-                id="date"
-                name="date"
-                type="date"
-                defaultValue={currentDeadline?.date}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="progress">Progress</Label>
-              <Input
-                id="progress"
-                name="progress"
-                type="number"
-                min="0"
-                max="100"
-                defaultValue={currentDeadline?.progress || 0}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                name="status"
-                defaultValue={currentDeadline?.status || "upcoming"}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="upcoming">Upcoming</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" className="w-full">
-              {currentDeadline ? "Update Deadline" : "Add Deadline"}
-            </Button>
-          </form>
+          <DeadlineForm
+            initialData={currentDeadline}
+            onSubmit={currentDeadline ? handleUpdateDeadline : handleCreateDeadline}
+            onCancel={() => setIsDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

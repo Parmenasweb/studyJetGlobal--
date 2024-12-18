@@ -1,231 +1,208 @@
 "use client";
 
-import { redirect } from "next/navigation";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Image from "next/image";
 import Link from "next/link";
-import { CiMenuFries } from "react-icons/ci";
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
-import { Dialog, DialogPanel } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogFooter,
-//   DialogClose,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-import ConsultationForm from "@/components/forms/consultationForm";
-import { signOut, signIn, useSession } from "next-auth/react";
-import { useState } from "react";
-
-// /create the navigation links
-const navigation = [
-  {
-    name: "programs & destination",
-    href: "/programs&destinations",
+const navLinks = {
+  study: {
+    label: "Study",
+    items: [
+      { label: "Destinations", href: "/destinations" },
+      { label: "Programs", href: "/programs" },
+      { label: "Scholarship", href: "/scholarship" },
+    ],
   },
-  {
-    name: "schorlarships",
-    href: "/schorlarship",
+  resources: {
+    label: "Resources",
+    items: [
+      { label: "Visa Guide", href: "/visa-guide" },
+      { label: "Success Stories", href: "/success-stories" },
+      { label: "Blog", href: "/blog" },
+    ],
   },
-  {
-    name: "Blogs",
-    href: "/blogs",
+  services: {
+    label: "Services",
+    items: [
+      { label: "Services", href: "/services" },
+      { label: "Application Guide", href: "/application-guide" },
+    ],
   },
-  {
-    name: "about us",
-    href: "/about",
-  },
-  {
-    name: "contact us",
-    href: "/contactUs",
-  },
-  // {
-  //   name: "partnership",
-  //   href: "/partnership",
-  // },
-];
-
-export const queryClient = new QueryClient();
+};
 
 export default function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: session } = useSession();
-  // const session = await auth();
-  // const user = session?.user;
+  const pathname = usePathname();
 
-  // const hrefName = usePathname();
   return (
-    <div className="h-full ">
-      <nav
-        aria-label="Global"
-        className="flex items-center justify-between p-5 lg:px-5"
-      >
-        <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5">
-            <span className="sr-only">StudyJetGlobal</span>
-            <Image
-              width={100}
-              height={50}
-              alt=""
-              src="/logotrans.jpeg"
-              className=" w-auto rounded-md"
-            />
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="container flex h-16 items-center justify-between">
+        <Link href="/" className="font-bold text-xl">
+          StudyJet Global
+        </Link>
+
+        {/* Desktop Navigation */}
+        <div className="hidden lg:flex items-center gap-6">
+          <NavigationMenu>
+            <NavigationMenuList>
+              {Object.entries(navLinks).map(([key, section]) => (
+                <NavigationMenuItem key={key}>
+                  <NavigationMenuTrigger>{section.label}</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[200px] gap-2 p-4">
+                      {section.items.map((item) => (
+                        <li key={item.href}>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href={item.href}
+                              className={cn(
+                                "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                                pathname === item.href
+                                  ? "bg-accent text-accent-foreground"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {item.label}
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
+          <Link
+            href="/about"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              pathname === "/about"
+                ? "text-primary"
+                : "text-muted-foreground"
+            )}
+          >
+            About
+          </Link>
+          <Link
+            href="/contact"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              pathname === "/contact"
+                ? "text-primary"
+                : "text-muted-foreground"
+            )}
+          >
+            Contact
           </Link>
         </div>
-        <div className="flex lg:hidden">
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(true)}
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
-          >
-            <span className="sr-only">Open main menu</span>
-            <Bars3Icon aria-hidden="true" className="h-6 w-6" />
-          </button>
-        </div>
-        <div className="hidden lg:flex lg:gap-x-8">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="text-md font-semibold leading-6 hover:border-b-2 hover:text-primary text-gray-900"
-            >
-              {item.name}
-            </Link>
-          ))}
-        </div>
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          {/* partnership and consultation buttons goes here */}
-          <div className="flex items-center mx-auto justify-between space-x-2">
-            <Button asChild>
-              <Link
-                href="/partnership"
-                className="text-sm font-semibold leading-6 text-gray-900"
-              >
-                Partnerships
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link
-                href="/onBoarding/consultationForm"
-                className="text-sm font-semibold leading-6 text-gray-900"
-              >
-                Book consultation
-              </Link>
-            </Button>
-          </div>
-          {session?.user ? (
-            <Link
-              href="/auth/login"
-              onClick={() => {
-                signOut();
-              }}
-              className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-            >
-              LogOut
-            </Link>
-          ) : (
-            <Link
-              href="/auth/login"
-              className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-            >
-              Log in
-            </Link>
-          )}
-        </div>
-      </nav>
-      <Dialog
-        open={mobileMenuOpen}
-        onClose={setMobileMenuOpen}
-        className="lg:hidden"
-      >
-        <div className="fixed inset-0 z-50" />
-        <DialogPanel className="fixed inset-y-0 right-0 z-50 w-[70%] overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="-m-1.5 p-1.5">
-              <span className="sr-only">studyJetGlobal</span>
-              <Image
-                width={100}
-                height={50}
-                alt=""
-                src="/logotrans.jpeg"
-                className=" w-auto"
-              />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(false)}
-              className=" hover:border-b-2 hover:text-secondary -m-2.5 rounded-md p-2.5 text-gray-900"
-            >
-              <span className="sr-only">Close menu</span>
-              <XMarkIcon aria-hidden="true" className="h-6 w-6" />
-            </button>
-          </div>
-          <div className="mt-6 flow-root">
-            <div className="-my-6 divide-y divide-gray-500/10">
-              <div className="space-y-3 py-6">
-                {navigation.map((item) => (
+
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          
+          {/* Mobile Navigation */}
+          <Sheet>
+            <SheetTrigger asChild className="lg:hidden">
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <div className="flex flex-col gap-4 mt-8">
+                <Accordion type="single" collapsible className="w-full">
+                  {Object.entries(navLinks).map(([key, section]) => (
+                    <AccordionItem key={key} value={key}>
+                      <AccordionTrigger className="text-sm font-medium">
+                        {section.label}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="flex flex-col space-y-2 pl-4">
+                          {section.items.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className={cn(
+                                "text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
+                                pathname === item.href
+                                  ? "bg-accent text-accent-foreground"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {item.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+
+                <div className="flex flex-col gap-2">
                   <Link
-                    onClick={() => setMobileMenuOpen(false)}
-                    key={item.name}
-                    href={item.href}
-                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-200"
+                    href="/about"
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
+                      pathname === "/about"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground"
+                    )}
                   >
-                    {item.name}
+                    About
                   </Link>
-                ))}
-              </div>
-              <div className="py-6 space-y-3">
-                <div className="flex items-start flex-col justify-between space-y-3 ">
-                  <Button asChild>
-                    <Link
-                      href="/partnership"
-                      className="text-sm font-semibold leading-6 text-gray-900 flex justify-start"
-                    >
-                      Partnerships
-                    </Link>
+                  <Link
+                    href="/contact"
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
+                      pathname === "/contact"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    Contact
+                  </Link>
+                </div>
+
+                <div className="flex flex-col gap-2 pt-4 border-t">
+                  <Button asChild variant="ghost" className="w-full justify-start">
+                    <Link href="/sign-in">Sign In</Link>
                   </Button>
-                  <Button variant="outline" asChild>
-                    <Link
-                      href="/onBoarding/consultationForm"
-                      className="text-sm font-semibold leading-6 text-gray-900"
-                    >
-                      Book a consultation
-                    </Link>
+                  <Button asChild className="w-full justify-start">
+                    <Link href="/sign-up">Get Started</Link>
                   </Button>
                 </div>
-                {session?.user ? (
-                  <Link
-                    href="/auth/login"
-                    onClick={() => {
-                      signOut();
-                    }}
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base my-3 font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                  >
-                    LogOut
-                  </Link>
-                ) : (
-                  <Link
-                    href="/auth/login"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                  >
-                    Log in
-                  </Link>
-                )}
               </div>
-            </div>
+            </SheetContent>
+          </Sheet>
+
+          <div className="hidden lg:flex items-center gap-4">
+            <Button asChild variant="ghost">
+              <Link href="/sign-in">Sign In</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/sign-up">Get Started</Link>
+            </Button>
           </div>
-        </DialogPanel>
-      </Dialog>
-    </div>
+        </div>
+      </nav>
+    </header>
   );
 }
 

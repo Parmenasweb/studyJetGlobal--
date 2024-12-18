@@ -7,6 +7,12 @@ import {
   YAxis,
   Bar
 } from "recharts";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const data = [
     {
@@ -69,6 +75,7 @@ const data = [
             axisLine={false}
             stroke="#888888"
             fontSize={12}
+            className="dark:text-gray-400"
           />
           <YAxis
             tickLine={false}
@@ -76,8 +83,34 @@ const data = [
             stroke="#888888"
             fontSize={12}
             tickFormatter={(value) => `$${value}`}
+            className="dark:text-gray-400"
           />
-          <Bar dataKey={"total"} radius={[4, 4, 0, 0]} />
+          <Bar 
+            dataKey={"total"} 
+            radius={[4, 4, 0, 0]}
+            fill="hsl(var(--primary))"
+            className="dark:fill-current dark:text-primary"
+          >
+            {data.map((entry, index) => (
+              <TooltipProvider key={index} delayDuration={100} skipDelayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs uppercase text-muted-foreground">
+                        {entry.name}
+                      </span>
+                      <span className="font-bold">
+                        ${entry.total}
+                      </span>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </Bar>
         </BarGraph>
       </ResponsiveContainer>
     );
