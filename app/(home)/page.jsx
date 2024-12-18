@@ -9,7 +9,7 @@ import {
   TestimonialsSkeleton,
   CTASkeleton,
   FAQSSkeleton
-} from "@/components/skeletons";
+} from "@/components/skeletons/index";
 
 // Dynamic imports with loading optimization
 const HeroSection = dynamic(() => import("./components/HeroSection"), {
