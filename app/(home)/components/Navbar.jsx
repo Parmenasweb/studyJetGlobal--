@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSession, signOut } from "next-auth/react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -51,6 +52,11 @@ const navLinks = {
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/" });
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -181,24 +187,47 @@ export default function Navbar() {
                 </div>
 
                 <div className="flex flex-col gap-2 pt-4 border-t">
-                  <Button asChild variant="ghost" className="w-full justify-start">
-                    <Link href="/auth/login">Sign In</Link>
-                  </Button>
-                  <Button asChild className="w-full justify-start">
-                    <Link href="/onBoarding/consultationForm">Book Free Consultation</Link>
-                  </Button>
+                  {session ? (
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Button>
+                  ) : (
+                    <>
+                      <Button asChild variant="ghost" className="w-full justify-start">
+                        <Link href="/auth/login">Sign In</Link>
+                      </Button>
+                      <Button asChild className="w-full justify-start">
+                        <Link href="/onBoarding/consultationForm">Book Free Consultation</Link>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </SheetContent>
           </Sheet>
 
           <div className="hidden lg:flex items-center gap-4">
-            <Button asChild variant="ghost">
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/onBoarding/consultationForm">Book Free Consultation</Link>
-            </Button>
+            {session ? (
+              <Button 
+                variant="ghost"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            ) : (
+              <>
+                <Button asChild variant="ghost">
+                  <Link href="/auth/login">Sign In</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/onBoarding/consultationForm">Book Free Consultation</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </nav>

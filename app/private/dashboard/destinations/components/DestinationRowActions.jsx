@@ -61,13 +61,7 @@ export function DestinationRowActions({ data }) {
           onClick={() => router.push(`/private/dashboard/destinations/${data._id}/universities`)}
         >
           <School className="mr-2 h-4 w-4" />
-          Universities
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => router.push(`/private/dashboard/destinations/${data._id}/scholarships`)}
-        >
-          <GraduationCap className="mr-2 h-4 w-4" />
-          Scholarships
+          Manage Universities
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onDelete} className="text-red-600">

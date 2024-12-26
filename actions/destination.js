@@ -122,16 +122,18 @@ export async function deleteDestination(id) {
     const response = await fetch(url.toString(), {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       cache: "no-store",
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to delete destination");
+      throw new Error(data.error || "Failed to delete destination");
     }
 
     revalidatePath("/private/dashboard/destinations");
-    return { success: true };
+    return { success: true, message: data.message };
   } catch (error) {
     console.error("Error deleting destination:", error);
     throw new Error(error.message || "Failed to delete destination");
