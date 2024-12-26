@@ -36,7 +36,7 @@ export default async function RootLayout({ children }) {
             >
               <div className="relative min-h-screen">
                 <Navbar />
-                <main className="pt-16">{children}</main>
+                <main className="w-full mx-auto">{children}</main>
                 <Toaster />
               </div>
             </ThemeProvider>

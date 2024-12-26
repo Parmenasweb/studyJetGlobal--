@@ -1,73 +1,124 @@
 import { NextResponse } from "next/server";
-import  connectDB  from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import dbConnect from "@/lib/db";
 import Client from "@/models/Client";
-import { auth } from "@/auth";
 
-// GET single client
 export async function GET(req, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    await connectDB();
-    const client = await Client.findById(params.id);
-    
+    const { id } = params;
+
+    await dbConnect();
+
+    const client = await Client.findById(id);
     if (!client) {
-      return new NextResponse("Client not found", { status: 404 });
+      return NextResponse.json(
+        { error: "Client not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(client);
   } catch (error) {
-    return new NextResponse("Internal Server Error", { status: 500 });
+    console.error("Error in GET /api/clients/[id]:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-// PATCH update client
 export async function PATCH(req, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    const body = await req.json();
-    await connectDB();
+    const { id } = params;
+    const data = await req.json();
 
-    const updatedClient = await Client.findByIdAndUpdate(
-      params.id,
-      { $set: body },
+    await dbConnect();
+
+    // Check if updating email and if it already exists
+    if (data.email) {
+      const existingClient = await Client.findOne({
+        email: data.email,
+        _id: { $ne: id },
+      });
+      if (existingClient) {
+        return NextResponse.json(
+          { error: "Client with this email already exists" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const client = await Client.findByIdAndUpdate(
+      id,
+      { ...data },
       { new: true, runValidators: true }
     );
 
-    if (!updatedClient) {
-      return new NextResponse("Client not found", { status: 404 });
+    if (!client) {
+      return NextResponse.json(
+        { error: "Client not found" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(updatedClient);
+    return NextResponse.json(client);
   } catch (error) {
-    return new NextResponse(error.message, { status: 500 });
+    console.error("Error in PATCH /api/clients/[id]:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE client
 export async function DELETE(req, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    await connectDB();
-    const client = await Client.findByIdAndDelete(params.id);
+    const { id } = params;
 
+    await dbConnect();
+
+    const client = await Client.findByIdAndDelete(id);
     if (!client) {
-      return new NextResponse("Client not found", { status: 404 });
+      return NextResponse.json(
+        { error: "Client not found" },
+        { status: 404 }
+      );
     }
 
-    return new NextResponse("Client deleted successfully", { status: 200 });
+    return NextResponse.json(
+      { message: "Client deleted successfully" },
+      { status: 200 }
+    );
   } catch (error) {
-    return new NextResponse("Internal Server Error", { status: 500 });
+    console.error("Error in DELETE /api/clients/[id]:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 } 

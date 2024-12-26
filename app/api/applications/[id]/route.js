@@ -1,21 +1,14 @@
 import { NextResponse } from "next/server";
-import  connectDB from "@/lib/db";
+import connectDB from "@/lib/db";
 import Application from "@/models/Application";
-import { auth } from "@/auth";
 import { handleError } from "@/middleware/error";
 
-// GET single application
 export async function GET(req, { params }) {
   try {
-    const session = await auth();
-    if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
     await connectDB();
-    const application = await Application.findById(params.id)
-      .populate('clientId', 'name email');
-    
+
+    const application = await Application.findById(params.id);
+
     if (!application) {
       return new NextResponse("Application not found", { status: 404 });
     }
@@ -26,63 +19,43 @@ export async function GET(req, { params }) {
   }
 }
 
-// PATCH update application
-export async function PATCH(req, { params }) {
+export async function PUT(req, { params }) {
   try {
-    const session = await auth();
-    if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const body = await req.json();
     await connectDB();
 
-    const currentApplication = await Application.findById(params.id);
-    if (!currentApplication) {
+    const data = await req.json();
+    const application = await Application.findByIdAndUpdate(
+      params.id,
+      { ...data, updatedAt: new Date() },
+      { new: true }
+    );
+
+    if (!application) {
       return new NextResponse("Application not found", { status: 404 });
     }
 
-    // Add timeline entry if status changed
-    if (body.status && body.status !== currentApplication.status) {
-      body.timeline = [
-        ...(currentApplication.timeline || []),
-        {
-          status: body.status,
-          date: new Date(),
-          description: `Status changed to ${body.status}`,
-          updatedBy: session.user.email
-        }
-      ];
-    }
-
-    const updatedApplication = await Application.findByIdAndUpdate(
-      params.id,
-      { $set: body },
-      { new: true, runValidators: true }
-    ).populate('clientId', 'name email');
-
-    return NextResponse.json(updatedApplication);
+    return NextResponse.json({
+      message: "Application updated successfully",
+      data: application,
+    });
   } catch (error) {
     return handleError(error);
   }
 }
 
-// DELETE application
 export async function DELETE(req, { params }) {
   try {
-    const session = await auth();
-    if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
     await connectDB();
+
     const application = await Application.findByIdAndDelete(params.id);
 
     if (!application) {
       return new NextResponse("Application not found", { status: 404 });
     }
 
-    return new NextResponse("Application deleted successfully", { status: 200 });
+    return NextResponse.json({
+      message: "Application deleted successfully",
+    });
   } catch (error) {
     return handleError(error);
   }

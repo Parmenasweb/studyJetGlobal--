@@ -1,40 +1,102 @@
 import { NextResponse } from "next/server";
-import  connectDB  from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import dbConnect from "@/lib/db";
 import Client from "@/models/Client";
-import { auth } from "@/auth";
 
-// GET all clients
-export async function GET() {
+export async function GET(req) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    await connectDB();
-    const clients = await Client.find({}).sort({ createdAt: -1 });
-    
-    return NextResponse.json(clients);
+    await dbConnect();
+
+    // Get query parameters for filtering
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const status = searchParams.get("status");
+    const clientType = searchParams.get("clientType");
+    const search = searchParams.get("search");
+
+    // Build query
+    const query = {};
+    if (status) query.status = status;
+    if (clientType) query.clientType = clientType;
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { destination: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const total = await Client.countDocuments(query);
+
+    // Get clients with pagination
+    const clients = await Client.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return NextResponse.json({
+      clients,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
-    return new NextResponse("Internal Server Error", { status: 500 });
+    console.error("Error in GET /api/clients:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-// POST new client
 export async function POST(req) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    const body = await req.json();
-    await connectDB();
+    const data = await req.json();
 
-    const newClient = await Client.create(body);
-    return NextResponse.json(newClient, { status: 201 });
+    await dbConnect();
+
+    // Check if client with same email already exists
+    const existingClient = await Client.findOne({ email: data.email });
+    if (existingClient) {
+      return NextResponse.json(
+        { error: "Client with this email already exists" },
+        { status: 400 }
+      );
+    }
+
+    const client = await Client.create(data);
+
+    return NextResponse.json(client, { status: 201 });
   } catch (error) {
-    console.error("Client creation error:", error);
-    return new NextResponse(error.message, { status: 500 });
+    console.error("Error in POST /api/clients:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 } 

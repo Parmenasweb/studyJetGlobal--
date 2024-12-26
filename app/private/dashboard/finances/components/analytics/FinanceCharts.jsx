@@ -1,65 +1,57 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFinanceStore } from "../../store/finance-store";
-import { Bar, Line } from "react-chartjs-2";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
   Tooltip,
   Legend,
-} from "chart.js";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-const chartOptions = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: "top",
-    },
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      ticks: {
-        callback: (value) => `$${value.toLocaleString()}`,
-      },
-    },
-  },
-};
+  Pie,
+  PieChart,
+  Cell,
+} from "recharts";
 
 export function FinanceCharts() {
   const { finance } = useFinanceStore();
 
+  // Handle null/undefined finance data
+  if (!finance) {
+    return (
+      <div className="grid gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>No finance data available</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Please check your finance data configuration.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Revenue and Expenses Data
   const monthlyData = {
-    labels: Object.keys(finance.monthlyRevenue),
+    labels: Object.keys(finance.monthlyRevenue || {}),
     datasets: [
       {
         label: "Revenue",
-        data: Object.values(finance.monthlyRevenue),
+        data: Object.values(finance.monthlyRevenue || {}),
         backgroundColor: "rgba(34, 197, 94, 0.5)",
         borderColor: "rgb(34, 197, 94)",
         borderWidth: 1,
       },
       {
         label: "Expenses",
-        data: Object.values(finance.monthlyExpenses),
+        data: Object.values(finance.monthlyExpenses || {}),
         backgroundColor: "rgba(239, 68, 68, 0.5)",
         borderColor: "rgb(239, 68, 68)",
         borderWidth: 1,
@@ -69,11 +61,11 @@ export function FinanceCharts() {
 
   // Category Distribution
   const categoryData = {
-    labels: Object.keys(finance.revenueByCategory),
+    labels: Object.keys(finance.revenueByCategory || {}),
     datasets: [
       {
         label: "Revenue by Category",
-        data: Object.values(finance.revenueByCategory),
+        data: Object.values(finance.revenueByCategory || {}),
         backgroundColor: [
           "rgba(34, 197, 94, 0.5)",
           "rgba(59, 130, 246, 0.5)",
@@ -94,15 +86,15 @@ export function FinanceCharts() {
   // Forecast Data
   const forecastData = {
     labels: [
-      ...Object.keys(finance.monthlyRevenue),
-      ...Object.keys(finance.revenueForecast),
+      ...Object.keys(finance.monthlyRevenue || {}),
+      ...Object.keys(finance.revenueForecast || {}),
     ],
     datasets: [
       {
         label: "Actual Revenue",
         data: [
-          ...Object.values(finance.monthlyRevenue),
-          ...Array(Object.keys(finance.revenueForecast).length).fill(null),
+          ...Object.values(finance.monthlyRevenue || {}),
+          ...Array(Object.keys(finance.revenueForecast || {}).length).fill(null),
         ],
         borderColor: "rgb(34, 197, 94)",
         backgroundColor: "rgba(34, 197, 94, 0.5)",
@@ -113,36 +105,11 @@ export function FinanceCharts() {
       {
         label: "Forecast Revenue",
         data: [
-          ...Array(Object.keys(finance.monthlyRevenue).length).fill(null),
-          ...Object.values(finance.revenueForecast),
+          ...Array(Object.keys(finance.monthlyRevenue || {}).length).fill(null),
+          ...Object.values(finance.revenueForecast || {}),
         ],
         borderColor: "rgb(59, 130, 246)",
         backgroundColor: "rgba(59, 130, 246, 0.5)",
-        borderDash: [5, 5],
-        pointStyle: "circle",
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: "Actual Expenses",
-        data: [
-          ...Object.values(finance.monthlyExpenses),
-          ...Array(Object.keys(finance.expenseForecast).length).fill(null),
-        ],
-        borderColor: "rgb(239, 68, 68)",
-        backgroundColor: "rgba(239, 68, 68, 0.5)",
-        pointStyle: "circle",
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: "Forecast Expenses",
-        data: [
-          ...Array(Object.keys(finance.monthlyExpenses).length).fill(null),
-          ...Object.values(finance.expenseForecast),
-        ],
-        borderColor: "rgb(234, 179, 8)",
-        backgroundColor: "rgba(234, 179, 8, 0.5)",
         borderDash: [5, 5],
         pointStyle: "circle",
         pointRadius: 4,
@@ -152,46 +119,84 @@ export function FinanceCharts() {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4">
+      {/* Monthly Revenue and Expenses */}
       <Card>
         <CardHeader>
-          <CardTitle>Revenue & Expenses</CardTitle>
-          <CardDescription>Monthly comparison of revenue and expenses</CardDescription>
+          <CardTitle>Monthly Revenue & Expenses</CardTitle>
         </CardHeader>
         <CardContent>
-          <Bar options={chartOptions} data={monthlyData} />
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlyData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Revenue" fill="rgba(34, 197, 94, 0.5)" />
+              <Bar dataKey="Expenses" fill="rgba(239, 68, 68, 0.5)" />
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
+      {/* Revenue by Category */}
       <Card>
         <CardHeader>
-          <CardTitle>Revenue by Category</CardTitle>
-          <CardDescription>Distribution of revenue across categories</CardDescription>
+          <CardTitle>Revenue Distribution by Category</CardTitle>
         </CardHeader>
         <CardContent>
-          <Bar options={chartOptions} data={categoryData} />
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={categoryData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label
+              >
+                {categoryData.datasets[0].data.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={categoryData.datasets[0].backgroundColor[index]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      <Card className="md:col-span-2">
+      {/* Revenue Forecast */}
+      <Card>
         <CardHeader>
-          <CardTitle>Financial Forecast</CardTitle>
-          <CardDescription>Actual vs forecast for revenue and expenses</CardDescription>
+          <CardTitle>Revenue Forecast</CardTitle>
         </CardHeader>
         <CardContent>
-          <Line
-            options={{
-              ...chartOptions,
-              plugins: {
-                ...chartOptions.plugins,
-                legend: {
-                  ...chartOptions.plugins.legend,
-                  position: "bottom",
-                },
-              },
-            }}
-            data={forecastData}
-          />
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={forecastData}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="Actual"
+                stroke="rgb(34, 197, 94)"
+                strokeWidth={2}
+              />
+              <Line
+                type="monotone"
+                dataKey="Forecast"
+                stroke="rgb(59, 130, 246)"
+                strokeDasharray="5 5"
+                strokeWidth={2}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>

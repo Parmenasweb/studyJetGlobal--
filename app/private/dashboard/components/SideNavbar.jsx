@@ -18,6 +18,7 @@ import {
   Settings,
   PenSquare,
   Menu,
+  MessageSquare,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -31,6 +32,11 @@ const navItems = [
     title: "Students",
     href: "/private/dashboard/students",
     icon: Users,
+  },
+  {
+    title: "Consultations",
+    href: "/private/dashboard/consultations",
+    icon: MessageSquare,
   },
   {
     title: "Applications",

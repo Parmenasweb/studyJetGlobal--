@@ -1,126 +1,144 @@
 "use client";
-import React from "react";
 
-import { DataTable } from "../students/components/data-table";
-import PageTitle from "@/components/pageTitle.jsx";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { mockApplications } from "./data/mock-applications";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataTable } from "../students/components/data-table";
+import { columns } from "./components/columns";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
-const columns = [
-  {
-    accessorKey: "clientId.name",
-    header: "Name",
-    cell: ({ row }) => {
-      const name = row.getValue("clientId.name");
-      return (
-        <div className="flex gap-2 items-center">
-          <img
-            className="h-10 w-10"
-            src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${name}`}
-            alt="user-image"
-          />
-          <p>{name}</p>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "clientId.email",
-    header: "Email",
-  },
-  {
-    accessorKey: "applicationType",
-    header: "Type",
-  },
-  {
-    accessorKey: "destination",
-    header: "Destination",
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      return (
-        <div
-          className={cn("font-medium w-fit px-4 py-2 rounded-lg", {
-            "bg-orange-200":
-              row.getValue("status") === "submitted" || row.getValue("status") === "processing",
-            "bg-red-200": row.getValue("status") === "rejected",
-            "bg-green-200": row.getValue("status") === "approved",
-            "bg-slate-200": row.getValue("status") === "draft",
-          })}
-        >
-          {row.getValue("status")}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "submissionDate",
-    header: ({ column }) => {
-      return (
+async function getApplications() {
+  const res = await fetch("/api/applications");
+  if (!res.ok) {
+    throw new Error("Failed to fetch applications");
+  }
+  return res.json();
+}
+
+export default function ApplicationsPage() {
+  const router = useRouter();
+  const [selectedTab, setSelectedTab] = useState("all");
+
+  const { data: applications = [], isLoading, error } = useQuery({
+    queryKey: ["applications"],
+    queryFn: getApplications,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[200px] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-[200px] w-full flex-col items-center justify-center gap-2">
+        <p className="text-sm text-muted-foreground">
+          {error.message || "Something went wrong"}
+        </p>
         <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          variant="outline"
+          onClick={() => window.location.reload()}
         >
-          Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          Try again
         </Button>
-      );
-    },
-    cell: ({ row }) => {
-      return format(new Date(row.getValue("submissionDate")), "PPP");
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const application = row.original;
+      </div>
+    );
+  }
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(application._id)}
-            >
-              Copy Application ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View Application details</DropdownMenuItem>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
+  const filteredApplications = applications.filter((application) => {
+    if (selectedTab === "all") return true;
+    if (selectedTab === "study") return application.applicationType === "study";
+    if (selectedTab === "work") return application.applicationType === "work";
+    return application.status === selectedTab;
+  });
 
-export default function ApplicationPage() {
+  const stats = {
+    total: applications.length,
+    study: applications.filter((app) => app.applicationType === "study").length,
+    work: applications.filter((app) => app.applicationType === "work").length,
+    pending: applications.filter((app) => app.status === "pending").length,
+    approved: applications.filter((app) => app.status === "approved").length,
+  };
+
   return (
-    <div className="container flex flex-col gap-5">
-      <PageTitle text="Student Applications" />
-      <DataTable columns={columns} data={mockApplications} />
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">Applications</h2>
+        <Button onClick={() => router.push("/private/dashboard/applications/new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Application
+        </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Study Applications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.study}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Work Applications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.work}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.pending}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="all" onValueChange={setSelectedTab}>
+        <TabsList>
+          <TabsTrigger value="all">All Applications</TabsTrigger>
+          <TabsTrigger value="study">Study</TabsTrigger>
+          <TabsTrigger value="work">Work</TabsTrigger>
+          <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="approved">Approved</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all" className="space-y-4">
+          <DataTable columns={columns} data={filteredApplications} />
+        </TabsContent>
+        <TabsContent value="study" className="space-y-4">
+          <DataTable columns={columns} data={filteredApplications} />
+        </TabsContent>
+        <TabsContent value="work" className="space-y-4">
+          <DataTable columns={columns} data={filteredApplications} />
+        </TabsContent>
+        <TabsContent value="pending" className="space-y-4">
+          <DataTable columns={columns} data={filteredApplications} />
+        </TabsContent>
+        <TabsContent value="approved" className="space-y-4">
+          <DataTable columns={columns} data={filteredApplications} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

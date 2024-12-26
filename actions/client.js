@@ -1,91 +1,131 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
-import { mockClients } from "@/app/private/dashboard/students/data/mock-clients";
+import connectDB from "@/lib/db";
+import Client from "@/models/Client";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-export async function getClients() {
+export async function getClients(query = {}) {
   try {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return mockClients;
+    await connectDB();
+
+    // Build query
+    const dbQuery = {};
+    if (query.status) dbQuery.status = query.status;
+    if (query.clientType) dbQuery.clientType = query.clientType;
+    if (query.search) {
+      dbQuery.$or = [
+        { name: { $regex: query.search, $options: "i" } },
+        { email: { $regex: query.search, $options: "i" } },
+        { destination: { $regex: query.search, $options: "i" } },
+      ];
+    }
+
+    // Calculate pagination
+    const page = parseInt(query.page) || 1;
+    const limit = parseInt(query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const total = await Client.countDocuments(dbQuery);
+
+    // Get clients with pagination
+    const clients = await Client.find(dbQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    return {
+      clients,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    };
   } catch (error) {
-    throw new Error(
-      error.message || "There was a problem loading the clients. Please try again."
-    );
+    console.error("Error fetching clients:", error);
+    throw new Error(error.message || "Failed to fetch clients");
   }
 }
 
 export async function getClient(id) {
   try {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const client = mockClients.find(c => c._id === id);
-    if (!client) throw new Error("Client not found");
+    await connectDB();
+    const client = await Client.findById(id).lean();
+    if (!client) {
+      throw new Error("Client not found");
+    }
     return client;
   } catch (error) {
-    throw new Error("Failed to fetch client");
+    console.error("Error fetching client:", error);
+    throw new Error(error.message || "Failed to fetch client");
   }
 }
 
 export async function createClient(data) {
   try {
-    const res = await fetch(`${BASE_URL}/api/clients`, {
+    const response = await fetch(`${BASE_URL}/api/clients`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...headers(),
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
-    if (!res.ok) {
-      throw new Error("Failed to create client");
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to create client");
     }
 
+    const newClient = await response.json();
     revalidatePath("/private/dashboard/students");
-    return res.json();
+    return newClient;
   } catch (error) {
-    throw new Error("Failed to create client");
+    console.error("Error creating client:", error);
+    throw new Error(error.message || "Failed to create client");
   }
 }
 
 export async function updateClient(id, data) {
   try {
-    const res = await fetch(`${BASE_URL}/api/clients/${id}`, {
+    const response = await fetch(`${BASE_URL}/api/clients/${id}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...headers(),
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
-    if (!res.ok) {
-      throw new Error("Failed to update client");
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to update client");
     }
 
+    const updatedClient = await response.json();
     revalidatePath("/private/dashboard/students");
     revalidatePath(`/private/dashboard/students/${id}`);
-    return res.json();
+    return updatedClient;
   } catch (error) {
-    throw new Error("Failed to update client");
+    console.error("Error updating client:", error);
+    throw new Error(error.message || "Failed to update client");
   }
 }
 
 export async function deleteClient(id) {
   try {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const clientIndex = mockClients.findIndex(c => c._id === id);
-    if (clientIndex === -1) throw new Error("Client not found");
-    
-    mockClients.splice(clientIndex, 1);
+    const response = await fetch(`${BASE_URL}/api/clients/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to delete client");
+    }
+
     revalidatePath("/private/dashboard/students");
     return { success: true };
   } catch (error) {
-    throw new Error("Failed to delete client");
+    console.error("Error deleting client:", error);
+    throw new Error(error.message || "Failed to delete client");
   }
 } 

@@ -54,7 +54,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <nav className="container flex h-16 items-center justify-between">
+      <nav className=" flex w-[95%] mx-auto h-16 items-center justify-between">
         <Link href="/" className="font-bold text-xl">
           StudyJet Global
         </Link>
@@ -103,7 +103,7 @@ export default function Navbar() {
             About
           </Link>
           <Link
-            href="/contact"
+            href="/contactUs"
             className={cn(
               "text-sm font-medium transition-colors hover:text-primary",
               pathname === "/contact"
@@ -171,7 +171,7 @@ export default function Navbar() {
                     href="/contact"
                     className={cn(
                       "text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
-                      pathname === "/contact"
+                      pathname === "/contactUs"
                         ? "bg-accent text-accent-foreground"
                         : "text-muted-foreground"
                     )}
@@ -182,10 +182,10 @@ export default function Navbar() {
 
                 <div className="flex flex-col gap-2 pt-4 border-t">
                   <Button asChild variant="ghost" className="w-full justify-start">
-                    <Link href="/sign-in">Sign In</Link>
+                    <Link href="/auth/login">Sign In</Link>
                   </Button>
                   <Button asChild className="w-full justify-start">
-                    <Link href="/sign-up">Get Started</Link>
+                    <Link href="/onBoarding/consultationForm">Book Free Consultation</Link>
                   </Button>
                 </div>
               </div>
@@ -194,10 +194,10 @@ export default function Navbar() {
 
           <div className="hidden lg:flex items-center gap-4">
             <Button asChild variant="ghost">
-              <Link href="/sign-in">Sign In</Link>
+              <Link href="/auth/login">Sign In</Link>
             </Button>
             <Button asChild>
-              <Link href="/sign-up">Get Started</Link>
+              <Link href="/onBoarding/consultationForm">Book Free Consultation</Link>
             </Button>
           </div>
         </div>

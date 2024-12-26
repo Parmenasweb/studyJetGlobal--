@@ -1,136 +1,233 @@
-import { create } from 'zustand';
-import { mockFinanceData } from '../data/mock-finances';
+import { create } from "zustand";
+import {
+  getFinanceAnalytics,
+  getFinanceForecast,
+  addTransaction,
+  addStudentPayment,
+  addBudget,
+  updateStudentPayment,
+  deleteStudentPayment,
+  deleteBudget,
+  updateBudget,
+} from "@/actions/finance";
 
-export const useFinanceStore = create((set) => ({
-  finance: mockFinanceData,
+const initialState = {
+  finance: {
+    totalRevenue: 0,
+    totalExpenses: 0,
+    netProfit: 0,
+    profitMargin: 0,
+    revenuePerStudent: 0,
+    operationalCosts: 0,
+    cashPosition: 0,
+    revenueByCategory: {},
+    expensesByCategory: {},
+    monthlyRevenue: {},
+    monthlyExpenses: {},
+    revenueForecast: {},
+    expenseForecast: {},
+    transactions: [],
+    studentPayments: [],
+    budgets: [],
+  },
   selectedPeriod: {
-    start: new Date("2024-01-01"),
-    end: new Date("2024-12-31"),
+    from: new Date(new Date().getFullYear(), 0, 1),
+    to: new Date(),
   },
   isLoading: false,
   error: null,
+};
 
-  // Actions
-  setFinance: (finance) => set({ finance }),
-  setSelectedPeriod: (period) => set({ selectedPeriod: period }),
-  setLoading: (isLoading) => set({ isLoading }),
-  setError: (error) => set({ error }),
+export const useFinanceStore = create((set, get) => ({
+  ...initialState,
 
-  // Transactions
-  addTransaction: (transaction) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        transactions: [...state.finance.transactions, transaction],
-        totalRevenue:
-          transaction.type === "INCOME"
-            ? state.finance.totalRevenue + transaction.amount
-            : state.finance.totalRevenue,
-        totalExpenses:
-          transaction.type === "EXPENSE"
-            ? state.finance.totalExpenses + transaction.amount
-            : state.finance.totalExpenses,
-      },
-    })),
+  setSelectedPeriod: (period) => {
+    set({ selectedPeriod: period });
+  },
 
-  updateTransaction: (id, updatedTransaction) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        transactions: state.finance.transactions.map((t) =>
-          t.id === id ? { ...t, ...updatedTransaction } : t
-        ),
-      },
-    })),
+  fetchFinanceData: async () => {
+    try {
+      set({ isLoading: true, error: null });
 
-  deleteTransaction: (id) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        transactions: state.finance.transactions.filter((t) => t.id !== id),
-      },
-    })),
+      // Get current fiscal year
+      const currentYear = new Date().getFullYear();
+      const fiscalYearId = `finance-${currentYear}`;
 
-  // Student Payments
-  addStudentPayment: (payment) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        studentPayments: [...state.finance.studentPayments, payment],
-        totalRevenue:
-          payment.status === "PAID"
-            ? state.finance.totalRevenue + payment.amount
-            : state.finance.totalRevenue,
-      },
-    })),
+      const [analyticsResponse, forecastResponse] = await Promise.all([
+        getFinanceAnalytics(fiscalYearId),
+        getFinanceForecast(fiscalYearId),
+      ]);
 
-  updateStudentPayment: (id, updatedPayment) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        studentPayments: state.finance.studentPayments.map((p) =>
-          p.id === id ? { ...p, ...updatedPayment } : p
-        ),
-      },
-    })),
+      if (!analyticsResponse.success || !forecastResponse.success) {
+        throw new Error(analyticsResponse.error || forecastResponse.error);
+      }
 
-  deleteStudentPayment: (id) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        studentPayments: state.finance.studentPayments.filter((p) => p.id !== id),
-      },
-    })),
+      set({
+        finance: {
+          ...initialState.finance,
+          ...analyticsResponse.data,
+          revenueForecast: forecastResponse.data.revenue,
+          expenseForecast: forecastResponse.data.expenses,
+        },
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error("Error fetching finance data:", error);
+      set({
+        error: error.message || "Failed to fetch finance data",
+        isLoading: false,
+      });
+    }
+  },
 
-  // Budgets
-  addBudget: (budget) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        budgets: [...state.finance.budgets, budget],
-      },
-    })),
+  addTransaction: async (transaction) => {
+    try {
+      set({ isLoading: true, error: null });
+      const currentYear = new Date().getFullYear();
+      const fiscalYearId = `finance-${currentYear}`;
+      
+      const response = await addTransaction(fiscalYearId, transaction);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
 
-  updateBudget: (id, updatedBudget) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        budgets: state.finance.budgets.map((b) =>
-          b.id === id ? { ...b, ...updatedBudget } : b
-        ),
-      },
-    })),
+      await get().fetchFinanceData();
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+      set({
+        error: error.message || "Failed to add transaction",
+        isLoading: false,
+      });
+    }
+  },
 
-  deleteBudget: (id) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        budgets: state.finance.budgets.filter((b) => b.id !== id),
-      },
-    })),
+  addStudentPayment: async (payment) => {
+    try {
+      set({ isLoading: true, error: null });
+      const currentYear = new Date().getFullYear();
+      const fiscalYearId = `finance-${currentYear}`;
+      
+      const response = await addStudentPayment(fiscalYearId, payment);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
 
-  // Analytics
-  updateAnalytics: (analytics) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        revenueByCategory: analytics.revenueByCategory || state.finance.revenueByCategory,
-        expensesByCategory: analytics.expensesByCategory || state.finance.expensesByCategory,
-        monthlyRevenue: analytics.monthlyRevenue || state.finance.monthlyRevenue,
-        monthlyExpenses: analytics.monthlyExpenses || state.finance.monthlyExpenses,
-      },
-    })),
+      await get().fetchFinanceData();
+    } catch (error) {
+      console.error("Error adding student payment:", error);
+      set({
+        error: error.message || "Failed to add student payment",
+        isLoading: false,
+      });
+    }
+  },
 
-  // Forecasting
-  updateForecast: (forecast) =>
-    set((state) => ({
-      finance: {
-        ...state.finance,
-        revenueForecast: forecast.revenue || state.finance.revenueForecast,
-        expenseForecast: forecast.expenses || state.finance.expenseForecast,
-      },
-    })),
+  addBudget: async (budget) => {
+    try {
+      set({ isLoading: true, error: null });
+      const currentYear = new Date().getFullYear();
+      const fiscalYearId = `finance-${currentYear}`;
+      
+      const response = await addBudget(fiscalYearId, budget);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
 
-  // Reset
-  resetFinance: () => set({ finance: mockFinanceData }),
+      await get().fetchFinanceData();
+    } catch (error) {
+      console.error("Error adding budget:", error);
+      set({
+        error: error.message || "Failed to add budget",
+        isLoading: false,
+      });
+    }
+  },
+
+  updateStudentPayment: async (paymentId, data) => {
+    try {
+      set({ isLoading: true, error: null });
+      const currentYear = new Date().getFullYear();
+      const fiscalYearId = `finance-${currentYear}`;
+      
+      const response = await updateStudentPayment(fiscalYearId, paymentId, data);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+
+      await get().fetchFinanceData();
+    } catch (error) {
+      console.error("Error updating student payment:", error);
+      set({
+        error: error.message || "Failed to update student payment",
+        isLoading: false,
+      });
+    }
+  },
+
+  deleteStudentPayment: async (paymentId) => {
+    try {
+      set({ isLoading: true, error: null });
+      const currentYear = new Date().getFullYear();
+      const fiscalYearId = `finance-${currentYear}`;
+      
+      const response = await deleteStudentPayment(fiscalYearId, paymentId);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+
+      await get().fetchFinanceData();
+    } catch (error) {
+      console.error("Error deleting student payment:", error);
+      set({
+        error: error.message || "Failed to delete student payment",
+        isLoading: false,
+      });
+    }
+  },
+
+  deleteBudget: async (budgetId) => {
+    try {
+      set({ isLoading: true, error: null });
+      const currentYear = new Date().getFullYear();
+      const fiscalYearId = `finance-${currentYear}`;
+      
+      const response = await deleteBudget(fiscalYearId, budgetId);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+
+      await get().fetchFinanceData();
+    } catch (error) {
+      console.error("Error deleting budget:", error);
+      set({
+        error: error.message || "Failed to delete budget",
+        isLoading: false,
+      });
+    }
+  },
+
+  updateBudget: async (budgetId, actual) => {
+    try {
+      set({ isLoading: true, error: null });
+      const currentYear = new Date().getFullYear();
+      const fiscalYearId = `finance-${currentYear}`;
+      
+      const response = await updateBudget(fiscalYearId, budgetId, actual);
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+
+      await get().fetchFinanceData();
+    } catch (error) {
+      console.error("Error updating budget:", error);
+      set({
+        error: error.message || "Failed to update budget",
+        isLoading: false,
+      });
+    }
+  },
+
+  resetFinanceStore: () => {
+    set(initialState);
+  },
 })); 

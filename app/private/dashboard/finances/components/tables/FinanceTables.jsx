@@ -99,7 +99,7 @@ export function FinanceTables() {
           <TabsContent value="transactions" className="mt-4">
             <DataTable
               columns={transactionColumns}
-              data={finance.transactions}
+              data={finance?.transactions || []}
               searchKey="category"
             />
           </TabsContent>
@@ -107,7 +107,7 @@ export function FinanceTables() {
           <TabsContent value="payments" className="mt-4">
             <DataTable
               columns={studentPaymentColumns}
-              data={finance.studentPayments}
+              data={finance?.studentPayments || []}
               searchKey="studentId"
             />
           </TabsContent>
@@ -115,7 +115,7 @@ export function FinanceTables() {
           <TabsContent value="budgets" className="mt-4">
             <DataTable
               columns={budgetColumns}
-              data={finance.budgets}
+              data={finance?.budgets || []}
               searchKey="category"
             />
           </TabsContent>

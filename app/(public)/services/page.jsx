@@ -133,7 +133,7 @@ const testimonials = [
 
 export default function ServicesPage() {
   return (
-    <div className="container mx-auto px-4 py-16 md:py-24">
+    <div className="w-[98%] mx-auto px-4 py-16 md:py-24">
       {/* Hero Section */}
       <div className="max-w-3xl mx-auto text-center mb-16">
         <h1 className="text-4xl font-bold tracking-tight mb-4">Our Services</h1>

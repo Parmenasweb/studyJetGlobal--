@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import {
   Card,
   CardHeader,
@@ -8,6 +11,14 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,268 +36,363 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
-import { useState, useTransition } from "react";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { consultationSchema } from "@/lib/validations/consultation";
 import FormError from "../dynamicComps/form-error";
 import FormSuccess from "../dynamicComps/form-success";
-import { format } from "date-fns";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 export default function ConsultationForm() {
-  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [consultationInfo, setConsultationInfo] = useState({
-    consulteeName: "",
-    email: "",
-    contactNumber: "",
-    whatsAppNumber: "",
-    selectedDate: "",
-    selectedTime: "",
-    description: "",
-  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setConsultationInfo((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  }
-
-  function cleanUpInput() {
-    setConsultationInfo({
+  const form = useForm({
+    resolver: zodResolver(consultationSchema),
+    defaultValues: {
       consulteeName: "",
       email: "",
       contactNumber: "",
       whatsAppNumber: "",
-      selectedDate: "",
+      selectedDate: new Date(),
       selectedTime: "",
+      consultationType: "",
+      preferredMode: "",
+      interestedCountries: [],
       description: "",
-    });
-  }
+      status: "pending",
+    },
+  });
 
-  async function uploadConsultation(consultationInfo) {
-    if (
-      !consultationInfo.consulteeName ||
-      !consultationInfo.email ||
-      !consultationInfo.contactNumber ||
-      !consultationInfo.whatsAppNumber ||
-      !consultationInfo.selectedDate ||
-      !consultationInfo.selectedTime ||
-      !consultationInfo.description
-    ) {
-      setError("All Field is required");
-    } else {
-      try {
-        startTransition(async () => {
-          const res = await fetch(`/api/onBoarding?query=consultation`, {
-            method: "POST",
-            headers: {
-              "content-type": "application/json",
-            },
-            body: JSON.stringify(consultationInfo),
-          });
-          if (res.status === 200) {
-            const okResponse = await res.json();
-            cleanUpInput(consultationInfo);
-            setSuccess(
-              "🎉congrats!..Your application has been submitted successfully"
-            );
-          } else {
-            const errorData = await res.json();
-            setError(errorData.message);
-          }
-        });
-      } catch (err) {}
+  async function onSubmit(data) {
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch(`/api/consultations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to submit consultation request");
+      }
+
+      const result = await res.json();
+      form.reset();
+      setSuccess("🎉 Your consultation request has been submitted successfully! We'll contact you shortly.");
+    } catch (error) {
+      setError(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    console.log(consultationInfo);
-    setError("");
-    setSuccess("");
-    uploadConsultation(consultationInfo);
-  }
   return (
-    <Card className="sm:w-[90%] lg:w-[50%] bg-primary-foreground  p-4 mx-auto">
-      <form onSubmit={handleSubmit} action="">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-center text-center text-xl font-semibold my-3">
-            Consultation Form
-          </CardTitle>
+    <Card className="sm:w-[90%] lg:w-[50%] bg-primary-foreground p-4 mx-auto">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-center text-center text-xl font-semibold my-3">
+              Consultation Form
+            </CardTitle>
+            <CardDescription className="flex text-lg text-center my-3 items-center justify-center font-bold">
+              Fill out the form below to schedule a consultation with our study
+              abroad experts.
+            </CardDescription>
+          </CardHeader>
 
-          <CardDescription className="flex text-lg text-center my-3 items-center justify-center font-bold">
-            Fill out the form below to schedule a consultation with our study
-            abroad experts.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Applicant Full Name</Label>
-            <Input
-              type="text"
-              disabled={isPending}
-              value={consultationInfo.consulteeName}
-              onChange={handleChange}
-              placeholder="Enter your full name"
+          <CardContent className="space-y-6">
+            <FormField
+              control={form.control}
               name="consulteeName"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Applicant Email</Label>
-            <Input
-              type="email"
-              disabled={isPending}
-              name="email"
-              value={consultationInfo.email}
-              onChange={handleChange}
-              placeholder="john20@gmail.com"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">contact Number</Label>
-            <PhoneInput
-              countryCodeEditable={false}
-              layout="second"
-              country="us"
-              inputProps={{
-                name: "contactNumber",
-                required: true,
-                autoFocus: true,
-              }}
-              placeholder="+1 (123) 456-7890"
-              value={consultationInfo.contactNumber}
-              onChange={(phone) =>
-                setConsultationInfo((prev) => {
-                  return {
-                    ...prev,
-                    contactNumber: phone,
-                  };
-                })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">whatsApp Number</Label>
-            <PhoneInput
-              countryCodeEditable={false}
-              layout="second"
-              country="us"
-              inputProps={{
-                name: "whatsAppNumber",
-                required: true,
-                autoFocus: true,
-              }}
-              placeholder="+1 (123) 456-7890"
-              value={consultationInfo.whatsAppNumber}
-              onChange={(phone) =>
-                setConsultationInfo((prev) => {
-                  return {
-                    ...prev,
-                    whatsAppNumber: phone,
-                  };
-                })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">pick a date for consultation</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start">
-                  {consultationInfo.selectedDate ? (
-                    format(consultationInfo.selectedDate, "PPP")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-5 w-[320px]">
-                <DayPicker
-                  initialFocus
-                  disabled={(date) =>
-                    date < new Date() || date < new Date("1900-01-01")
-                  }
-                  mode="single"
-                  selected={consultationInfo.selectedDate}
-                  onSelect={(value) =>
-                    setConsultationInfo((prev) => {
-                      return {
-                        ...prev,
-                        selectedDate: value,
-                      };
-                    })
-                  }
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="time">Preferred Time</Label>
-            <Select
-              onValueChange={(value) =>
-                setConsultationInfo((prev) => {
-                  return {
-                    ...prev,
-                    selectedTime: value,
-                  };
-                })
-              }
-              name="selectedTime"
-              value={consultationInfo.selectedTime}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a time" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="9am">9:00 AM</SelectItem>
-                <SelectItem value="10am">10:00 AM</SelectItem>
-                <SelectItem value="11am">11:00 AM</SelectItem>
-                <SelectItem value="12pm">12:00 PM</SelectItem>
-                <SelectItem value="1pm">1:00 PM</SelectItem>
-                <SelectItem value="2pm">2:00 PM</SelectItem>
-                <SelectItem value="3pm">3:00 PM</SelectItem>
-                <SelectItem value="4pm">4:00 PM</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="description">Consultation Description</Label>
-            <Textarea
-              name="description"
-              value={consultationInfo.description}
-              onChange={handleChange}
-              placeholder="Briefly describe what you'd like to discuss during the consultation"
-              className="min-h-[50px]"
-            />
-          </div>
-        </CardContent>
-        <CardFooter>
-          <div className="flex flex-col w-[95%] mx-auto items-center pt-4 justify-start ">
-            <FormError message={error} />
-            <FormSuccess message={success} />
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="btn btn-submit items-center justify-center mx-auto lg:w-[50%] sm:w-[70%] py-6 px-9 ml-1 my-3 rounded-xl bg-black"
-            >
-              {isPending ? (
-                <div>
-                  <loadingSpinner /> Submitting...
-                </div>
-              ) : (
-                "Schedule Consultation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your full name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </Button>
-          </div>
-        </CardFooter>
-      </form>
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="john@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="space-y-2">
+              <Label>Contact Number</Label>
+              <PhoneInput
+                country="us"
+                value={form.watch("contactNumber")}
+                onChange={(phone) => form.setValue("contactNumber", phone)}
+                inputProps={{
+                  required: true,
+                  className: "w-full p-2 border rounded-md",
+                }}
+                containerClass="w-full"
+              />
+              {form.formState.errors.contactNumber && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.contactNumber.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>WhatsApp Number</Label>
+              <PhoneInput
+                country="us"
+                value={form.watch("whatsAppNumber")}
+                onChange={(phone) => form.setValue("whatsAppNumber", phone)}
+                inputProps={{
+                  required: true,
+                  className: "w-full p-2 border rounded-md",
+                }}
+                containerClass="w-full"
+              />
+              {form.formState.errors.whatsAppNumber && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.whatsAppNumber.message}
+                </p>
+              )}
+            </div>
+
+            <FormField
+              control={form.control}
+              name="selectedDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date < new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="selectedTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preferred Time</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a time" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => {
+                        const hour = i.toString().padStart(2, "0");
+                        return (
+                          <>
+                            <SelectItem value={`${hour}:00`}>{`${hour}:00`}</SelectItem>
+                            <SelectItem value={`${hour}:30`}>{`${hour}:30`}</SelectItem>
+                          </>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="consultationType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Consultation Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select consultation type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="study">Study</SelectItem>
+                      <SelectItem value="work">Work</SelectItem>
+                      <SelectItem value="general">General</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="preferredMode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preferred Mode</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select preferred mode" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="online">Online</SelectItem>
+                      <SelectItem value="in-person">In-Person</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="interestedCountries"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Interested Countries</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      const currentValues = field.value || [];
+                      if (!currentValues.includes(value)) {
+                        field.onChange([...currentValues, value]);
+                      }
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select countries" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="USA">USA</SelectItem>
+                      <SelectItem value="UK">UK</SelectItem>
+                      <SelectItem value="Canada">Canada</SelectItem>
+                      <SelectItem value="Australia">Australia</SelectItem>
+                      <SelectItem value="New Zealand">New Zealand</SelectItem>
+                      <SelectItem value="Germany">Germany</SelectItem>
+                      <SelectItem value="France">France</SelectItem>
+                      <SelectItem value="Ireland">Ireland</SelectItem>
+                      <SelectItem value="Netherlands">Netherlands</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {field.value?.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {field.value.map((country) => (
+                        <div
+                          key={country}
+                          className="bg-primary text-primary-foreground px-2 py-1 rounded-md flex items-center gap-2"
+                        >
+                          {country}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              field.onChange(
+                                field.value.filter((c) => c !== country)
+                              );
+                            }}
+                            className="text-xs hover:text-red-500"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Briefly describe what you'd like to discuss during the consultation"
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+
+          <CardFooter>
+            <div className="flex flex-col w-full items-center space-y-4">
+              <FormError message={error} />
+              <FormSuccess message={success} />
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full md:w-1/2 py-6"
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Submitting...</span>
+                  </div>
+                ) : (
+                  "Schedule Consultation"
+                )}
+              </Button>
+            </div>
+          </CardFooter>
+        </form>
+      </Form>
     </Card>
   );
 }

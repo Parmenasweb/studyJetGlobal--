@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -34,10 +35,14 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function ClientForm({ client }) {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const form = useForm({
     resolver: zodResolver(clientSchema),
     defaultValues: client || {
@@ -69,23 +74,47 @@ export function ClientForm({ client }) {
 
   async function onSubmit(data) {
     try {
+      setIsLoading(true);
+      setError(null);
+
+      // Format dates to ISO strings
+      const formattedData = {
+        ...data,
+        applicationDate: data.applicationDate.toISOString(),
+        studyDetails: data.studyDetails ? {
+          ...data.studyDetails,
+          startDate: data.studyDetails.startDate?.toISOString(),
+        } : undefined,
+      };
+
       if (client) {
-        await updateClient(client._id, data);
+        await updateClient(client._id, formattedData);
         toast.success("Client updated successfully");
       } else {
-        await createClient(data);
+        await createClient(formattedData);
         toast.success("Client created successfully");
       }
+
       router.push("/private/dashboard/students");
       router.refresh();
     } catch (error) {
-      toast.error(error.message);
+      console.error("Form submission error:", error);
+      setError(error.message || "Something went wrong");
+      toast.error(error.message || "Failed to save client");
+    } finally {
+      setIsLoading(false);
     }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Basic Information */}
           <FormField
@@ -95,7 +124,11 @@ export function ClientForm({ client }) {
               <FormItem>
                 <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" {...field} />
+                  <Input 
+                    placeholder="John Doe" 
+                    {...field} 
+                    disabled={isLoading}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -109,7 +142,11 @@ export function ClientForm({ client }) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="john@example.com" {...field} />
+                  <Input 
+                    placeholder="john@example.com" 
+                    {...field} 
+                    disabled={isLoading}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -123,7 +160,11 @@ export function ClientForm({ client }) {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="+1234567890" {...field} />
+                  <Input 
+                    placeholder="+1234567890" 
+                    {...field} 
+                    disabled={isLoading}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -139,6 +180,7 @@ export function ClientForm({ client }) {
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={isLoading}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -162,7 +204,11 @@ export function ClientForm({ client }) {
               <FormItem>
                 <FormLabel>Destination Country</FormLabel>
                 <FormControl>
-                  <Input placeholder="Canada" {...field} />
+                  <Input 
+                    placeholder="Canada" 
+                    {...field} 
+                    disabled={isLoading}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -178,6 +224,7 @@ export function ClientForm({ client }) {
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={isLoading}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -194,6 +241,47 @@ export function ClientForm({ client }) {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="applicationDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Application Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                        disabled={isLoading}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={isLoading}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         {/* Conditional Fields Based on Client Type */}
@@ -206,7 +294,11 @@ export function ClientForm({ client }) {
                 <FormItem>
                   <FormLabel>University</FormLabel>
                   <FormControl>
-                    <Input placeholder="University name" {...field} />
+                    <Input 
+                      placeholder="University name" 
+                      {...field} 
+                      disabled={isLoading}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -220,7 +312,11 @@ export function ClientForm({ client }) {
                 <FormItem>
                   <FormLabel>Course</FormLabel>
                   <FormControl>
-                    <Input placeholder="Course name" {...field} />
+                    <Input 
+                      placeholder="Course name" 
+                      {...field} 
+                      disabled={isLoading}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -236,6 +332,7 @@ export function ClientForm({ client }) {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={isLoading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -268,6 +365,7 @@ export function ClientForm({ client }) {
                             "w-full pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
+                          disabled={isLoading}
                         >
                           {field.value ? (
                             format(field.value, "PPP")
@@ -283,9 +381,7 @@ export function ClientForm({ client }) {
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date() || date < new Date("1900-01-01")
-                        }
+                        disabled={isLoading}
                         initialFocus
                       />
                     </PopoverContent>
@@ -306,7 +402,11 @@ export function ClientForm({ client }) {
                 <FormItem>
                   <FormLabel>Company</FormLabel>
                   <FormControl>
-                    <Input placeholder="Company name" {...field} />
+                    <Input 
+                      placeholder="Company name" 
+                      {...field} 
+                      disabled={isLoading}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -320,7 +420,11 @@ export function ClientForm({ client }) {
                 <FormItem>
                   <FormLabel>Job Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Job title" {...field} />
+                    <Input 
+                      placeholder="Job title" 
+                      {...field} 
+                      disabled={isLoading}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -334,7 +438,11 @@ export function ClientForm({ client }) {
                 <FormItem>
                   <FormLabel>Contract Duration</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., 12 months" {...field} />
+                    <Input 
+                      placeholder="e.g., 12 months" 
+                      {...field} 
+                      disabled={isLoading}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -350,9 +458,10 @@ export function ClientForm({ client }) {
                   <FormControl>
                     <Input
                       type="number"
-                      placeholder="50000"
+                      placeholder="0"
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -362,55 +471,56 @@ export function ClientForm({ client }) {
           </div>
         )}
 
-        {/* Common Fields */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="commissionAmount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Commission Amount</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="1000"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="commissionAmount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Commission Amount</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  disabled={isLoading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Additional notes about the client..."
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Additional notes..."
+                  {...field}
+                  disabled={isLoading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex gap-4">
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/private/dashboard/students")}
+            onClick={() => router.back()}
+            disabled={isLoading}
           >
             Cancel
           </Button>
-          <Button type="submit">
-            {client ? "Update Client" : "Create Client"}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {client ? "Update Client" : "Add Client"}
           </Button>
         </div>
       </form>

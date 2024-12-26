@@ -1,46 +1,65 @@
 "use client";
 
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowUpDown, MoreHorizontal, Eye, FileEdit, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
-// Status badge variants
 const statusVariants = {
-  pending: "warning",
-  processing: "secondary",
+  draft: "secondary",
+  submitted: "warning",
+  reviewing: "secondary",
+  documents_pending: "warning",
+  documents_submitted: "secondary",
+  visa_processing: "warning",
   approved: "success",
   rejected: "destructive",
+  deferred: "secondary",
+  withdrawn: "destructive",
+};
+
+const priorityVariants = {
+  low: "secondary",
+  medium: "warning",
+  high: "destructive",
+  urgent: "destructive",
 };
 
 export const columns = [
   {
-    accessorKey: "clientId.name",
+    accessorKey: "personalInfo.fullName",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Student Name
+          Applicant Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
   },
   {
-    accessorKey: "university",
-    header: "University",
-  },
-  {
-    accessorKey: "program",
-    header: "Program",
+    accessorKey: "applicationType",
+    header: "Type",
+    cell: ({ row }) => {
+      const type = row.getValue("applicationType");
+      return (
+        <Badge variant="outline">
+          {type.charAt(0).toUpperCase() + type.slice(1)}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "status",
@@ -48,19 +67,60 @@ export const columns = [
     cell: ({ row }) => {
       const status = row.getValue("status");
       return (
-        <Badge variant={statusVariants[status] || "secondary"}>
-          {status}
+        <Badge variant={statusVariants[status]}>
+          {status.split("_").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "priority",
+    header: "Priority",
+    cell: ({ row }) => {
+      const priority = row.getValue("priority");
+      return (
+        <Badge variant={priorityVariants[priority]}>
+          {priority.charAt(0).toUpperCase() + priority.slice(1)}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "progress",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Progress
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const progress = row.getValue("progress");
+      return (
+        <Badge variant="outline">
+          {progress}%
         </Badge>
       );
     },
   },
   {
     accessorKey: "submissionDate",
-    header: "Submitted",
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("submissionDate"));
-      return date.toLocaleDateString();
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Submitted
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
     },
+    cell: ({ row }) => format(new Date(row.getValue("submissionDate")), "PPP"),
   },
   {
     id: "actions",
@@ -77,21 +137,24 @@ export const columns = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                window.location.href = `/private/dashboard/applications/${application._id}`;
-              }}
-            >
-              View Details
+            <DropdownMenuItem asChild>
+              <Link href={`/private/dashboard/applications/${application._id}`}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                window.location.href = `/private/dashboard/applications/${application._id}/edit`;
-              }}
-            >
-              Edit
+            <DropdownMenuItem asChild>
+              <Link href={`/private/dashboard/applications/${application._id}/edit`}>
+                <FileEdit className="mr-2 h-4 w-4" />
+                Edit Application
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href={`/private/dashboard/applications/${application._id}/notes`}>
+                <MessageSquare className="mr-2 h-4 w-4" />
+                View Notes
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

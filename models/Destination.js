@@ -1,25 +1,79 @@
 import mongoose from "mongoose";
 
+const scholarshipSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  amount: { type: Number, required: true },
+  description: String,
+  criteria: String,
+  deadline: Date,
+  type: {
+    type: String,
+    enum: ['merit', 'need-based', 'research', 'sports', 'cultural', 'other'],
+    default: 'merit'
+  },
+  coverage: {
+    type: String,
+    enum: ['full', 'partial', 'specific'],
+    default: 'partial'
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'upcoming'],
+    default: 'active'
+  },
+  applicationProcess: String,
+  requiredDocuments: [String],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
 const programSchema = new mongoose.Schema({
   name: { type: String, required: true },
   level: { type: String, required: true },
   duration: { type: String, required: true },
   tuitionFee: { type: Number, required: true },
   description: String,
+  intakes: [String],
+  requirements: [String],
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
+  }
 });
 
 const universitySchema = new mongoose.Schema({
   name: { type: String, required: true },
   location: { type: String, required: true },
+  type: {
+    type: String,
+    enum: ['public', 'private'],
+    required: true
+  },
   ranking: Number,
+  description: String,
+  website: String,
+  contactEmail: String,
+  contactPhone: String,
   programs: [programSchema],
-});
-
-const scholarshipSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  amount: { type: Number, required: true },
-  criteria: String,
-  deadline: Date,
+  scholarships: [scholarshipSchema],
+  facilities: [String],
+  images: [{
+    url: String,
+    caption: String
+  }],
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
+  },
+  partnershipDetails: {
+    startDate: Date,
+    endDate: Date,
+    agreementFile: String,
+    commissionRate: Number,
+    notes: String
+  }
 });
 
 const destinationSchema = new mongoose.Schema(
@@ -30,48 +84,51 @@ const destinationSchema = new mongoose.Schema(
       unique: true,
       trim: true 
     },
-    countryCode: { 
-      type: String, 
-      required: true, 
-      uppercase: true,
-      length: 2 
+    countryCode: {
+      type: String,
+      required: true,
+      length: 2
     },
-    capital: { 
-      type: String, 
-      required: true 
+    capital: {
+      type: String,
+      required: true
     },
-    description: { 
-      type: String, 
-      required: true 
+    description: {
+      type: String,
+      required: true
     },
     quickFacts: {
-      population: { type: String },
-      language: { type: String },
-      currency: { type: String },
-      internationalStudents: { type: String },
-      averageCostOfLiving: { type: Number },
-      climateInfo: { type: String }
+      population: String,
+      language: String,
+      currency: String,
+      internationalStudents: String,
+      averageCostOfLiving: Number,
+      climateInfo: String,
+      timeZone: String,
+      visaProcessingTime: String
     },
     studyInfo: {
-      averageTuitionFee: { type: Number, required: true },
-      academicYear: { type: String },
+      averageTuitionFee: Number,
+      academicYear: String,
       majorCities: [String],
       popularPrograms: [String],
       admissionRequirements: [String],
-      visaRequirements: [String]
+      visaRequirements: [String],
+      workPermitInfo: String,
+      prEligibility: String
     },
     universities: [universitySchema],
-    scholarships: [scholarshipSchema],
     media: {
-      mainImage: { type: String, required: true },
-      flagImage: { type: String, required: true },
+      mainImage: String,
+      flagImage: String,
       galleryImages: [String],
       videoUrl: String
     },
     statistics: {
       studentSatisfactionRate: Number,
       employmentRate: Number,
-      internationalStudentRatio: Number
+      internationalStudentRatio: Number,
+      visaSuccessRate: Number
     },
     status: {
       type: String,
@@ -91,18 +148,28 @@ destinationSchema.virtual('totalUniversities').get(function() {
   return this.universities.length;
 });
 
-// Virtual for total number of scholarships
-destinationSchema.virtual('totalScholarships').get(function() {
-  return this.scholarships.length;
+// Virtual for total number of active universities
+destinationSchema.virtual('activeUniversities').get(function() {
+  return this.universities.filter(uni => uni.status === 'active').length;
 });
 
-// Index for efficient queries
+// Virtual for total number of scholarships across all universities
+destinationSchema.virtual('totalScholarships').get(function() {
+  return this.universities.reduce((total, uni) => total + uni.scholarships.length, 0);
+});
+
+// Virtual for total number of programs across all universities
+destinationSchema.virtual('totalPrograms').get(function() {
+  return this.universities.reduce((total, uni) => total + uni.programs.length, 0);
+});
+
+// Indexes for efficient queries
 destinationSchema.index({ name: 1, countryCode: 1 });
 destinationSchema.index({ status: 1 });
 destinationSchema.index({ 'universities.name': 1 });
+destinationSchema.index({ 'universities.status': 1 });
 
 const Destination = mongoose.models?.Destination || mongoose.model("Destination", destinationSchema);
 
 export default Destination;
-// export const User = mongoose.models?.User || mongoose.model("user", userSchema);5555
 

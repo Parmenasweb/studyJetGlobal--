@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { 
-  HeroSkeleton,
+  NavHeroSkeleton,
   StudyStepsSkeleton,
   ProgramsSkeleton,
   WhyUsSkeleton,
@@ -13,7 +13,7 @@ import {
 
 // Dynamic imports with loading optimization
 const HeroSection = dynamic(() => import("./components/HeroSection"), {
-  loading: () => <HeroSkeleton />
+  loading: () => <NavHeroSkeleton />
 });
 const StudySteps = dynamic(() => import("@/components/homepagecomps/study-steps"), {
   loading: () => <StudyStepsSkeleton />
@@ -37,10 +37,10 @@ const Footer = dynamic(() => import("@/components/homepagecomps/Footer"));
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen overflow-x-hidden">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-[1440px]">
-        <div className="flex flex-col gap-12 sm:gap-16 md:gap-20 lg:gap-24 py-4 sm:py-6 md:py-8">
-          <Suspense fallback={<HeroSkeleton />}>
+    // <main className=" min-h-screen overflow-x-hidden">
+      // <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div className=" w-[98%] mx-auto flex-col gap-12 sm:gap-16 md:gap-20 lg:gap-24 py-1 sm:py-2 md:py-4"> 
+          <Suspense fallback={<NavHeroSkeleton />}>
             <HeroSection />
           </Suspense>
           
@@ -71,8 +71,8 @@ export default function Home() {
           <Suspense fallback={<div className="animate-pulse h-40 bg-gray-100" />}>
             <Footer />
           </Suspense>
-        </div>
+        {/* </div> */}
       </div>
-    </main>
+    // </main>
   );
 }

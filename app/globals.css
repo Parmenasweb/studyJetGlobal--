@@ -99,3 +99,27 @@
     background-position: 0% 50%;
   }
 }
+
+/* Required field indicator */
+.required::after {
+  content: "*";
+  color: hsl(var(--destructive));
+  margin-left: 4px;
+}
+
+/* Form validation styles */
+.form-item-error {
+  @apply border-destructive focus:ring-destructive;
+}
+
+.form-message-error {
+  @apply text-destructive text-sm mt-1;
+}
+
+.form-item-success {
+  @apply border-green-500 focus:ring-green-500;
+}
+
+.form-message-success {
+  @apply text-green-500 text-sm mt-1;
+}

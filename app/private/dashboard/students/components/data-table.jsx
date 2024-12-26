@@ -1,12 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-
+import React, { useState } from "react"
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
@@ -18,17 +13,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ArrowUpDown, MoreHorizontal, PlusCircle } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { ExclamationTriangleIcon, EnvelopeClosedIcon } from "@radix-ui/react-icons"
-
-import {
   Table,
   TableBody,
   TableCell,
@@ -36,15 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Award } from "lucide-react"
 
-export function DataTable({ data = [], columns }) {
+export function DataTable({ data = [], columns, searchKey = "name" }) {
   const [sorting, setSorting] = useState([])
   const [columnFilters, setColumnFilters] = useState([])
-  const router = useRouter()
-
-  useEffect(() => {
-    console.log("DataTable mounted with data:", data)
-  }, [data])
 
   const table = useReactTable({
     data,
@@ -70,14 +50,11 @@ export function DataTable({ data = [], columns }) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center rounded-md border border-dashed p-8 text-center animate-in fade-in-50">
         <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
-          <EnvelopeClosedIcon className="h-10 w-10 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-semibold">No clients found</h3>
+          <Award className="h-10 w-10 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-semibold">No scholarships found</h3>
           <p className="mb-4 mt-2 text-sm text-muted-foreground">
-            You haven&apos;t added any clients yet. Add one to get started.
+            No scholarships have been added yet.
           </p>
-          <Button onClick={() => router.push("/private/dashboard/students/new")}>
-            Add Client
-          </Button>
         </div>
       </div>
     );
@@ -85,19 +62,15 @@ export function DataTable({ data = [], columns }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between py-4">
+      <div className="flex items-center py-4">
         <Input
-          placeholder="Filter by name..."
-          value={(table.getColumn("name")?.getFilterValue()) ?? ""}
+          placeholder="Filter scholarships..."
+          value={(table.getColumn(searchKey)?.getFilterValue()) ?? ""}
           onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
+            table.getColumn(searchKey)?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
-        <Button onClick={() => router.push("/private/dashboard/students/new")}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Client
-        </Button>
       </div>
       <div className="rounded-md border">
         <Table>

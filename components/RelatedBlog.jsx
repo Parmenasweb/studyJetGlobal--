@@ -9,14 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { HeartIcon } from "lucide-react";
 
-// interface BlogPost {
-//   id: string
-//   title: string
-//   image: string
-//   excerpt: string
-//   date: string
-//   likes: number
-// }
+
 
 const blogPosts = [
   {
