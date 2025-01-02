@@ -1,35 +1,35 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { connectToDB } from "@/lib/db";
+import connectDB from "@/lib/db";
 import Application from "@/models/Application";
 import { auth } from "@/auth";
 
 // Get all applications with filtering and pagination
 export async function getApplications(query = {}, options = {}) {
   try {
-    await connectToDB();
-    
+    await connectDB();
+
     const {
       page = 1,
       limit = 10,
-      sortBy = 'submissionDate',
-      sortOrder = 'desc',
+      sortBy = "submissionDate",
+      sortOrder = "desc",
       status,
       applicationType,
       priority,
       assignedTo,
       startDate,
-      endDate
+      endDate,
     } = options;
 
     const filter = { ...query };
-    
+
     if (status) filter.status = status;
     if (applicationType) filter.applicationType = applicationType;
     if (priority) filter.priority = priority;
     if (assignedTo) filter.assignedTo = assignedTo;
-    
+
     if (startDate || endDate) {
       filter.submissionDate = {};
       if (startDate) filter.submissionDate.$gte = new Date(startDate);
@@ -37,16 +37,16 @@ export async function getApplications(query = {}, options = {}) {
     }
 
     const skip = (page - 1) * limit;
-    const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+    const sortOptions = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
     const [applications, total] = await Promise.all([
       Application.find(filter)
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
-        .populate('clientId', 'name email phone')
-        .populate('assignedTo', 'firstName lastName email'),
-      Application.countDocuments(filter)
+        .populate("clientId", "name email phone")
+        .populate("assignedTo", "firstName lastName email"),
+      Application.countDocuments(filter),
     ]);
 
     return {
@@ -55,8 +55,8 @@ export async function getApplications(query = {}, options = {}) {
         total,
         pages: Math.ceil(total / limit),
         page,
-        limit
-      }
+        limit,
+      },
     };
   } catch (error) {
     return { error: "Failed to fetch applications" };
@@ -66,11 +66,11 @@ export async function getApplications(query = {}, options = {}) {
 // Get single application by ID
 export async function getApplication(id) {
   try {
-    await connectToDB();
+    await connectDB();
     const application = await Application.findById(id)
-      .populate('clientId', 'name email phone')
-      .populate('assignedTo', 'firstName lastName email')
-      .populate('reviewedBy', 'firstName lastName email');
+      .populate("clientId", "name email phone")
+      .populate("assignedTo", "firstName lastName email")
+      .populate("reviewedBy", "firstName lastName email");
 
     if (!application) {
       return { error: "Application not found" };
@@ -90,18 +90,20 @@ export async function createApplication(data) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
-    
+    await connectDB();
+
     // Add initial timeline event
-    data.timeline = [{
-      title: "Application Created",
-      description: "Application has been created and saved as draft",
-      status: "draft",
-      updatedBy: session.user.email
-    }];
+    data.timeline = [
+      {
+        title: "Application Created",
+        description: "Application has been created and saved as draft",
+        status: "draft",
+        updatedBy: session.user.email,
+      },
+    ];
 
     const application = await Application.create(data);
-    
+
     revalidatePath("/private/dashboard/applications");
     return { data: application };
   } catch (error) {
@@ -117,7 +119,7 @@ export async function updateApplication(id, data) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
 
     // Add timeline event for status change if status is updated
     if (data.status) {
@@ -126,8 +128,8 @@ export async function updateApplication(id, data) {
           title: "Status Updated",
           description: `Application status changed to ${data.status}`,
           status: data.status,
-          updatedBy: session.user.email
-        }
+          updatedBy: session.user.email,
+        },
       };
     }
 
@@ -156,7 +158,7 @@ export async function deleteApplication(id) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const application = await Application.findByIdAndDelete(id);
 
     if (!application) {
@@ -178,7 +180,7 @@ export async function addApplicationDocument(id, document) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const application = await Application.findByIdAndUpdate(
       id,
       {
@@ -187,9 +189,9 @@ export async function addApplicationDocument(id, document) {
           timeline: {
             title: "Document Added",
             description: `New document "${document.name}" has been added`,
-            updatedBy: session.user.email
-          }
-        }
+            updatedBy: session.user.email,
+          },
+        },
       },
       { new: true }
     );
@@ -213,7 +215,7 @@ export async function updateDocumentStatus(id, documentId, status) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const application = await Application.findOneAndUpdate(
       { _id: id, "documents._id": documentId },
       {
@@ -222,9 +224,9 @@ export async function updateDocumentStatus(id, documentId, status) {
           timeline: {
             title: "Document Status Updated",
             description: `Document status updated to ${status}`,
-            updatedBy: session.user.email
-          }
-        }
+            updatedBy: session.user.email,
+          },
+        },
       },
       { new: true }
     );
@@ -248,7 +250,7 @@ export async function addApplicationNote(id, content) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const application = await Application.findByIdAndUpdate(
       id,
       {
@@ -256,9 +258,9 @@ export async function addApplicationNote(id, content) {
           notes: {
             content,
             author: session.user.email,
-            createdAt: new Date()
-          }
-        }
+            createdAt: new Date(),
+          },
+        },
       },
       { new: true }
     );
@@ -282,7 +284,7 @@ export async function assignApplication(id, userId) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const application = await Application.findByIdAndUpdate(
       id,
       {
@@ -291,9 +293,9 @@ export async function assignApplication(id, userId) {
           timeline: {
             title: "Application Assigned",
             description: "Application has been assigned to a new user",
-            updatedBy: session.user.email
-          }
-        }
+            updatedBy: session.user.email,
+          },
+        },
       },
       { new: true }
     );
@@ -317,7 +319,7 @@ export async function updateApplicationProgress(id, progress) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const application = await Application.findByIdAndUpdate(
       id,
       {
@@ -326,9 +328,9 @@ export async function updateApplicationProgress(id, progress) {
           timeline: {
             title: "Progress Updated",
             description: `Application progress updated to ${progress}%`,
-            updatedBy: session.user.email
-          }
-        }
+            updatedBy: session.user.email,
+          },
+        },
       },
       { new: true }
     );
@@ -342,4 +344,4 @@ export async function updateApplicationProgress(id, progress) {
   } catch (error) {
     return { error: "Failed to update progress" };
   }
-} 
+}

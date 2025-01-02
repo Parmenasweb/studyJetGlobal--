@@ -1,18 +1,74 @@
-"use client";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { SideNavbar } from "./components/nav";
+import {
+  Users,
+  GraduationCap,
+  Clock,
+  DollarSign,
+  Settings,
+  FileText,
+  BookOpen,
+} from "lucide-react";
 
-import SideNavbar from "./components/SideNavbar";
+export default async function DashboardLayout({ children }) {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/auth/login");
+  }
 
-export default function DashboardLayout({ children }) {
+  const isAdmin = session.user.role === "admin";
+
+  // Base navigation links available to all users
+  const baseLinks = [
+    {
+      title: "Overview",
+      href: "/private/dashboard",
+      icon: BookOpen,
+    },
+    {
+      title: "Students",
+      href: "/private/dashboard/students",
+      icon: Users,
+    },
+    {
+      title: "Applications",
+      href: "/private/dashboard/applications",
+      icon: GraduationCap,
+    },
+    {
+      title: "Deadlines",
+      href: "/private/dashboard/deadlines",
+      icon: Clock,
+    },
+    {
+      title: "Blogs",
+      href: "/private/dashboard/blogs",
+      icon: FileText,
+    },
+  ];
+
+  // Admin-only links
+  const adminLinks = [
+    {
+      title: "Finances",
+      href: "/private/dashboard/finances",
+      icon: DollarSign,
+    },
+    {
+      title: "Settings",
+      href: "/private/dashboard/settings",
+      icon: Settings,
+    },
+  ];
+
+  // Combine links based on user role
+  const links = isAdmin ? [...baseLinks, ...adminLinks] : baseLinks;
+
   return (
-    <div className="h-full">
-      <div className="fixed inset-y-0 z-50 h-full flex-col md:flex">
-        <SideNavbar />
-      </div>
-      <main className="md:pl-72 h-full">
-        <div className="h-full overflow-y-auto">
-          {children}
-        </div>
-      </main>
+    <div className="flex h-screen overflow-hidden">
+      <SideNavbar links={links} />
+      <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   );
 }

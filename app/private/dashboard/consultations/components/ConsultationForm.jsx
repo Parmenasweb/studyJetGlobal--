@@ -18,7 +18,11 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { consultationSchema } from "@/lib/validations/consultation";
@@ -26,11 +30,33 @@ import FormError from "@/components/dynamicComps/form-error";
 import FormSuccess from "@/components/dynamicComps/form-success";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { useToast } from "@/components/ui/use-toast";
+
+const timeSlots = Array.from({ length: 24 }, (_, i) => {
+  const hour = i.toString().padStart(2, "0");
+  return [
+    { value: `${hour}:00`, label: `${hour}:00` },
+    { value: `${hour}:30`, label: `${hour}:30` },
+  ];
+}).flat();
+
+const countries = [
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "New Zealand",
+  "Ireland",
+  "Germany",
+  "France",
+  "Spain",
+  "Italy",
+  // Add more countries as needed
+];
 
 export default function ConsultationForm({ initialData }) {
   const router = useRouter();
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm({
@@ -51,15 +77,12 @@ export default function ConsultationForm({ initialData }) {
   });
 
   const onSubmit = async (data) => {
-    setError("");
-    setSuccess("");
     setIsLoading(true);
-
     try {
-      const url = initialData 
+      const url = initialData
         ? `/api/consultations/${initialData._id}`
         : "/api/consultations";
-      
+
       const method = initialData ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -75,10 +98,21 @@ export default function ConsultationForm({ initialData }) {
         throw new Error(error.message || "Failed to save consultation");
       }
 
+      toast({
+        title: initialData ? "Consultation Updated" : "Consultation Created",
+        description: initialData
+          ? "The consultation has been updated successfully."
+          : "A new consultation has been created successfully.",
+      });
+
       router.push("/private/dashboard/consultations");
       router.refresh();
     } catch (error) {
-      setError(error.message || "Something went wrong");
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -94,8 +128,13 @@ export default function ConsultationForm({ initialData }) {
               <Input
                 id="consulteeName"
                 {...form.register("consulteeName")}
-                error={form.formState.errors.consulteeName?.message}
+                disabled={isLoading}
               />
+              {form.formState.errors.consulteeName && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.consulteeName.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -104,8 +143,13 @@ export default function ConsultationForm({ initialData }) {
                 id="email"
                 type="email"
                 {...form.register("email")}
-                error={form.formState.errors.email?.message}
+                disabled={isLoading}
               />
+              {form.formState.errors.email && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.email.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -114,6 +158,7 @@ export default function ConsultationForm({ initialData }) {
                 country="us"
                 value={form.watch("contactNumber")}
                 onChange={(phone) => form.setValue("contactNumber", phone)}
+                disabled={isLoading}
                 inputProps={{
                   required: true,
                   className: "w-full p-2 border rounded-md",
@@ -133,6 +178,7 @@ export default function ConsultationForm({ initialData }) {
                 country="us"
                 value={form.watch("whatsAppNumber")}
                 onChange={(phone) => form.setValue("whatsAppNumber", phone)}
+                disabled={isLoading}
                 inputProps={{
                   required: true,
                   className: "w-full p-2 border rounded-md",
@@ -156,6 +202,7 @@ export default function ConsultationForm({ initialData }) {
                       "w-full justify-start text-left font-normal",
                       !form.watch("selectedDate") && "text-muted-foreground"
                     )}
+                    disabled={isLoading}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {form.watch("selectedDate") ? (
@@ -189,20 +236,17 @@ export default function ConsultationForm({ initialData }) {
               <Select
                 value={form.watch("selectedTime")}
                 onValueChange={(value) => form.setValue("selectedTime", value)}
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 24 }, (_, i) => {
-                    const hour = i.toString().padStart(2, "0");
-                    return (
-                      <>
-                        <SelectItem value={`${hour}:00`}>{`${hour}:00`}</SelectItem>
-                        <SelectItem value={`${hour}:30`}>{`${hour}:30`}</SelectItem>
-                      </>
-                    );
-                  })}
+                  {timeSlots.map((slot) => (
+                    <SelectItem key={slot.value} value={slot.value}>
+                      {slot.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {form.formState.errors.selectedTime && (
@@ -216,7 +260,10 @@ export default function ConsultationForm({ initialData }) {
               <Label>Consultation Type</Label>
               <Select
                 value={form.watch("consultationType")}
-                onValueChange={(value) => form.setValue("consultationType", value)}
+                onValueChange={(value) =>
+                  form.setValue("consultationType", value)
+                }
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
@@ -239,6 +286,7 @@ export default function ConsultationForm({ initialData }) {
               <Select
                 value={form.watch("preferredMode")}
                 onValueChange={(value) => form.setValue("preferredMode", value)}
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select mode" />
@@ -255,61 +303,66 @@ export default function ConsultationForm({ initialData }) {
               )}
             </div>
 
-            {initialData && (
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select
-                  value={form.watch("status")}
-                  onValueChange={(value) => form.setValue("status", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-                {form.formState.errors.status && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.status.message}
-                  </p>
-                )}
-              </div>
-            )}
+            <div className="space-y-2 col-span-2">
+              <Label>Interested Countries</Label>
+              <Select
+                value={form.watch("interestedCountries")}
+                onValueChange={(value) =>
+                  form.setValue("interestedCountries", [value])
+                }
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select countries" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.interestedCountries && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.interestedCountries.message}
+                </p>
+              )}
+            </div>
 
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2 col-span-2">
               <Label>Description</Label>
               <Textarea
                 {...form.register("description")}
-                rows={4}
-                error={form.formState.errors.description?.message}
+                disabled={isLoading}
+                className="min-h-[100px]"
+                placeholder="Please provide details about your consultation request..."
               />
+              {form.formState.errors.description && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.description.message}
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col items-center space-y-4">
-            <FormError message={error} />
-            <FormSuccess message={success} />
+          <div className="mt-6 flex justify-end">
             <Button
-              type="submit"
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              className="mr-2"
               disabled={isLoading}
-              className="w-full md:w-1/2"
             >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Saving...</span>
-                </div>
-              ) : (
-                <span>{initialData ? "Update" : "Create"} Consultation</span>
-              )}
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {initialData ? "Update" : "Create"} Consultation
             </Button>
           </div>
         </CardContent>
       </Card>
     </form>
   );
-} 
+}

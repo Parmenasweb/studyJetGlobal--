@@ -1,144 +1,136 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { connectToDB } from "@/lib/db";
+import connectDB from "@/lib/db";
 import Consultation from "@/models/consultationForm";
-import { auth } from "@/auth";
 
-export async function getConsultations(query = {}) {
+export async function getConsultations() {
   try {
-    await connectToDB();
-    const consultations = await Consultation.find(query)
-      .sort({ selectedDate: 1, selectedTime: 1 });
-    return { data: consultations };
+    await connectDB();
+    const consultations = await Consultation.find()
+      .sort({ createdAt: -1 })
+      .populate("assignedTo", "firstName lastName email")
+      .populate("notes.author", "firstName lastName");
+
+    return [consultations, null];
   } catch (error) {
-    return { error: "Failed to fetch consultations" };
+    console.error("Error fetching consultations:", error);
+    return [null, "Failed to fetch consultations"];
   }
 }
 
-export async function getConsultation(id) {
+export async function getConsultationById(id) {
   try {
-    await connectToDB();
-    const consultation = await Consultation.findById(id);
+    await connectDB();
+    const consultation = await Consultation.findById(id)
+      .populate("assignedTo", "firstName lastName email")
+      .populate("notes.author", "firstName lastName");
+
     if (!consultation) {
-      return { error: "Consultation not found" };
+      throw new Error("Consultation not found");
     }
-    return { data: consultation };
+
+    return [consultation, null];
   } catch (error) {
-    return { error: "Failed to fetch consultation" };
+    console.error("Error fetching consultation:", error);
+    return [null, "Failed to fetch consultation"];
   }
 }
 
 export async function createConsultation(data) {
   try {
-    await connectToDB();
+    await connectDB();
     const consultation = await Consultation.create(data);
     revalidatePath("/private/dashboard/consultations");
-    return { data: consultation };
+    return [consultation, null];
   } catch (error) {
-    return { error: "Failed to create consultation" };
+    console.error("Error creating consultation:", error);
+    return [null, "Failed to create consultation"];
   }
 }
 
 export async function updateConsultation(id, data) {
   try {
-    await connectToDB();
+    await connectDB();
     const consultation = await Consultation.findByIdAndUpdate(
       id,
-      { $set: data },
-      { new: true, runValidators: true }
-    );
-    
+      { ...data },
+      { new: true }
+    )
+      .populate("assignedTo", "firstName lastName email")
+      .populate("notes.author", "firstName lastName");
+
     if (!consultation) {
-      return { error: "Consultation not found" };
+      throw new Error("Consultation not found");
     }
-    
+
     revalidatePath("/private/dashboard/consultations");
-    return { data: consultation };
+    return [consultation, null];
   } catch (error) {
-    return { error: "Failed to update consultation" };
+    console.error("Error updating consultation:", error);
+    return [null, "Failed to update consultation"];
   }
 }
 
 export async function deleteConsultation(id) {
   try {
-    await connectToDB();
+    await connectDB();
     const consultation = await Consultation.findByIdAndDelete(id);
-    
+
     if (!consultation) {
-      return { error: "Consultation not found" };
+      throw new Error("Consultation not found");
     }
-    
+
     revalidatePath("/private/dashboard/consultations");
-    return { success: true };
+    return [true, null];
   } catch (error) {
-    return { error: "Failed to delete consultation" };
+    console.error("Error deleting consultation:", error);
+    return [null, "Failed to delete consultation"];
   }
 }
 
 export async function addConsultationNote(id, note) {
   try {
-    const session = await auth();
-    if (!session) {
-      return { error: "Unauthorized" };
-    }
-
-    await connectToDB();
+    await connectDB();
     const consultation = await Consultation.findByIdAndUpdate(
       id,
-      {
-        $push: {
-          notes: {
-            content: note,
-            author: session.user.email,
-            createdAt: new Date()
-          }
-        }
-      },
+      { $push: { notes: note } },
       { new: true }
-    );
-    
+    )
+      .populate("assignedTo", "firstName lastName email")
+      .populate("notes.author", "firstName lastName");
+
     if (!consultation) {
-      return { error: "Consultation not found" };
+      throw new Error("Consultation not found");
     }
-    
+
     revalidatePath("/private/dashboard/consultations");
-    return { data: consultation };
+    return [consultation, null];
   } catch (error) {
-    return { error: "Failed to add note" };
+    console.error("Error adding note:", error);
+    return [null, "Failed to add note"];
   }
 }
 
 export async function updateConsultationStatus(id, status) {
   try {
-    const session = await auth();
-    if (!session) {
-      return { error: "Unauthorized" };
-    }
-
-    await connectToDB();
+    await connectDB();
     const consultation = await Consultation.findByIdAndUpdate(
       id,
-      { 
-        status,
-        $push: {
-          notes: {
-            content: `Status updated to ${status}`,
-            author: session.user.email,
-            createdAt: new Date()
-          }
-        }
-      },
+      { status },
       { new: true }
-    );
-    
+    )
+      .populate("assignedTo", "firstName lastName email")
+      .populate("notes.author", "firstName lastName");
+
     if (!consultation) {
-      return { error: "Consultation not found" };
+      throw new Error("Consultation not found");
     }
-    
+
     revalidatePath("/private/dashboard/consultations");
-    return { data: consultation };
+    return [consultation, null];
   } catch (error) {
-    return { error: "Failed to update status" };
+    console.error("Error updating status:", error);
+    return [null, "Failed to update status"];
   }
-} 
+}

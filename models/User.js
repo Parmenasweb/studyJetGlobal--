@@ -11,9 +11,19 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
     password: { type: String, required: true },
-    role: { type: String, default: "user" },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      required: true,
+    },
     image: { type: String },
     authProviderId: { type: String },
+    lastLogin: { type: Date },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

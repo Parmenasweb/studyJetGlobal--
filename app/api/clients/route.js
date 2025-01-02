@@ -1,102 +1,223 @@
 import { NextResponse } from "next/server";
+import connectDB from "@/lib/db";
+import { Client } from "@/models/Client";
+import { Application } from "@/models/Application";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/db";
-import Client from "@/models/Client";
 
-export async function GET(req) {
+// Helper function to check if an application is completed
+function isApplicationCompleted(application) {
+  return (
+    application.status === "approved" &&
+    application.studyDetails?.university &&
+    application.studyDetails?.program
+  );
+}
+
+export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
-
-    // Get query parameters for filtering
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page")) || 1;
-    const limit = parseInt(searchParams.get("limit")) || 10;
-    const status = searchParams.get("status");
-    const clientType = searchParams.get("clientType");
-    const search = searchParams.get("search");
-
-    // Build query
+    const { searchParams } = new URL(request.url);
     const query = {};
-    if (status) query.status = status;
-    if (clientType) query.clientType = clientType;
+
+    // Handle search and filtering
+    const search = searchParams.get("search");
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { destination: { $regex: search, $options: "i" } },
+      query["$or"] = [
+        { "personalInfo.fullName": { $regex: search, $options: "i" } },
+        { "personalInfo.email": { $regex: search, $options: "i" } },
+        { "academicInfo.studentId": { $regex: search, $options: "i" } },
       ];
     }
 
-    // Calculate pagination
-    const skip = (page - 1) * limit;
+    const status = searchParams.get("status");
+    if (status) {
+      query.status = status;
+    }
 
-    // Get total count for pagination
-    const total = await Client.countDocuments(query);
+    const advisor = searchParams.get("advisor");
+    if (advisor) {
+      query.assignedAdvisor = advisor;
+    }
 
-    // Get clients with pagination
+    await connectDB();
     const clients = await Client.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .populate("applicationId", "applicationType status")
+      .populate("assignedAdvisor", "name email")
+      .sort({ createdAt: -1 });
 
-    return NextResponse.json({
-      clients,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      },
-    });
+    return NextResponse.json(clients);
   } catch (error) {
-    console.error("Error in GET /api/clients:", error);
+    console.error("Error fetching clients:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch clients" },
       { status: 500 }
     );
   }
 }
 
-export async function POST(req) {
+export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await req.json();
+    const data = await request.json();
 
-    await dbConnect();
-
-    // Check if client with same email already exists
-    const existingClient = await Client.findOne({ email: data.email });
-    if (existingClient) {
+    // Validate required fields
+    if (!data.applicationId) {
       return NextResponse.json(
-        { error: "Client with this email already exists" },
+        { error: "Application ID is required" },
         { status: 400 }
       );
     }
 
-    const client = await Client.create(data);
+    await connectDB();
 
-    return NextResponse.json(client, { status: 201 });
+    // Check if application exists and is completed
+    const application = await Application.findById(data.applicationId);
+    if (!application) {
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 }
+      );
+    }
+
+    if (!isApplicationCompleted(application)) {
+      return NextResponse.json(
+        { error: "Application is not completed" },
+        { status: 400 }
+      );
+    }
+
+    // Check if client already exists for this application
+    const existingClient = await Client.findOne({
+      applicationId: data.applicationId,
+    });
+    if (existingClient) {
+      return NextResponse.json(
+        { error: "Client already exists for this application" },
+        { status: 400 }
+      );
+    }
+
+    // Create client with application data
+    const clientData = {
+      ...data,
+      personalInfo: {
+        ...application.personalInfo,
+      },
+      academicInfo: {
+        university: {
+          name: application.studyDetails.university,
+          country: application.studyDetails.destinationCountry,
+          city: application.studyDetails.destinationCity,
+        },
+        program: {
+          name: application.studyDetails.program,
+          level: application.studyDetails.programLevel,
+          duration: application.studyDetails.duration,
+        },
+      },
+      status: "active",
+    };
+
+    const client = new Client(clientData);
+    await client.save();
+
+    return NextResponse.json({
+      message: "Client created successfully",
+      client,
+    });
   } catch (error) {
-    console.error("Error in POST /api/clients:", error);
+    console.error("Error creating client:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: "Failed to create client",
+        details: error.message,
+      },
       { status: 500 }
     );
   }
-} 
+}
+
+export async function PUT(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "Client ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const data = await request.json();
+    await connectDB();
+
+    const client = await Client.findById(id);
+    if (!client) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    // Update client data
+    Object.assign(client, data);
+    await client.save();
+
+    return NextResponse.json({
+      message: "Client updated successfully",
+      client,
+    });
+  } catch (error) {
+    console.error("Error updating client:", error);
+    return NextResponse.json(
+      { error: "Failed to update client" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "Client ID is required" },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+    const client = await Client.findByIdAndDelete(id);
+
+    if (!client) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      message: "Client deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting client:", error);
+    return NextResponse.json(
+      { error: "Failed to delete client" },
+      { status: 500 }
+    );
+  }
+}

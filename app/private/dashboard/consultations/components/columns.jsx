@@ -1,7 +1,15 @@
 "use client";
 
 import { format } from "date-fns";
-import { ArrowUpDown, MoreHorizontal, Eye, FileEdit, Trash2, MessageSquare } from "lucide-react";
+import {
+  ArrowUpDown,
+  MoreHorizontal,
+  Eye,
+  FileEdit,
+  Trash2,
+  MessageSquare,
+  UserPlus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +21,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { useState } from "react";
+import AssignStaffDialog from "./AssignStaffDialog";
 
 const statusVariants = {
   pending: "warning",
@@ -84,6 +94,18 @@ export const columns = [
     header: "Time",
   },
   {
+    accessorKey: "assignedTo",
+    header: "Assigned To",
+    cell: ({ row }) => {
+      const assignedTo = row.getValue("assignedTo");
+      return assignedTo ? (
+        <span>{`${assignedTo.firstName} ${assignedTo.lastName}`}</span>
+      ) : (
+        <span className="text-muted-foreground">Unassigned</span>
+      );
+    },
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
@@ -99,44 +121,68 @@ export const columns = [
     id: "actions",
     cell: ({ row }) => {
       const consultation = row.original;
+      const [showAssignDialog, setShowAssignDialog] = useState(false);
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem asChild>
-              <Link href={`/private/dashboard/consultations/${consultation._id}`}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Details
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href={`/private/dashboard/consultations/${consultation._id}/edit`}>
-                <FileEdit className="mr-2 h-4 w-4" />
-                Edit Consultation
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href={`/private/dashboard/consultations/${consultation._id}/notes`}>
-                <MessageSquare className="mr-2 h-4 w-4" />
-                View Notes
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Consultation
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link
+                  href={`/private/dashboard/consultations/${consultation._id}`}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
+                  href={`/private/dashboard/consultations/${consultation._id}/edit`}
+                >
+                  <FileEdit className="mr-2 h-4 w-4" />
+                  Edit Consultation
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShowAssignDialog(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Assign Staff
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
+                  href={`/private/dashboard/consultations/${consultation._id}/notes`}
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  View Notes
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Consultation
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <AssignStaffDialog
+            open={showAssignDialog}
+            onOpenChange={setShowAssignDialog}
+            consultation={consultation}
+            staffMembers={[
+              // TODO: Replace with actual staff members from API
+              { _id: "1", firstName: "John", lastName: "Doe" },
+              { _id: "2", firstName: "Jane", lastName: "Smith" },
+            ]}
+          />
+        </>
       );
     },
   },
-]; 
+];

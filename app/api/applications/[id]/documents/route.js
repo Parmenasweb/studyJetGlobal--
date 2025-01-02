@@ -1,166 +1,206 @@
 import { NextResponse } from "next/server";
-import { connectToDB } from "@/lib/db";
-import Application from "@/models/Application";
-import { auth } from "@/auth";
-import { handleError } from "@/middleware/error";
+import { connectToDatabase } from "@/lib/database";
+import { Application } from "@/models/Application";
+import { writeFile } from "fs/promises";
+import { join } from "path";
+import { v4 as uuidv4 } from "uuid";
 
-// GET application documents
-export async function GET(req, { params }) {
+export async function POST(request, { params }) {
   try {
-    const session = await auth();
-    if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    const applicationId = params.id;
+
+    if (!applicationId) {
+      return NextResponse.json(
+        { error: "Application ID is required" },
+        { status: 400 }
+      );
     }
 
-    await connectToDB();
-    const application = await Application.findById(params.id)
-      .select("documents")
-      .sort({ "documents.uploadDate": -1 });
+    const formData = await request.formData();
+    const file = formData.get("file");
 
-    if (!application) {
-      return new NextResponse("Application not found", { status: 404 });
+    if (!file) {
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    return NextResponse.json(application.documents);
-  } catch (error) {
-    return handleError(error);
-  }
-}
-
-// POST new document
-export async function POST(req, { params }) {
-  try {
-    const session = await auth();
-    if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const body = await req.json();
-    if (!body.name || !body.url || !body.type) {
-      return new NextResponse("Missing required document fields", { status: 400 });
-    }
-
-    await connectToDB();
-    const application = await Application.findByIdAndUpdate(
-      params.id,
-      {
-        $push: {
-          documents: {
-            ...body,
-            uploadDate: new Date(),
-            status: "pending"
-          },
-          timeline: {
-            title: "Document Added",
-            description: `New document "${body.name}" has been added`,
-            updatedBy: session.user.email,
-            date: new Date()
-          }
-        }
-      },
-      { new: true }
-    ).select("documents");
-
-    if (!application) {
-      return new NextResponse("Application not found", { status: 404 });
-    }
-
-    // Send notification about new document
-    // await sendDocumentNotification(application);
-
-    return NextResponse.json(application.documents);
-  } catch (error) {
-    return handleError(error);
-  }
-}
-
-// PATCH update document status
-export async function PATCH(req, { params }) {
-  try {
-    const session = await auth();
-    if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const { documentId, status, notes } = await req.json();
-    if (!documentId || !status) {
-      return new NextResponse("Document ID and status are required", { status: 400 });
-    }
-
-    await connectToDB();
-    const application = await Application.findOneAndUpdate(
-      { 
-        _id: params.id,
-        "documents._id": documentId
-      },
-      {
-        $set: {
-          "documents.$.status": status,
-          "documents.$.notes": notes
+    // Validate file type
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid file type. Only PDF, JPEG, and PNG files are allowed.",
         },
-        $push: {
-          timeline: {
-            title: "Document Status Updated",
-            description: `Document "${documentId}" status updated to ${status}`,
-            updatedBy: session.user.email,
-            date: new Date()
-          }
-        }
-      },
-      { new: true }
-    ).select("documents");
-
-    if (!application) {
-      return new NextResponse("Application or document not found", { status: 404 });
+        { status: 400 }
+      );
     }
 
-    // Send notification about document status update
-    // await sendDocumentStatusNotification(application, documentId, status);
+    // Validate file size (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { error: "File size exceeds 5MB limit" },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json(application.documents);
+    // Generate unique filename with timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const ext = file.type.split("/")[1];
+    const filename = `${timestamp}-${uuidv4()}.${ext}`;
+
+    // Create uploads directory if it doesn't exist
+    const uploadDir = join(process.cwd(), "public", "uploads");
+    try {
+      await writeFile(
+        join(uploadDir, filename),
+        Buffer.from(await file.arrayBuffer())
+      );
+    } catch (error) {
+      console.error("Error saving file:", error);
+      return NextResponse.json(
+        { error: "Failed to save file to storage" },
+        { status: 500 }
+      );
+    }
+
+    // Update application with document reference
+    await connectToDatabase();
+    const application = await Application.findById(applicationId);
+
+    if (!application) {
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 }
+      );
+    }
+
+    // Add document to application
+    if (!application.documents) {
+      application.documents = [];
+    }
+
+    const document = {
+      filename,
+      originalName: file.name,
+      type: file.type,
+      size: file.size,
+      uploadedAt: new Date(),
+    };
+
+    application.documents.push(document);
+
+    try {
+      await application.save();
+    } catch (error) {
+      console.error("Error saving document reference:", error);
+      return NextResponse.json(
+        { error: "Failed to save document reference" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      message: "Document uploaded successfully",
+      document,
+    });
   } catch (error) {
-    return handleError(error);
+    console.error("Error uploading document:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to upload document",
+        details: error.message,
+      },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE document
-export async function DELETE(req, { params }) {
+export async function GET(request, { params }) {
   try {
-    const session = await auth();
-    if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    const applicationId = params.id;
+
+    if (!applicationId) {
+      return NextResponse.json(
+        { error: "Application ID is required" },
+        { status: 400 }
+      );
     }
 
-    const { searchParams } = new URL(req.url);
-    const documentId = searchParams.get("documentId");
-    
-    if (!documentId) {
-      return new NextResponse("Document ID is required", { status: 400 });
-    }
-
-    await connectToDB();
-    const application = await Application.findByIdAndUpdate(
-      params.id,
-      {
-        $pull: { documents: { _id: documentId } },
-        $push: {
-          timeline: {
-            title: "Document Removed",
-            description: "A document has been removed from the application",
-            updatedBy: session.user.email,
-            date: new Date()
-          }
-        }
-      },
-      { new: true }
-    ).select("documents");
+    await connectToDatabase();
+    const application = await Application.findById(applicationId);
 
     if (!application) {
-      return new NextResponse("Application not found", { status: 404 });
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(application.documents);
+    return NextResponse.json(application.documents || []);
   } catch (error) {
-    return handleError(error);
+    console.error("Error fetching documents:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to fetch documents",
+        details: error.message,
+      },
+      { status: 500 }
+    );
   }
-} 
+}
+
+export async function DELETE(request, { params }) {
+  try {
+    const applicationId = params.id;
+    const { searchParams } = new URL(request.url);
+    const filename = searchParams.get("filename");
+
+    if (!applicationId || !filename) {
+      return NextResponse.json(
+        { error: "Application ID and filename are required" },
+        { status: 400 }
+      );
+    }
+
+    await connectToDatabase();
+    const application = await Application.findById(applicationId);
+
+    if (!application) {
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 }
+      );
+    }
+
+    // Remove document from application
+    if (application.documents) {
+      application.documents = application.documents.filter(
+        (doc) => doc.filename !== filename
+      );
+      await application.save();
+    }
+
+    // Delete file from disk
+    try {
+      const filePath = join(process.cwd(), "public", "uploads", filename);
+      await unlink(filePath);
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      // Continue even if file deletion fails
+    }
+
+    return NextResponse.json({
+      message: "Document deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting document:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to delete document",
+        details: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}

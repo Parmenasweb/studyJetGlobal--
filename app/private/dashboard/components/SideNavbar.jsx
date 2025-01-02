@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,7 +23,8 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const navItems = [
+// Base navigation items available to all users
+const baseNavItems = [
   {
     title: "Overview",
     href: "/private/dashboard",
@@ -54,11 +56,6 @@ const navItems = [
     icon: GraduationCap,
   },
   {
-    title: "Finances",
-    href: "/private/dashboard/finances",
-    icon: DollarSign,
-  },
-  {
     title: "Blogs",
     href: "/private/dashboard/blogs",
     icon: PenSquare,
@@ -67,6 +64,15 @@ const navItems = [
     title: "Deadlines",
     href: "/private/dashboard/deadlines",
     icon: Calendar,
+  },
+];
+
+// Admin-only navigation items
+const adminNavItems = [
+  {
+    title: "Finances",
+    href: "/private/dashboard/finances",
+    icon: DollarSign,
   },
   {
     title: "Settings",
@@ -78,12 +84,20 @@ const navItems = [
 export default function SideNavbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session } = useSession();
+
+  // Determine which nav items to show based on user role
+  const navItems =
+    session?.user?.role === "admin"
+      ? [...baseNavItems, ...adminNavItems]
+      : baseNavItems;
 
   const NavLinks = () => (
     <>
       {navItems.map((item) => {
         const Icon = item.icon;
-        const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+        const isActive =
+          pathname === item.href || pathname.startsWith(item.href + "/");
 
         return (
           <Link
@@ -92,7 +106,9 @@ export default function SideNavbar() {
             onClick={() => setIsOpen(false)}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
-              isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+              isActive
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground"
             )}
           >
             <Icon className="h-4 w-4" />
@@ -116,7 +132,10 @@ export default function SideNavbar() {
         <SheetContent side="left" className="w-[300px] p-0">
           <div className="flex h-full flex-col">
             <div className="flex h-14 items-center border-b px-6">
-              <Link href="/private/dashboard" className="flex items-center gap-2">
+              <Link
+                href="/private/dashboard"
+                className="flex items-center gap-2"
+              >
                 <GraduationCap className="h-6 w-6" />
                 <span className="font-bold">StudyJet Global</span>
               </Link>
