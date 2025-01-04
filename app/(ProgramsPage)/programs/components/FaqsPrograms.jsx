@@ -63,7 +63,7 @@ const FaqsPrograms = () => {
     {
       question: "Is a visa required for this program?",
       answer:
-        "For stays longer than 90 days, you will need to obtain a student visa. Our program staff will assist you with the visa application process after you're accepted into the program.",
+        "For stays longer than 90 days, you will need to obtain a student visa. Our program staff will assist you with the visa application process after you are accepted into the program.",
     },
   ];
   return (

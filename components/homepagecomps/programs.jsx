@@ -50,7 +50,7 @@ function EmptyState() {
         <Globe2 className="h-12 w-12 text-muted-foreground" />
         <CardTitle>No Destinations Available</CardTitle>
         <CardDescription>
-          We're currently updating our destination list. Please check back later.
+          We&apos;re currently updating our destination list. Please check back later.
         </CardDescription>
       </CardContent>
     </Card>

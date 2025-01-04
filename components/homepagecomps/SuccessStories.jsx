@@ -13,7 +13,7 @@ const testimonials = [
     university: "University of Toronto",
     program: "Masters in Data Science",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-    quote: "The guidance I received made my application process smooth and successful. I'm now pursuing my dream course in Canada!",
+    quote: "The guidance I received made my application process smooth and successful. I&apos;m now pursuing my dream course in Canada!",
     country: "Canada",
   },
   {
@@ -29,7 +29,7 @@ const testimonials = [
     university: "University College London",
     program: "MSc in Business Analytics",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya",
-    quote: "Their scholarship guidance helped me secure funding for my studies. I'm grateful for their expert support.",
+    quote: "Their scholarship guidance helped me secure funding for my studies. I&apos;m grateful for their expert support.",
     country: "UK",
   },
 ];
@@ -76,7 +76,7 @@ export default function SuccessStories() {
                       </Badge>
                     </div>
                     <Quote className="h-8 w-8 text-primary/20" />
-                    <p className="text-muted-foreground italic">"{testimonial.quote}"</p>
+                    <p className="text-muted-foreground italic">&quot;{testimonial.quote}&quot;</p>
                   </div>
                 </CardContent>
               </Card>
