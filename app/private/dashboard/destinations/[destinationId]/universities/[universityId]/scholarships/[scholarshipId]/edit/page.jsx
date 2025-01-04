@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import ScholarshipForm from "../../components/ScholarshipForm";
+import { ScholarshipForm } from "../../components/ScholarshipForm";
 import { getScholarship } from "@/actions/destination";
 import { LoadingPage } from "@/components/loading";
 import { ErrorPage } from "@/components/error";

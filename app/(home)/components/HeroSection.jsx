@@ -19,7 +19,7 @@ export default function HeroSection() {
           {/* Left Column - Content */}
           <div className="flex flex-col items-center sm:w-[90%] mx-auto md:items-start text-center sm:text-left lg:text-left space-y-8">
             {/* Announcement Badge */}
-            <Link href="/scholarship">
+            <Link href="/onBoarding/applicationForm">
               <Badge variant="secondary" className=" flex items-center gap-2 px-4 py-2 text-sm hover:bg-accent cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 <span className="text-primary">New:</span> 
                 2025 Scholarship Round Now Open
@@ -47,14 +47,14 @@ export default function HeroSection() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 w-[90%]  mx-auto justify-center lg:justify-start">
               <Button  asChild className="gap-2 w-[80%] ">
-                <Link href="/onboarding/consultation">
+                <Link href="/onBoarding/consultationForm">
                   Book Free Consultation
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
               <Button  variant="outline" asChild className="gap-2 w-[80%]">
-                <Link href="/scholarship">
-                  Explore Scholarships
+                <Link href="/onBoarding/applicationForm">
+                  Apply Now!
                   <GraduationCap className="w-4 h-4" />
                 </Link>
               </Button>

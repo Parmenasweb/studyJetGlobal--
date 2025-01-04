@@ -128,7 +128,7 @@ export default function ApplicationForm({
 
   const applicationType = form.watch("applicationType");
 
-  async function handleSubmit(data) {
+  async function handleFormSubmit(data) {
     try {
       // Format dates for API submission
       const formattedData = {
@@ -164,7 +164,7 @@ export default function ApplicationForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         {/* Application Type Selection */}
         <FormField
           control={form.control}
@@ -254,7 +254,7 @@ export default function ApplicationForm({
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="Enter your full name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -455,8 +455,8 @@ export default function ApplicationForm({
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="diploma">Diploma</SelectItem>
-                        <SelectItem value="bachelors">Bachelor's</SelectItem>
-                        <SelectItem value="masters">Master's</SelectItem>
+                        <SelectItem value="bachelors">Bachelor&apos;s</SelectItem>
+                        <SelectItem value="masters">Master&apos;s</SelectItem>
                         <SelectItem value="phd">PhD</SelectItem>
                       </SelectContent>
                     </Select>
@@ -710,58 +710,56 @@ export default function ApplicationForm({
         {/* Additional Information Section */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Additional Information</h3>
-          <h3 className="text-lg font-medium">Personal Information</h3>
           <div className="grid gap-4 md:grid-cols-2">
             <FormField
+              control={form.control}
               name="additionalInfo.previousVisaRejections"
-              name="personalInfo.fullName"
+              render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
-                    <Input type="email" {...field} />
+                  </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Previous Visa Rejections
-                    </FormLabel>
+                    <FormLabel>Previous Visa Rejections</FormLabel>
                   </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {form.watch("additionalInfo.previousVisaRejections") && (
 
-            <FormField
+            {form.watch("additionalInfo.previousVisaRejections") && (
+              <FormField
+                control={form.control}
                 name="additionalInfo.rejectionDetails"
-              name="personalInfo.phone"
-              render={({ field }) => (
+                render={({ field }) => (
+                  <FormItem>
                     <FormLabel>Rejection Details</FormLabel>
-                  <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
                       <Textarea
                         {...field}
                         placeholder="Provide details about previous visa rejections..."
                       />
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-            />
 
             <FormField
+              control={form.control}
               name="additionalInfo.specialRequirements"
-              name="personalInfo.currentCountry"
               render={({ field }) => (
+                <FormItem>
                   <FormLabel>Special Requirements</FormLabel>
-                  <FormLabel>Current Country</FormLabel>
+                  <FormControl>
                     <Textarea
                       {...field}
                       placeholder="Any special requirements or considerations..."
                     />
-                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -769,22 +767,22 @@ export default function ApplicationForm({
             />
 
             <FormField
+              control={form.control}
               name="additionalInfo.howDidYouHear"
-              name="personalInfo.passportNumber"
               render={({ field }) => (
+                <FormItem>
                   <FormLabel>How did you hear about us?</FormLabel>
-                  <FormLabel>Gender</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
+                      <SelectTrigger>
                         <SelectValue placeholder="Select source" />
-                        <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                     </FormControl>
+                    <SelectContent>
                       <SelectItem value="social_media">Social Media</SelectItem>
                       <SelectItem value="referral">Referral</SelectItem>
                       <SelectItem value="search">Search Engine</SelectItem>
                       <SelectItem value="advertisement">Advertisement</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>

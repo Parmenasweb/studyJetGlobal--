@@ -487,8 +487,8 @@ export default function ApplicationFormEdit({ initialData, onSubmit }) {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="diploma">Diploma</SelectItem>
-                            <SelectItem value="bachelors">Bachelor's</SelectItem>
-                            <SelectItem value="masters">Master's</SelectItem>
+                            <SelectItem value="bachelors">Bachelor&apos;s</SelectItem>
+                            <SelectItem value="masters">Master&apos;s</SelectItem>
                             <SelectItem value="phd">PhD</SelectItem>
                           </SelectContent>
                         </Select>

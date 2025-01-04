@@ -1,8 +1,5 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/dbConnect";
 import Agent from "@/models/Agent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +8,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CommissionsTable } from "./components/commissions-table";
 import { LeadsTable } from "./components/leads-table";
 import { formatCurrency } from "@/lib/utils";
+import connectDB from "@/lib/db";
+import { auth } from "@/auth";
 
 async function getAgent(id) {
-  await dbConnect();
+  await connectDB();
   const agent = await Agent.findById(id)
     .populate({
       path: "leads",
@@ -250,7 +249,7 @@ function LoadingSkeleton() {
 }
 
 export default async function AgentPage({ params }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) {
     notFound();
   }

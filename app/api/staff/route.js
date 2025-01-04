@@ -3,6 +3,9 @@ import { auth } from "@/auth";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 
+// Mark this route as dynamic
+export const dynamic = 'force-dynamic';
+
 export async function GET(req) {
   try {
     const session = await auth();

@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { connectToDatabase } from "@/lib/db";
+import  connectDB  from "@/lib/db";
 import Destination from "@/models/Destination";
 import sharp from "sharp";
 import { join } from "path";
 import { writeFile, unlink } from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
+import { auth } from "@/auth";
 
 // Maximum file size (5MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -72,12 +71,12 @@ async function deleteImage(url) {
 export async function POST(req, { params }) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || !session.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectToDatabase();
+    await connectDB();
 
     // Get the destination
     const destination = await Destination.findById(params.destinationId);
@@ -157,12 +156,12 @@ export async function POST(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || !session.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectToDatabase();
+    await connectDB();
 
     const { searchParams } = new URL(req.url);
     const imageIndex = searchParams.get('index');

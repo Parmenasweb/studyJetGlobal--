@@ -22,7 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { addProgram, updateProgram } from "@/actions/destination";
+// import { addProgram, updateProgram } from "@/actions/destination";
+import { addProgram, updateProgram} from "@/actions/program";
 
 const programSchema = z.object({
   name: z.string().min(1, "Program name is required"),

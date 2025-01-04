@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/dbConnect";
 import Agent from "@/models/Agent";
+import connectDB from "@/lib/db";
+import { auth } from "@/auth";
 
 export async function GET(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await connectDB();
 
     const agent = await Agent.findById(params.agentId).select("leads");
     if (!agent) {
@@ -30,14 +29,14 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const data = await req.json();
 
-    await dbConnect();
+    await connectDB();
 
     const agent = await Agent.findById(params.agentId);
     if (!agent) {
@@ -65,7 +64,7 @@ export async function POST(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -73,7 +72,7 @@ export async function PUT(req, { params }) {
     const { leadId } = params;
     const data = await req.json();
 
-    await dbConnect();
+    await connectDB();
 
     const agent = await Agent.findById(params.agentId);
     if (!agent) {
@@ -105,14 +104,14 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { leadId } = params;
 
-    await dbConnect();
+    await connectDB();
 
     const agent = await Agent.findById(params.agentId);
     if (!agent) {

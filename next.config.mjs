@@ -24,15 +24,4 @@ const nextConfig = {
   },
 };
 
-// module.exports = {
-//   images: {
-//     remotePatterns: [
-//       {
-//         protocol: "https",
-//         hostname: "images.pexels.com",
-//       },
-//     ],
-//   },
-// };
-
 export default nextConfig;

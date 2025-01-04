@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import ScholarshipForm from "../components/ScholarshipForm";
+import { ScholarshipForm } from "../components/ScholarshipForm";
 
 export default function NewScholarshipPage() {
   const router = useRouter();

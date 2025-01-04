@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { v2 as cloudinary } from "cloudinary";
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Maximum file size (5MB)
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+// Allowed image types
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export async function POST(req) {
   try {
@@ -18,7 +16,6 @@ export async function POST(req) {
 
     const formData = await req.formData();
     const file = formData.get("file");
-    const folder = formData.get("folder") || "studyjet/general"; // Default folder
 
     if (!file) {
       return NextResponse.json(
@@ -27,20 +24,29 @@ export async function POST(req) {
       );
     }
 
+    // Validate file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({
+        error: `Invalid file type. Allowed types: ${ALLOWED_TYPES.join(", ")}`,
+      }, { status: 400 });
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({
+        error: `File size too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+      }, { status: 400 });
+    }
+
     // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64File = `data:${file.type};base64,${buffer.toString("base64")}`;
-
-    // Upload to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(base64File, {
-      folder,
-      resource_type: "auto",
-    });
+    const base64String = `data:${file.type};base64,${buffer.toString('base64')}`;
 
     return NextResponse.json({
-      url: uploadResult.secure_url,
-      publicId: uploadResult.public_id,
+      url: base64String,
+      type: file.type,
+      size: file.size
     });
   } catch (error) {
     console.error("Upload error:", error);

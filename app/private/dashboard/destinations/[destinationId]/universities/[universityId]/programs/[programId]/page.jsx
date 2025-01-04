@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getProgram } from "@/actions/program";
-import { getUniversity } from "@/actions/university";
+import { getUniversity } from "@/actions/destination";
 
 export default async function ProgramPage({ params }) {
   const { destinationId, universityId, programId } = params;

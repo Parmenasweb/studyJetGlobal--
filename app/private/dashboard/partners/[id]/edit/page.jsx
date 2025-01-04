@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import dbConnect from "@/lib/dbConnect";
 import Partner from "@/models/Partner";
 import { PartnerForm } from "../../components/partner-form";
+import connectDB from "@/lib/db";
 
 async function getPartner(id) {
-  await dbConnect();
+  await connectDB();
   const partner = await Partner.findById(id)
     .populate("assignedTo", "name email")
     .populate("createdBy", "name email")

@@ -14,7 +14,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCcw } from "lucide-react";
+import { AlertCircle, RefreshCcw, Globe2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { motion } from "framer-motion";
 
@@ -23,46 +23,37 @@ function ProgramSkeleton() {
   return (
     <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3 items-center justify-around w-[90%] mx-auto p-8">
       {[1, 2, 3].map((index) => (
-        <Card key={index} className="shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300">
-          <CardContent>
-            <div className="cursor-pointer overflow-hidden relative h-64 rounded-md shadow-xl space-y-3 bg-slate-400 animate-pulse flex flex-col justify-between p-4 w-72">
-              <div className="absolute w-full h-full top-0 left-0 transition duration-300 hover:bg-black opacity-30" />
-              <div className="flex flex-row items-center h-12 w-full bg-slate-300 animate-pulse justify-between space-x-4 z-10 rounded-md" />
+        <Card key={index} className="shadow-md hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="h-48 bg-slate-200 rounded-lg animate-pulse mb-4" />
+            <div className="space-y-3">
+              <div className="h-6 bg-slate-200 rounded w-3/4 animate-pulse" />
+              <div className="h-4 bg-slate-200 rounded w-1/2 animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-4 bg-slate-200 rounded animate-pulse" />
+                <div className="h-4 bg-slate-200 rounded animate-pulse" />
+              </div>
+              <div className="h-10 bg-slate-200 rounded w-1/3 animate-pulse" />
             </div>
-            <Card className="w-full p-4 pt-0 pb-2">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold">
-                  <div className="h-[2px] w-[100px] animate-pulse bg-slate-300" />
-                </CardTitle>
-                <CardDescription>
-                  <div className="h-[2px] w-[80%] animate-pulse bg-slate-300" />
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">Study Cost (yearly):</span>
-                    <span className="text-muted-foreground font-semibold">-</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">Living Cost (monthly):</span>
-                    <span className="text-muted-foreground font-semibold">-</span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex pt-2 items-center justify-start mt-1">
-                <Button
-                  className="text-lg shadow-md hover:shadow-xl hover:scale-105 font-semibold"
-                  variant="secondary"
-                >
-                  Loading...
-                </Button>
-              </CardFooter>
-            </Card>
           </CardContent>
         </Card>
       ))}
     </div>
+  );
+}
+
+// Empty state component
+function EmptyState() {
+  return (
+    <Card className="w-[90%] mx-auto p-8 text-center">
+      <CardContent className="flex flex-col items-center space-y-4">
+        <Globe2 className="h-12 w-12 text-muted-foreground" />
+        <CardTitle>No Destinations Available</CardTitle>
+        <CardDescription>
+          We're currently updating our destination list. Please check back later.
+        </CardDescription>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -73,7 +64,7 @@ function ErrorState({ error, refetch }) {
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error</AlertTitle>
-        <AlertDescription>
+        <AlertDescription className="mt-2">
           {error?.message || "Failed to load destinations. Please try again."}
         </AlertDescription>
         <Button
@@ -104,9 +95,7 @@ export default function Programs() {
     queryKey: ["destinations"],
     queryFn: async () => {
       try {
-        const response = await fetch("/api/destinations", {
-          next: { revalidate: 3600 }, // Cache for 1 hour
-        });
+        const response = await fetch("/api/destinations");
         
         if (!response.ok) {
           throw new Error("Failed to fetch destinations");
@@ -124,57 +113,60 @@ export default function Programs() {
   });
 
   return (
-    <main className="py-12">
+    <section className="py-16 bg-gradient-to-b from-background to-muted/20">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="container mx-auto px-4"
       >
-        <h2 className="text-3xl font-bold text-center mb-6">
-          Our Top Study Destinations and Programs
+        <h2 className="text-4xl font-bold text-center mb-6">
+          Explore Your Study Destinations
         </h2>
         <p className="text-lg text-muted-foreground text-center max-w-2xl mx-auto mb-12">
-          Explore our top study abroad destinations and find the perfect fit for
-          your academic and cultural goals
+          Discover world-class educational opportunities in our partner countries.
+          Each destination offers unique academic and cultural experiences.
         </p>
-      </motion.div>
 
-      <Suspense fallback={<ProgramSkeleton />}>
-        {isLoading ? (
-          <ProgramSkeleton />
-        ) : isError ? (
-          <ErrorState error={error} refetch={refetch} />
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3 items-center justify-around w-[90%] mx-auto p-8"
-          >
-            {destinations?.map((destination, index) => (
-              <motion.div
-                key={destination._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.5,
-                  delay: index * 0.1,
-                }}
-              >
-                <DestinationCard
-                  destinationName={destination.name}
-                  flagUrl={destination.flagUrl}
-                  imageUrl={destination.imageUrl}
-                  studyCost={destination.stats.averageTuition}
-                  accommodationFee={destination.stats.costOfLiving}
-                  description={destination.shortDescription}
-                  countryId={destination._id}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </Suspense>
-    </main>
+        <Suspense fallback={<ProgramSkeleton />}>
+          {isLoading ? (
+            <ProgramSkeleton />
+          ) : isError ? (
+            <ErrorState error={error} refetch={refetch} />
+          ) : !destinations?.length ? (
+            <EmptyState />
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-stretch justify-around"
+            >
+              {destinations.map((destination, index) => (
+                <motion.div
+                  key={destination._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.5,
+                    delay: index * 0.1,
+                  }}
+                >
+                  <DestinationCard
+                    destinationName={destination.name}
+                    flagUrl={destination.flagUrl}
+                    imageUrl={destination.imageUrl}
+                    studyCost={destination.stats.averageTuition}
+                    accommodationFee={destination.stats.costOfLiving}
+                    description={destination.shortDescription}
+                    countryId={destination._id}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </Suspense>
+      </motion.div>
+    </section>
   );
 }

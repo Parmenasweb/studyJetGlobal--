@@ -169,7 +169,7 @@ export default function ConsultationForm({ initialData, consultationId }) {
                       type="date" 
                       {...field} 
                       value={field.value || ''} 
-                      disabled={isLoading} 
+                    disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -197,23 +197,23 @@ export default function ConsultationForm({ initialData, consultationId }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Consultation Type</FormLabel>
-                  <Select
-                    disabled={isLoading}
+              <Select
+                disabled={isLoading}
                     onValueChange={field.onChange}
                     value={field.value}
                     defaultValue={field.value}
-                  >
+              >
                     <FormControl>
-                      <SelectTrigger>
+                <SelectTrigger>
                         <SelectValue placeholder="Select consultation type" />
-                      </SelectTrigger>
+                </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="study">Study</SelectItem>
-                      <SelectItem value="work">Work</SelectItem>
+                <SelectContent>
+                  <SelectItem value="study">Study</SelectItem>
+                  <SelectItem value="work">Work</SelectItem>
                       <SelectItem value="other">other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                </SelectContent>
+              </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -225,22 +225,22 @@ export default function ConsultationForm({ initialData, consultationId }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Preferred Mode</FormLabel>
-                  <Select
-                    disabled={isLoading}
+              <Select
+                disabled={isLoading}
                     onValueChange={field.onChange}
                     value={field.value}
                     defaultValue={field.value}
-                  >
+              >
                     <FormControl>
-                      <SelectTrigger>
+                <SelectTrigger>
                         <SelectValue placeholder="Select preferred mode" />
-                      </SelectTrigger>
+                </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="online">Online</SelectItem>
+                <SelectContent>
+                  <SelectItem value="online">Online</SelectItem>
                       <SelectItem value="phone">Phone</SelectItem>
-                    </SelectContent>
-                  </Select>
+                </SelectContent>
+              </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -252,24 +252,24 @@ export default function ConsultationForm({ initialData, consultationId }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select
-                    disabled={isLoading}
+              <Select
+                disabled={isLoading}
                     onValueChange={field.onChange}
                     value={field.value}
                     defaultValue={field.value}
-                  >
+              >
                     <FormControl>
-                      <SelectTrigger>
+                <SelectTrigger>
                         <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
+                </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                <SelectContent>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="confirmed">Confirmed</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
+                </SelectContent>
+              </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -307,7 +307,7 @@ export default function ConsultationForm({ initialData, consultationId }) {
               )}
             </Button>
           </div>
-        </form>
+    </form>
       </Form>
     </div>
   );

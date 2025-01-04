@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ProgramForm } from "../../components/ProgramForm";
 import { getProgram } from "@/actions/program";
-import { getUniversities } from "@/actions/university";
+import { getUniversities } from "@/actions/destination";
 
 export default async function EditProgramPage({ params }) {
   const [program, universities] = await Promise.all([

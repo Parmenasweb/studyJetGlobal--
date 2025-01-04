@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataTable } from "./components/data-table";
+// import { DataTable } from "./components/data-table";
 import { DataTable } from "../students/components/data-table";
 import { getColumns } from "./components/columns";
 import { Button } from "@/components/ui/button";

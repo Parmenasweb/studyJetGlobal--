@@ -1,4 +1,18 @@
+"use client";
+
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "sonner";
+import { MoreHorizontal, Eye, FileEdit, ClipboardList, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { deleteConsultation } from "@/lib/actions/consultation-actions";
 import ConsultationNotes from "./ConsultationNotes";
 
 export function DataTable({ data, columns }) {

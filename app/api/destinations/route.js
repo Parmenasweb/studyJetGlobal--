@@ -70,10 +70,6 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
-    const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     await connectDB();
     

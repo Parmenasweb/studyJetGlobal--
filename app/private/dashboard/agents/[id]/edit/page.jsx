@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import dbConnect from "@/lib/dbConnect";
 import Agent from "@/models/Agent";
 import { AgentForm } from "../../components/agent-form";
+import connectDB from "@/lib/db";
 
 async function getAgent(id) {
-  await dbConnect();
+  await connectDB();
   const agent = await Agent.findById(id)
     .populate("createdBy", "name email")
     .populate("updatedBy", "name email");

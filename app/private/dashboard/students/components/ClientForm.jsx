@@ -446,10 +446,10 @@ export function ClientForm({ client }) {
                         <FormControl>
                           <Input placeholder="Passport number" {...field} disabled={isLoading} />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
                 <div className="space-y-4">

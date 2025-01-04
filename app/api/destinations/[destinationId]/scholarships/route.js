@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import connectDB from "@/lib/db";
 import Destination from "@/models/Destination";
-import { scholarshipSchema } from "@/lib/validations/destination";
+// import { scholarshipSchema } from "@/lib/validations/destination";
 
 export async function GET(req, { params }) {
   try {
@@ -40,7 +40,7 @@ export async function POST(req, { params }) {
     const data = await req.json();
     
     // Validate the request body
-    const validatedData = scholarshipSchema.parse(data);
+    // const validatedData = scholarshipSchema.parse(data);
 
     await connectDB();
     const destination = await Destination.findById(params.destinationId);
@@ -50,7 +50,7 @@ export async function POST(req, { params }) {
     }
 
     destination.scholarships.push({
-      ...validatedData,
+      ...data,
       createdBy: session.user.id,
       createdAt: new Date(),
     });

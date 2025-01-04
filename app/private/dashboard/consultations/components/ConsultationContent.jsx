@@ -10,6 +10,8 @@ import CalendarView from "./CalendarView";
 import { useConsultationView } from "./ConsultationViewContext";
 
 export default function ConsultationContent({ consultations }) {
+  const { viewMode } = useConsultationView();
+
   if (!consultations?.length) {
     return (
       <Card>
@@ -19,10 +21,7 @@ export default function ConsultationContent({ consultations }) {
       </Card>
     );
   }
-  
-  const { viewMode } = useConsultationView();
 
-  // No need to transform the consultations as they're already serialized
   if (viewMode === "calendar") {
     return (
       <Card>

@@ -1,5 +1,6 @@
-import { getUniversity } from "@/actions/university";
-import ProgramForm from "../components/ProgramForm";
+
+import { getUniversity } from "@/actions/destination";
+import { ProgramForm } from "../components/ProgramForm";
 import { Separator } from "@/components/ui/separator";
 
 export default async function NewProgramPage({ params }) {

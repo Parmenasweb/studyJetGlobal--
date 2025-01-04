@@ -371,28 +371,28 @@ export default function DestinationForm({ initialData }) {
         {/* Basic Information */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Basic Information</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Canada" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Canada" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="countryCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Country Code</FormLabel>
-                  <FormControl>
+          <FormField
+            control={form.control}
+            name="countryCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country Code</FormLabel>
+                <FormControl>
                     <Input 
                       placeholder="e.g., CA" 
                       maxLength={2} 
@@ -402,49 +402,49 @@ export default function DestinationForm({ initialData }) {
                         field.onChange(value);
                       }}
                     />
-                  </FormControl>
-                  <FormDescription>2-letter ISO country code</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormControl>
+                <FormDescription>2-letter ISO country code</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="capital"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Capital City</FormLabel>
+          <FormField
+            control={form.control}
+            name="capital"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Capital City</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Ottawa" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <Input placeholder="e.g., Ottawa" {...field} />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           </div>
         </div>
 
@@ -645,7 +645,7 @@ export default function DestinationForm({ initialData }) {
                 <FormLabel>Popular Programs</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <FormControl>
+                <FormControl>
                       <Button
                         variant="outline"
                         role="combobox"
@@ -725,7 +725,7 @@ export default function DestinationForm({ initialData }) {
                 <FormLabel>Admission Requirements</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <FormControl>
+                <FormControl>
                       <Button
                         variant="outline"
                         role="combobox"
@@ -935,16 +935,16 @@ export default function DestinationForm({ initialData }) {
                               fill
                               className="object-cover rounded-md"
                             />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
                               className="absolute -top-2 -right-2 h-6 w-6"
                               onClick={() => handleImageDelete("mainImage")}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                      </div>
                         )}
                         <FormControl>
                           <Input
@@ -954,7 +954,7 @@ export default function DestinationForm({ initialData }) {
                             disabled={isLoading}
                           />
                         </FormControl>
-                      </div>
+                        </div>
                     </div>
                   </FormControl>
                   <FormDescription>
@@ -985,16 +985,16 @@ export default function DestinationForm({ initialData }) {
                               fill
                               className="object-cover rounded-md"
                             />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
                               className="absolute -top-2 -right-2 h-6 w-6"
                               onClick={() => handleImageDelete("flagImage")}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                      </div>
                         )}
                         <FormControl>
                           <Input
@@ -1004,7 +1004,7 @@ export default function DestinationForm({ initialData }) {
                             disabled={isLoading}
                           />
                         </FormControl>
-                      </div>
+                        </div>
                     </div>
                   </FormControl>
                   <FormDescription>
@@ -1025,10 +1025,10 @@ export default function DestinationForm({ initialData }) {
                     <div className="space-y-4">
                       <div className="flex items-center gap-4">
                         <FormControl>
-                          <Input
-                            type="file"
+                        <Input
+                          type="file"
                             accept="image/jpeg,image/png,image/webp"
-                            multiple
+                          multiple
                             onChange={e => handleImageChange(e, "gallery")}
                             disabled={isLoading}
                           />

@@ -71,6 +71,99 @@ async function deleteApplication(id) {
   }
 }
 
+// Separate component for the actions cell
+const CellActions = ({ row }) => {
+  const router = useRouter();
+  const application = row.original;
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await deleteApplication(application.id);
+      toast.success("Application deleted successfully");
+      router.refresh();
+    } catch (error) {
+      toast.error(error.message || "Failed to delete application");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
+  const handleView = () => {
+    router.push(`/private/dashboard/applications/${application.id}`);
+  };
+
+  const handleEdit = () => {
+    router.push(`/private/dashboard/applications/${application.id}/edit`);
+  };
+
+  const handleNotes = () => {
+    router.push(`/private/dashboard/applications/${application.id}/notes`);
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem onClick={handleView}>
+            <Eye className="mr-2 h-4 w-4" />
+            View Details
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleEdit}>
+            <FileEdit className="mr-2 h-4 w-4" />
+            Edit Application
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleNotes}>
+            <MessageSquare className="mr-2 h-4 w-4" />
+            View Notes
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => setShowDeleteDialog(true)}
+            className="text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              application and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
+
 export const columns = [
   {
     id: "select",
@@ -186,96 +279,6 @@ export const columns = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const router = useRouter();
-      const application = row.original;
-      const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-      const [isDeleting, setIsDeleting] = useState(false);
-
-      const handleDelete = async () => {
-        try {
-          setIsDeleting(true);
-          await deleteApplication(application.id);
-          toast.success("Application deleted successfully");
-          router.refresh();
-        } catch (error) {
-          toast.error(error.message || "Failed to delete application");
-        } finally {
-          setIsDeleting(false);
-          setShowDeleteDialog(false);
-        }
-      };
-
-      const handleView = () => {
-        router.push(`/private/dashboard/applications/${application.id}`);
-      };
-
-      const handleEdit = () => {
-        router.push(`/private/dashboard/applications/${application.id}/edit`);
-      };
-
-      const handleNotes = () => {
-        router.push(`/private/dashboard/applications/${application.id}/notes`);
-      };
-
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={handleView}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleEdit}>
-                <FileEdit className="mr-2 h-4 w-4" />
-                Edit Application
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleNotes}>
-                <MessageSquare className="mr-2 h-4 w-4" />
-                View Notes
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setShowDeleteDialog(true)}
-                className="text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the application
-                  and remove all associated data.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDelete}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? "Deleting..." : "Delete"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </>
-      );
-    },
+    cell: ({ row }) => <CellActions row={row} />
   },
 ];

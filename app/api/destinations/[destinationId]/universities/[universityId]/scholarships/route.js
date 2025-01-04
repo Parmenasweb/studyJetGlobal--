@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { connectToDB } from "@/lib/mongoose";
+import connectDB from "@/lib/db";
 import Destination from "@/models/Destination";
 
 export async function GET(req, { params }) {
   try {
-    await connectToDB();
+    await connectDB();
 
     const destination = await Destination.findById(params.destinationId);
     if (!destination) {
@@ -25,7 +25,7 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   try {
-    await connectToDB();
+    await connectDB();
 
     const destination = await Destination.findById(params.destinationId);
     if (!destination) {

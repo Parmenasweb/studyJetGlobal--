@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { connectToDatabase } from "@/lib/db";
+import  connectDB  from "@/lib/db";
 import Destination from "@/models/Destination";
+import { auth } from "@/auth";
 
 export async function PATCH(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -14,7 +13,7 @@ export async function PATCH(req, { params }) {
     const { destinationId, deadlineId } = params;
     const { title, description, date } = await req.json();
 
-    await connectToDatabase();
+    await connectDB();
 
     const destination = await Destination.findById(destinationId);
     if (!destination) {
@@ -44,14 +43,14 @@ export async function PATCH(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const { destinationId, deadlineId } = params;
 
-    await connectToDatabase();
+    await connectDB();
 
     const destination = await Destination.findById(destinationId);
     if (!destination) {

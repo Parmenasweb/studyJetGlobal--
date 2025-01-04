@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import UniversityForm from "../../components/UniversityForm";
 import { getUniversity } from "@/actions/destination";

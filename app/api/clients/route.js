@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { Client } from "@/models/Client";
 import { Application } from "@/models/Application";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
 
 // Helper function to check if an application is completed
 function isApplicationCompleted(application) {
@@ -16,7 +15,7 @@ function isApplicationCompleted(application) {
 
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -62,7 +61,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -148,7 +147,7 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -189,7 +188,7 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import connectDB from "@/lib/db";
 import Destination from "@/models/Destination";
-import Application from "@/models/Application";
+import { Application } from "@/models/Application";
 
 export async function GET(req, { params }) {
   try {

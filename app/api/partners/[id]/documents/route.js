@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/dbConnect";
 import Partner from "@/models/Partner";
 import { writeFile, unlink } from "fs/promises";
 import { join } from "path";
 import { v4 as uuidv4 } from "uuid";
+import { auth } from "@/auth";
+import connectDB from "@/lib/db";
 
 const UPLOAD_DIR = join(process.cwd(), "public", "uploads", "partners");
 const ALLOWED_FILE_TYPES = [
@@ -21,12 +20,12 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function POST(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await connectDB();
 
     const formData = await request.formData();
     const file = formData.get("file");
@@ -113,12 +112,12 @@ export async function POST(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await connectDB();
 
     const { searchParams } = new URL(request.url);
     const documentId = searchParams.get("documentId");

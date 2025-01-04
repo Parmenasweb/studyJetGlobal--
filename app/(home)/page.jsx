@@ -21,9 +21,16 @@ const StudySteps = dynamic(() => import("@/components/homepagecomps/study-steps"
 const Programs = dynamic(() => import("@/components/homepagecomps/programs"), {
   loading: () => <ProgramsSkeleton />
 });
-const WhyUs = dynamic(() => import("@/components/homepagecomps/whyUs"), {
+const WhyUs = dynamic(() => import("@/components/homepagecomps/WhyChooseUs"), {
   loading: () => <WhyUsSkeleton />
 });
+const CallToAction = dynamic(() => import("@/components/homepagecomps/CallToAction"), {
+  loading: () => <CTASkeleton />
+});
+const SuccessStories = dynamic(() => import("@/components/homepagecomps/SuccessStories"), {
+  loading: () => <WhyUsSkeleton />
+});
+
 const Testimonials = dynamic(() => import("@/components/homepagecomps/testimonials"), {
   loading: () => <TestimonialsSkeleton />
 });
@@ -54,6 +61,14 @@ export default function Home() {
           
           <Suspense fallback={<WhyUsSkeleton />}>
             <WhyUs />
+          </Suspense>
+
+          <Suspense fallback={<WhyUsSkeleton />}>
+            <SuccessStories />
+          </Suspense>
+
+          <Suspense fallback={<CTASkeleton />}>
+            <CallToAction />
           </Suspense>
           
           <Suspense fallback={<TestimonialsSkeleton />}>

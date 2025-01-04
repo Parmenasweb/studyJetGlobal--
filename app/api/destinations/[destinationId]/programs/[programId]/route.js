@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import connectDB from "@/lib/db";
 import Destination from "@/models/Destination";
-import { programSchema } from "@/lib/validations/destination";
+// import { programSchema } from "@/lib/validations/destination";
+// import programSc
 
 export async function PATCH(req, { params }) {
   try {
@@ -14,7 +15,7 @@ export async function PATCH(req, { params }) {
     const data = await req.json();
     
     // Validate the request body
-    const validatedData = programSchema.parse(data);
+    // const validatedData = programSchema.parse(data);
 
     await connectDB();
     const destination = await Destination.findOneAndUpdate(
@@ -25,7 +26,7 @@ export async function PATCH(req, { params }) {
       { 
         $set: {
           "programs.$": {
-            ...validatedData,
+            ...data,
             _id: params.programId,
             updatedBy: session.user.id,
             updatedAt: new Date(),

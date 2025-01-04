@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import Application from "@/models/Application";
+import { Application } from "@/models/Application";
 import { handleError } from "@/middleware/error";
 
 export async function GET(req, { params }) {

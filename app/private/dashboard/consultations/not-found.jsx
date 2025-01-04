@@ -16,7 +16,7 @@ export default function ConsultationsNotFound() {
               No Consultations Found
             </h2>
             <p className="text-muted-foreground">
-              We couldn't find the consultations you're looking for. They might have been moved or deleted.
+              We couldn&apos;t find the consultations you&apos;re looking for. They might have been moved or deleted.
             </p>
             <div className="flex gap-4 mt-4">
               <Button variant="outline" asChild>

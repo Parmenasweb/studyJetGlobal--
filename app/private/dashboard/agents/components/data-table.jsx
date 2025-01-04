@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 import { addDays, isWithinInterval, parseISO } from "date-fns";
 
 export function DataTable({
@@ -109,7 +110,7 @@ export function DataTable({
           </Select>
           <DatePickerWithRange
             date={dateRange}
-            onDateChange={setDateRange}
+            onChange={setDateRange}
           />
         </div>
       </div>

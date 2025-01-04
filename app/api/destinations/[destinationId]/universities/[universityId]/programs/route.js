@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/db";
-import Program from "@/models/Program";
-import University from "@/models/University";
+import connectDB from "@/lib/db";
+import Destination from "@/models/Destination";
+import { auth } from "@/auth";
+
 
 export async function GET(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -17,12 +16,14 @@ export async function GET(req, { params }) {
 
     const { destinationId, universityId } = params;
 
-    await dbConnect();
+    await connectDB();
 
-    const university = await University.findOne({
-      _id: universityId,
-      destination: destinationId,
-    });
+    const destination = await Destination.findById(destinationId);
+    if (!destination) {
+      return NextResponse.json({ error: "Destination not found" }, { status: 404 });
+    }
+
+    const university = destination.universities._id(universityId);
 
     if (!university) {
       return NextResponse.json(
@@ -31,7 +32,7 @@ export async function GET(req, { params }) {
       );
     }
 
-    const programs = await Program.find({ university: universityId });
+    const programs = university.programs;
 
     return NextResponse.json(programs);
   } catch (error) {
@@ -45,7 +46,7 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -56,13 +57,17 @@ export async function POST(req, { params }) {
     const { destinationId, universityId } = params;
     const data = await req.json();
 
-    await dbConnect();
+    await connectDB();
 
-    const university = await University.findOne({
-      _id: universityId,
-      destination: destinationId,
-    });
+    const destination = await Destination.findById(destinationId);
+    if (!destination) {
+      return NextResponse.json(
+        { error: "Destination not found" },
+        { status: 404 }
+      );
+    }
 
+    const university = destination.universities.id(universityId);
     if (!university) {
       return NextResponse.json(
         { error: "University not found" },
@@ -70,12 +75,21 @@ export async function POST(req, { params }) {
       );
     }
 
-    const program = await Program.create({
-      ...data,
-      university: universityId,
+    university.programs.push({
+      name: data.name,
+      level: data.level,
+      duration: data.duration,
+      tuitionFee: data.tuitionFee,
+      description: data.description,
+      intakes: data.intakes,
+      requirements: data.requirements,
+      status: data.status || 'active'
     });
 
-    return NextResponse.json(program, { status: 201 });
+    await destination.save();
+
+    return NextResponse.json(university.programs[university.programs.length - 1], { status: 201 });
+
   } catch (error) {
     console.error("Error in POST /api/destinations/[destinationId]/universities/[universityId]/programs:", error);
     return NextResponse.json(
@@ -83,4 +97,4 @@ export async function POST(req, { params }) {
       { status: 500 }
     );
   }
-} 
+}

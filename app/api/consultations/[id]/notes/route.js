@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { connectToDB } from "@/lib/db";
+import connectDB from "@/lib/db";
 import Consultation from "@/models/consultationForm";
 
 export async function GET(req, { params }) {
   try {
-    await connectToDB();
+    await connectDB();
     const consultation = await Consultation.findById(params.id);
 
     if (!consultation) {
@@ -27,7 +27,7 @@ export async function GET(req, { params }) {
 export async function POST(req, { params }) {
   try {
     const { content, author } = await req.json();
-    await connectToDB();
+    await connectDB();
 
     const consultation = await Consultation.findByIdAndUpdate(
       params.id,
@@ -63,7 +63,7 @@ export async function POST(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     const { noteId } = await req.json();
-    await connectToDB();
+    await connectDB();
 
     const consultation = await Consultation.findByIdAndUpdate(
       params.id,

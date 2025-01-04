@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import connectDB from "@/lib/db";
 import Destination from "@/models/Destination";
-import { scholarshipSchema } from "@/lib/validations/destination";
+// import { scholarshipSchema } from "@/lib/validations/destination";
 
 export async function PATCH(req, { params }) {
   try {
@@ -14,7 +14,7 @@ export async function PATCH(req, { params }) {
     const data = await req.json();
     
     // Validate the request body
-    const validatedData = scholarshipSchema.parse(data);
+    // const validatedData = scholarshipSchema.parse(data);
 
     await connectDB();
     const destination = await Destination.findOneAndUpdate(
@@ -25,7 +25,7 @@ export async function PATCH(req, { params }) {
       { 
         $set: {
           "scholarships.$": {
-            ...validatedData,
+            data,
             _id: params.scholarshipId,
             updatedBy: session.user.id,
             updatedAt: new Date(),

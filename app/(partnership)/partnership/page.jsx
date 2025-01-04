@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/homepagecomps/Footer";
 import Image from "next/image";
-import ApplyButton from "@/components/Applybutton";
 import PartnerCard from "./components/PartnerCard";
 import { partners } from "@/lib/countrydetails";
 

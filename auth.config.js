@@ -13,36 +13,54 @@ export const authConfig = {
       name: "credentials",
       
       async authorize(credentials) {
-        try {
-          await connectDB();
-          const user = await User.findOne({ email: credentials.email });
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
 
-          if (!user || !user.isActive) {
-            return null;
+        try {
+          // Ensure database connection
+          await connectDB();
+          
+          const user = await User.findOne({ email: credentials.email }).select('+password');
+
+          if (!user) {
+            throw new Error("No user found with this email");
           }
 
-          const passwordMatch = await compare(
-            credentials.password,
+          if (!user.isActive) {
+            throw new Error("This account has been deactivated");
+          }
+
+          if (!user.password) {
+            throw new Error("Password not set for this account");
+          }
+
+          const isValidPassword = await compare(
+            credentials.password.trim(),
             user.password
           );
-          if (!passwordMatch) {
-            return null;
+          
+          if (!isValidPassword) {
+            throw new Error("Invalid password");
           }
 
-          await User.findByIdAndUpdate(user._id, {
+          // Update last login without waiting
+          User.findByIdAndUpdate(user._id, {
             lastLogin: new Date(),
+          }).catch(error => {
+            console.error("Failed to update last login:", error);
           });
 
           return {
-            id: user._id,
+            id: user._id.toString(),
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
             role: user.role,
           };
-        } catch (err) {
-          console.error("Authentication error:", err);
-          return null;
+        } catch (error) {
+          console.error("Authentication error:", error);
+          throw error; // Propagate error for better error handling
         }
       },
     }),
@@ -63,4 +81,8 @@ export const authConfig = {
       return session;
     },
   },
-};
+  session: {
+    strategy: "jwt",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+}

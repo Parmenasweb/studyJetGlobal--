@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
 import Partner from "@/models/Partner";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
+import connectDB from "@/lib/db";
 
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -15,7 +14,7 @@ export async function GET(request) {
     const partnerId = searchParams.get("partnerId");
     const programId = searchParams.get("programId");
 
-    await dbConnect();
+    await connectDB();
 
     if (programId) {
       const partner = await Partner.findOne({
@@ -49,7 +48,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -57,7 +56,7 @@ export async function POST(request) {
     const data = await request.json();
     const { partnerId, programId, ...programData } = data;
 
-    await dbConnect();
+    await connectDB();
 
     const partner = await Partner.findById(partnerId);
     if (!partner) {
@@ -110,7 +109,7 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -126,7 +125,7 @@ export async function DELETE(request) {
       );
     }
 
-    await dbConnect();
+    await connectDB();
 
     const partner = await Partner.findById(partnerId);
     if (!partner) {

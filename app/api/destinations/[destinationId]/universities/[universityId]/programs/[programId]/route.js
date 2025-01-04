@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/db";
-import Program from "@/models/Program";
-import University from "@/models/University";
+import connectDB from "@/lib/db";
+import Destination from "@/models/Destination";
+import { auth } from "@/auth";
 
 export async function GET(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -17,13 +15,17 @@ export async function GET(req, { params }) {
 
     const { destinationId, universityId, programId } = params;
 
-    await dbConnect();
+    await connectDB();
 
-    const university = await University.findOne({
-      _id: universityId,
-      destination: destinationId,
-    });
+    const destination = await Destination.findById(destinationId);
+    if (!destination) {
+      return NextResponse.json(
+        { error: "Destination not found" },
+        { status: 404 }
+      );
+    }
 
+    const university = destination.universities.id(universityId);
     if (!university) {
       return NextResponse.json(
         { error: "University not found" },
@@ -31,11 +33,7 @@ export async function GET(req, { params }) {
       );
     }
 
-    const program = await Program.findOne({
-      _id: programId,
-      university: universityId,
-    });
-
+    const program = university.programs.id(programId);
     if (!program) {
       return NextResponse.json(
         { error: "Program not found" },
@@ -55,7 +53,7 @@ export async function GET(req, { params }) {
 
 export async function PATCH(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -66,13 +64,17 @@ export async function PATCH(req, { params }) {
     const { destinationId, universityId, programId } = params;
     const data = await req.json();
 
-    await dbConnect();
+    await connectDB();
 
-    const university = await University.findOne({
-      _id: universityId,
-      destination: destinationId,
-    });
+    const destination = await Destination.findById(destinationId);
+    if (!destination) {
+      return NextResponse.json(
+        { error: "Destination not found" },
+        { status: 404 }
+      );
+    }
 
+    const university = destination.universities.id(universityId);
     if (!university) {
       return NextResponse.json(
         { error: "University not found" },
@@ -80,21 +82,16 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    const program = await Program.findOneAndUpdate(
-      {
-        _id: programId,
-        university: universityId,
-      },
-      data,
-      { new: true }
-    );
-
+    const program = university.programs.id(programId);
     if (!program) {
       return NextResponse.json(
         { error: "Program not found" },
         { status: 404 }
       );
     }
+
+    Object.assign(program, data);
+    await destination.save();
 
     return NextResponse.json(program);
   } catch (error) {
@@ -108,7 +105,7 @@ export async function PATCH(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -118,13 +115,17 @@ export async function DELETE(req, { params }) {
 
     const { destinationId, universityId, programId } = params;
 
-    await dbConnect();
+    await connectDB();
 
-    const university = await University.findOne({
-      _id: universityId,
-      destination: destinationId,
-    });
+    const destination = await Destination.findById(destinationId);
+    if (!destination) {
+      return NextResponse.json(
+        { error: "Destination not found" },
+        { status: 404 }
+      );
+    }
 
+    const university = destination.universities.id(universityId);
     if (!university) {
       return NextResponse.json(
         { error: "University not found" },
@@ -132,17 +133,16 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    const program = await Program.findOneAndDelete({
-      _id: programId,
-      university: universityId,
-    });
-
+    const program = university.programs.id(programId);
     if (!program) {
       return NextResponse.json(
         { error: "Program not found" },
         { status: 404 }
       );
     }
+
+    program.remove();
+    await destination.save();
 
     return NextResponse.json(
       { message: "Program deleted successfully" },
@@ -155,4 +155,4 @@ export async function DELETE(req, { params }) {
       { status: 500 }
     );
   }
-} 
+}

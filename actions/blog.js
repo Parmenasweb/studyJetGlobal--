@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { connectToDB } from "@/lib/db";
+import connectDB from "@/lib/db";
 import BlogPost from "@/models/Blogs";
 import { auth } from "@/auth";
 
 export async function getBlogs(query = {}) {
   try {
-    await connectToDB();
+    await connectDB();
     const blogs = await BlogPost.find(query)
       .populate('author', 'name email')
       .sort({ createdAt: -1 });
@@ -19,7 +19,7 @@ export async function getBlogs(query = {}) {
 
 export async function getBlog(id) {
   try {
-    await connectToDB();
+    await connectDB();
     const blog = await BlogPost.findById(id)
       .populate('author', 'name email')
       .populate('comments.author', 'name email')
@@ -41,7 +41,7 @@ export async function createBlog(data) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const blog = await BlogPost.create({
       ...data,
       author: session.user.id
@@ -61,7 +61,7 @@ export async function updateBlog(id, data) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const blog = await BlogPost.findByIdAndUpdate(
       id,
       { ...data },
@@ -87,7 +87,7 @@ export async function deleteBlog(id) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const blog = await BlogPost.findByIdAndDelete(id);
 
     if (!blog) {
@@ -108,7 +108,7 @@ export async function addComment(blogId, comment) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const blog = await BlogPost.findByIdAndUpdate(
       blogId,
       { 
@@ -140,7 +140,7 @@ export async function toggleLike(blogId) {
       return { error: "Unauthorized" };
     }
 
-    await connectToDB();
+    await connectDB();
     const blog = await BlogPost.findById(blogId);
 
     if (!blog) {
@@ -167,7 +167,7 @@ export async function toggleLike(blogId) {
 
 export async function incrementViews(blogId) {
   try {
-    await connectToDB();
+    await connectDB();
     const blog = await BlogPost.findByIdAndUpdate(
       blogId,
       { $inc: { views: 1 } },
@@ -186,7 +186,7 @@ export async function incrementViews(blogId) {
 
 export async function getBlogStats() {
   try {
-    await connectToDB();
+    await connectDB();
     
     const stats = await BlogPost.aggregate([
       {

@@ -92,7 +92,7 @@ export default function UniversitiesPage() {
             <School className="h-12 w-12 text-muted-foreground" />
             <h3 className="text-lg font-medium">No Universities Yet</h3>
             <p className="text-muted-foreground text-center max-w-sm">
-              Start by adding universities to {destination.name}. Click the "Add University" button above to get started.
+              Start by adding universities to {destination.name}. Click the &quot;Add University button&quot; above to get started.
             </p>
           </div>
         ) : (

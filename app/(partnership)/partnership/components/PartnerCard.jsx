@@ -1,4 +1,4 @@
-import ApplyButton from "@/components/Applybutton";
+
 import Image from "next/image";
 
 export default function PartnerCard({ name, imageUrl, date }) {
@@ -16,7 +16,7 @@ export default function PartnerCard({ name, imageUrl, date }) {
         Successful partnership since ,{" "}
         <span className="font-semibold">{date}</span>
       </p>
-      <ApplyButton value="Apply Now" />
+      <p>apply Now</p>
     </div>
   );
 }

@@ -1,20 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { v2 as cloudinary } from "cloudinary";
 import connectDB from "@/lib/db";
 import { Client } from "@/models/Client";
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { auth } from "@/auth";
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -43,41 +34,37 @@ export async function POST(request) {
       );
     }
 
-    // Upload files to Cloudinary
-    const uploadPromises = files.map(async (file) => {
+    // Process files
+    const processedFiles = await Promise.all(files.map(async (file) => {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-
-      // Convert buffer to base64
-      const base64 = buffer.toString("base64");
-      const mimeType = file.type;
-      const dataURI = `data:${mimeType};base64,${base64}`;
-
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: `studyjet/clients/${clientId}/documents`,
-        resource_type: "auto",
-      });
+      const base64Data = buffer.toString('base64');
 
       return {
         type,
         title,
-        fileUrl: result.secure_url,
-        fileType: result.resource_type,
+        fileData: base64Data,
+        fileType: file.type,
+        fileName: file.name,
         uploadDate: new Date(),
-        status: "pending",
+        status: "pending"
       };
-    });
-
-    const uploadedFiles = await Promise.all(uploadPromises);
+    }));
 
     // Add documents to client
-    client.documents.push(...uploadedFiles);
+    client.documents.push(...processedFiles);
     await client.save();
 
     return NextResponse.json({
       message: "Documents uploaded successfully",
-      documents: uploadedFiles,
+      documents: processedFiles.map(file => ({
+        type: file.type,
+        title: file.title,
+        fileName: file.fileName,
+        fileType: file.fileType,
+        uploadDate: file.uploadDate,
+        status: file.status
+      }))
     });
   } catch (error) {
     console.error("Error uploading documents:", error);
@@ -90,7 +77,7 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -127,7 +114,7 @@ export async function GET(request) {
 
 export async function DELETE(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -153,7 +140,7 @@ export async function DELETE(request) {
       );
     }
 
-    // Find the document
+    // Find and remove the document
     const document = client.documents.id(documentId);
     if (!document) {
       return NextResponse.json(
@@ -162,11 +149,6 @@ export async function DELETE(request) {
       );
     }
 
-    // Delete from Cloudinary
-    const publicId = document.fileUrl.split("/").pop().split(".")[0];
-    await cloudinary.uploader.destroy(publicId);
-
-    // Remove from client's documents
     client.documents.pull(documentId);
     await client.save();
 
@@ -180,4 +162,4 @@ export async function DELETE(request) {
       { status: 500 }
     );
   }
-} 
+}

@@ -32,6 +32,81 @@ const statusVariants = {
   cancelled: "destructive",
 };
 
+// Separate component for the actions cell
+const ConsultationActions = ({ row }) => {
+  const consultation = row.original;
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <Link href={`/private/dashboard/consultations/${consultation.id}`}>
+              <Eye className="mr-2 h-4 w-4" />
+              View Details
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link
+              href={`/private/dashboard/consultations/${consultation.id}/edit`}
+            >
+              <FileEdit className="mr-2 h-4 w-4" />
+              Edit Consultation
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setShowAssignDialog(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Assign Staff
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link
+              href={`/private/dashboard/consultations/${consultation.id}/notes`}
+            >
+              <MessageSquare className="mr-2 h-4 w-4" />
+              View Notes
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => setShowDeleteDialog(true)}
+            className="text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete Consultation
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AssignStaffDialog
+        open={showAssignDialog}
+        onOpenChange={setShowAssignDialog}
+        consultation={consultation}
+        staffMembers={[
+          // TODO: Replace with actual staff members from API
+          { _id: "1", firstName: "John", lastName: "Doe" },
+          { _id: "2", firstName: "Jane", lastName: "Smith" },
+        ]}
+      />
+
+      <DeleteConsultationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        consultation={consultation}
+      />
+    </>
+  );
+};
+
 export const columns = [
   {
     accessorKey: "consulteeName",
@@ -120,78 +195,6 @@ export const columns = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const consultation = row.original;
-      const [showAssignDialog, setShowAssignDialog] = useState(false);
-      const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link href={`/private/dashboard/consultations/${consultation.id}`}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  View Details
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/private/dashboard/consultations/${consultation.id}/edit`}
-                >
-                  <FileEdit className="mr-2 h-4 w-4" />
-                  Edit Consultation
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowAssignDialog(true)}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Assign Staff
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/private/dashboard/consultations/${consultation.id}/notes`}
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  View Notes
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setShowDeleteDialog(true)}
-                className="text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Consultation
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <AssignStaffDialog
-            open={showAssignDialog}
-            onOpenChange={setShowAssignDialog}
-            consultation={consultation}
-            staffMembers={[
-              // TODO: Replace with actual staff members from API
-              { _id: "1", firstName: "John", lastName: "Doe" },
-              { _id: "2", firstName: "Jane", lastName: "Smith" },
-            ]}
-          />
-
-          <DeleteConsultationDialog
-            open={showDeleteDialog}
-            onOpenChange={setShowDeleteDialog}
-            consultation={consultation}
-          />
-        </>
-      );
-    },
+    cell: ({ row }) => <ConsultationActions row={row} />
   },
 ];

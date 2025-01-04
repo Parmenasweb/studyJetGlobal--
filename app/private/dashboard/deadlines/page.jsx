@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { DeadlineCalendar } from "./components/deadline-calendar";
 
+
 async function getDeadlines() {
   const res = await fetch("/api/deadlines");
   if (!res.ok) {

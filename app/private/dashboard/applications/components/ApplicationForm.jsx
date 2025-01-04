@@ -506,8 +506,8 @@ export default function ApplicationForm({ initialData }) {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="diploma">Diploma</SelectItem>
-                              <SelectItem value="bachelors">Bachelor's</SelectItem>
-                              <SelectItem value="masters">Master's</SelectItem>
+                              <SelectItem value="bachelors">Bachelor&apos;s</SelectItem>
+                              <SelectItem value="masters">Master&apos;s</SelectItem>
                               <SelectItem value="phd">PhD</SelectItem>
                               <SelectItem value="certificate">Certificate</SelectItem>
                               <SelectItem value="foundation">Foundation</SelectItem>

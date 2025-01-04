@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/db";
-import Client from "@/models/Client";
+import { Client } from "@/models/Client";
+import { auth } from "@/auth";
+import connectDB from "@/lib/db";
 
 export async function GET(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -16,7 +15,7 @@ export async function GET(req, { params }) {
 
     const { id } = params;
 
-    await dbConnect();
+    await connectDB();
 
     const client = await Client.findById(id);
     if (!client) {
@@ -38,7 +37,7 @@ export async function GET(req, { params }) {
 
 export async function PATCH(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -49,7 +48,7 @@ export async function PATCH(req, { params }) {
     const { id } = params;
     const data = await req.json();
 
-    await dbConnect();
+    await connectDB();
 
     // Check if updating email and if it already exists
     if (data.email) {
@@ -90,7 +89,7 @@ export async function PATCH(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -100,7 +99,7 @@ export async function DELETE(req, { params }) {
 
     const { id } = params;
 
-    await dbConnect();
+    await connectDB();
 
     const client = await Client.findByIdAndDelete(id);
     if (!client) {

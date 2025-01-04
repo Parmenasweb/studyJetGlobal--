@@ -15,9 +15,47 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Building2, Users2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export function getColumns({ onDeletePartner }) {
+// Create a separate component for partner actions
+const PartnerActions = ({ partner, onDeletePartner }) => {
   const router = useRouter();
 
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem
+          onClick={() =>
+            router.push(`/private/dashboard/partners/${partner._id}`)
+          }
+        >
+          View Details
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() =>
+            router.push(`/private/dashboard/partners/${partner._id}/edit`)
+          }
+        >
+          Edit Partner
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive"
+          onClick={() => onDeletePartner(partner._id)}
+        >
+          Delete Partner
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+export function getColumns({ onDeletePartner }) {
   return [
     {
       id: "select",
@@ -129,44 +167,12 @@ export function getColumns({ onDeletePartner }) {
     },
     {
       id: "actions",
-      cell: ({ row }) => {
-        const partner = row.original;
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/private/dashboard/partners/${partner._id}`)
-                }
-              >
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/private/dashboard/partners/${partner._id}/edit`)
-                }
-              >
-                Edit Partner
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => onDeletePartner(partner._id)}
-              >
-                Delete Partner
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      cell: ({ row }) => (
+        <PartnerActions 
+          partner={row.original}
+          onDeletePartner={onDeletePartner}
+        />
+      ),
     },
   ];
 }

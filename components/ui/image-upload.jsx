@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 export function ImageUpload({ 
   onUpload, 
-  value, 
-  folder = "studyjet/general",
+  value,
   className = "",
   disabled = false,
 }) {
@@ -24,7 +22,6 @@ export function ImageUpload({
       setIsLoading(true);
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", folder);
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -32,7 +29,8 @@ export function ImageUpload({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to upload image");
+        const error = await response.json();
+        throw new Error(error.error || "Failed to upload image");
       }
 
       const data = await response.json();
@@ -50,12 +48,17 @@ export function ImageUpload({
     <div className={`space-y-4 ${className}`}>
       {value?.url && (
         <div className="relative aspect-square w-32 overflow-hidden rounded-lg">
-          <Image
+          <img
             src={value.url}
-            alt={value.alt || "Uploaded image"}
-            fill
-            className="object-cover"
+            alt="Uploaded image"
+            className="h-full w-full object-cover"
           />
+          <button
+            onClick={() => onUpload(null)}
+            className="absolute right-1 top-1 rounded-full bg-background/80 p-1 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
       <div className="flex items-center gap-4">

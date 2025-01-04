@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
 import Agent from "@/models/Agent";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
+import connectDB from "@/lib/db";
 
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -14,7 +13,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
-    await dbConnect();
+    await connectDB();
 
     if (id) {
       const agent = await Agent.findById(id)
@@ -45,14 +44,14 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const data = await request.json();
 
-    await dbConnect();
+    await connectDB();
 
     // Check if agent with same email already exists
     const existingAgent = await Agent.findOne({ email: data.email });
@@ -81,7 +80,7 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -98,7 +97,7 @@ export async function PUT(request) {
 
     const data = await request.json();
 
-    await dbConnect();
+    await connectDB();
 
     // Check if updating email and if it already exists
     if (data.email) {
@@ -142,7 +141,7 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -157,7 +156,7 @@ export async function DELETE(request) {
       );
     }
 
-    await dbConnect();
+    await connectDB();
 
     const agent = await Agent.findByIdAndDelete(id);
 
