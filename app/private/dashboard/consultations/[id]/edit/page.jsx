@@ -1,46 +1,49 @@
-"use client";
+import { getConsultationById } from "@/actions/consultation";
+import { notFound } from "next/navigation";
+import EditConsultationForm from "./EditConsultationForm";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import ConsultationForm from "../../components/ConsultationForm";
-import { mockConsultations } from "../../data/mock-consultations";
+export default async function EditConsultationPage({ params }) {
+  const [consultation, error] = await getConsultationById(params.id);
 
-export default function EditConsultationPage() {
-  const params = useParams();
-  const router = useRouter();
-  const [consultation, setConsultation] = useState(null);
-
-  useEffect(() => {
-    // In a real app, this would be an API call
-    const found = mockConsultations.find((c) => c._id === params.id);
-    setConsultation(found);
-  }, [params.id]);
-
-  if (!consultation) {
-    return <div>Loading...</div>;
+  if (error || !consultation) {
+    notFound();
   }
 
-  return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="flex items-center"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <h2 className="text-3xl font-bold tracking-tight">
-            Edit Consultation
-          </h2>
-        </div>
-      </div>
+  // Properly serialize the Mongoose document
+  const serializedConsultation = {
+    _id: consultation._id.toString(),
+    consulteeName: consultation.consulteeName,
+    email: consultation.email,
+    contactNumber: consultation.contactNumber,
+    whatsAppNumber: consultation.whatsAppNumber,
+    selectedDate: consultation.selectedDate ? new Date(consultation.selectedDate).toISOString() : null,
+    selectedTime: consultation.selectedTime,
+    consultationType: consultation.consultationType,
+    preferredMode: consultation.preferredMode,
+    interestedCountries: Array.isArray(consultation.interestedCountries) 
+      ? [...consultation.interestedCountries]
+      : [],
+    description: consultation.description,
+    status: consultation.status,
+    assignedTo: consultation.assignedTo ? {
+      _id: consultation.assignedTo._id.toString(),
+      firstName: consultation.assignedTo.firstName,
+      lastName: consultation.assignedTo.lastName,
+      email: consultation.assignedTo.email
+    } : null,
+    notes: consultation.notes ? consultation.notes.map(note => ({
+      _id: note._id.toString(),
+      content: note.content,
+      createdAt: new Date(note.createdAt).toISOString(),
+      author: note.author ? {
+        _id: note.author._id.toString(),
+        firstName: note.author.firstName,
+        lastName: note.author.lastName
+      } : null
+    })) : [],
+    createdAt: new Date(consultation.createdAt).toISOString(),
+    updatedAt: new Date(consultation.updatedAt).toISOString()
+  };
 
-      <ConsultationForm initialData={consultation} />
-    </div>
-  );
+  return <EditConsultationForm consultation={serializedConsultation} consultationId={params.id} />;
 } 

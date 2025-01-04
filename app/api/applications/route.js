@@ -1,208 +1,109 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { Application } from "@/models/Application";
+import { auth } from "@/auth";
 
-export async function GET() {
+export async function POST(req) {
   try {
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
-    const applications = await Application.find().sort({ submittedAt: -1 });
-    return NextResponse.json(applications);
+    const data = await req.json();
+
+    // Add metadata
+    data.createdBy = session.user.id;
+    data.submittedAt = new Date();
+
+    const application = await Application.create(data);
+
+    return NextResponse.json({ 
+      message: "Application created successfully",
+      applicationId: application._id 
+    }, { status: 201 });
+  } catch (error) {
+    console.error("Error creating application:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to create application" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(req) {
+  try {
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+    
+    // Get query parameters
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const status = searchParams.get("status");
+    const search = searchParams.get("search");
+
+    // Build query
+    const query = {};
+    if (status) query.status = status;
+    if (search) {
+      query.$or = [
+        { "personalInfo.fullName": { $regex: search, $options: "i" } },
+        { "personalInfo.email": { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+
+    // Fetch applications with populated references
+    const applicationResults = await Application.find(query)
+      .sort({ submittedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // Get total count for pagination
+    const total = await Application.countDocuments(query);
+
+    // Format the response data
+    const formattedApplications = applicationResults.map(app => ({
+      id: app._id,
+      applicationType: app.applicationType,
+      status: app.status,
+      priority: app.priority,
+      studentName: app.personalInfo?.fullName || "N/A",
+      studentEmail: app.personalInfo?.email || "N/A",
+      destination: app.studyDetails?.destinationCountry || app.workDetails?.destinationCountry || "N/A",
+      program: app.studyDetails?.specificProgram || app.workDetails?.preferredPosition || "N/A",
+      submittedAt: app.submittedAt,
+      updatedAt: app.updatedAt,
+    }));
+
+    return NextResponse.json({
+      applications: formattedApplications,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error("Error fetching applications:", error);
     return NextResponse.json(
-      { error: "Failed to fetch applications" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request) {
-  try {
-    const data = await request.json();
-    console.log("Received application data:", JSON.stringify(data, null, 2));
-
-    // Validate required fields
-    if (!data.applicationType || !data.personalInfo) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    // Format dates and ensure proper data types
-    const formattedData = {
-      ...data,
-      status: "submitted",
-      priority: data.priority || "medium",
-      submittedAt: new Date(),
-      personalInfo: {
-        ...data.personalInfo,
-        dateOfBirth: new Date(data.personalInfo.dateOfBirth),
-        passportExpiry: data.personalInfo.passportExpiry
-          ? new Date(data.personalInfo.passportExpiry)
-          : undefined,
-        languages: Array.isArray(data.personalInfo.languages)
-          ? data.personalInfo.languages.map((lang) => ({
-              language: typeof lang === "object" ? lang.language : lang,
-              proficiencyLevel:
-                typeof lang === "object" ? lang.proficiencyLevel : "basic",
-            }))
-          : [],
-      },
-      financialInfo: {
-        ...data.financialInfo,
-        fundingSource: data.financialInfo.fundingSource || "self",
-        annualFamilyIncome: Number(data.financialInfo.annualFamilyIncome) || 0,
-        hasExistingFunds: Boolean(data.financialInfo.hasExistingFunds),
-        fundingAmount: data.financialInfo.fundingAmount
-          ? Number(data.financialInfo.fundingAmount)
-          : undefined,
-      },
-      additionalInfo: {
-        ...data.additionalInfo,
-        previousVisaRejections: Boolean(
-          data.additionalInfo.previousVisaRejections
-        ),
-        rejectionDetails: data.additionalInfo.rejectionDetails || "",
-        travelHistory: Array.isArray(data.additionalInfo.travelHistory)
-          ? data.additionalInfo.travelHistory.map((entry) => ({
-              ...entry,
-              year: Number(entry.year),
-            }))
-          : [],
-        specialRequirements: data.additionalInfo.specialRequirements || "",
-        howDidYouHear: data.additionalInfo.howDidYouHear || "",
-      },
-      timeline: [
-        {
-          status: "submitted",
-          date: new Date(),
-          note: "Application submitted successfully",
-        },
-      ],
-    };
-
-    // Handle study details
-    if (data.applicationType === "study" && data.studyDetails) {
-      formattedData.studyDetails = {
-        ...data.studyDetails,
-        academicBackground: Array.isArray(data.studyDetails.academicBackground)
-          ? data.studyDetails.academicBackground.map((bg) => ({
-              ...bg,
-              yearCompleted: Number(bg.yearCompleted),
-            }))
-          : [],
-        englishProficiency: {
-          ...data.studyDetails.englishProficiency,
-          testType: (
-            data.studyDetails.englishProficiency.testType || ""
-          ).toLowerCase(),
-          testDate: new Date(data.studyDetails.englishProficiency.testDate),
-          expiryDate: new Date(data.studyDetails.englishProficiency.expiryDate),
-          overallScore: Number(
-            data.studyDetails.englishProficiency.overallScore
-          ),
-        },
-        hasScholarshipRequirement: Boolean(
-          data.studyDetails.hasScholarshipRequirement
-        ),
-        preferredCities: Array.isArray(data.studyDetails.preferredCities)
-          ? data.studyDetails.preferredCities
-          : [],
-        preferredUniversities: Array.isArray(
-          data.studyDetails.preferredUniversities
-        )
-          ? data.studyDetails.preferredUniversities
-          : [],
-      };
-      formattedData.workDetails = null;
-    }
-
-    // Handle work details
-    if (data.applicationType === "work" && data.workDetails) {
-      formattedData.workDetails = {
-        ...data.workDetails,
-        yearsOfExperience: Number(data.workDetails.yearsOfExperience) || 0,
-        workExperience: Array.isArray(data.workDetails.workExperience)
-          ? data.workDetails.workExperience.filter(
-              (exp) =>
-                exp.company &&
-                exp.position &&
-                exp.duration &&
-                exp.responsibilities
-            )
-          : [],
-        skills: Array.isArray(data.workDetails.skills)
-          ? data.workDetails.skills
-          : [],
-      };
-      formattedData.studyDetails = null;
-    }
-
-    console.log(
-      "Formatted data before submission:",
-      JSON.stringify(formattedData, null, 2)
-    );
-
-    await connectDB();
-    console.log("Connected to database");
-
-    const application = new Application(formattedData);
-    console.log("Created application object");
-
-    const validationError = application.validateSync();
-    if (validationError) {
-      console.error("Validation error:", validationError);
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: validationError.message,
-        },
-        { status: 400 }
-      );
-    }
-
-    await application.save();
-    console.log("Application saved successfully");
-
-    return NextResponse.json({
-      message: "Application submitted successfully",
-      applicationId: application._id,
-    });
-  } catch (error) {
-    console.error("Error submitting application:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to submit application",
-        details: error.message,
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Application ID is required" },
-        { status: 400 }
-      );
-    }
-
-    await connectDB();
-    await Application.findByIdAndDelete(id);
-
-    return NextResponse.json({
-      message: "Application deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting application:", error);
-    return NextResponse.json(
-      { error: "Failed to delete application" },
+      { error: error.message || "Failed to fetch applications" },
       { status: 500 }
     );
   }

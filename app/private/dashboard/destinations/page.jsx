@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { columns } from "./components/columns";
+import { createColumns } from "./components/columns";
 import { getDestinations } from "@/actions/destination";
 import { LoadingPage } from "@/components/loading";
 import { ErrorPage } from "@/components/error";
 import CardDestinationStats from "./components/CardDestinationStats";
+import Link from "next/link";
 
 export default function DestinationsPage() {
   const router = useRouter();
@@ -28,11 +29,7 @@ export default function DestinationsPage() {
     },
   });
 
-  useEffect(() => {
-    fetchDestinations();
-  }, []);
-
-  async function fetchDestinations(query = {}) {
+  const fetchDestinations = async (query = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -49,7 +46,15 @@ export default function DestinationsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    fetchDestinations();
+  }, []);
+
+  const handleDelete = async () => {
+    await fetchDestinations({ page: data.pagination.page });
+  };
 
   if (loading) {
     return <LoadingPage />;
@@ -58,6 +63,37 @@ export default function DestinationsPage() {
   if (error) {
     return <ErrorPage message={error} />;
   }
+
+  // Format the data for the table
+  const formattedDestinations = data.destinations.map(destination => ({
+    id: destination._id.toString(),
+    name: destination.name,
+    countryCode: destination.countryCode,
+    capital: destination.capital,
+    status: destination.status,
+    universities: destination.universities?.length || 0,
+    programs: destination.programs?.length || 0,
+    scholarships: destination.scholarships?.length || 0,
+    studyInfo: {
+      averageTuitionFee: destination.studyInfo?.averageTuitionFee,
+      academicYear: destination.studyInfo?.academicYear,
+    },
+    quickFacts: {
+      population: destination.quickFacts?.population,
+      language: destination.quickFacts?.language,
+      currency: destination.quickFacts?.currency,
+      internationalStudents: destination.quickFacts?.internationalStudents,
+    },
+    statistics: {
+      studentSatisfactionRate: destination.statistics?.studentSatisfactionRate,
+      employmentRate: destination.statistics?.employmentRate,
+      visaSuccessRate: destination.statistics?.visaSuccessRate,
+    },
+    createdAt: destination.createdAt ? new Date(destination.createdAt).toLocaleDateString() : 'N/A',
+    updatedAt: destination.updatedAt ? new Date(destination.updatedAt).toLocaleDateString() : 'N/A',
+  }));
+
+  const columns = createColumns(handleDelete);
 
   return (
     <div className="container mx-auto py-10">
@@ -69,11 +105,12 @@ export default function DestinationsPage() {
               Manage study destinations and their details
             </p>
           </div>
-          <Button
-            onClick={() => router.push("/private/dashboard/destinations/new")}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add Destination
-          </Button>
+          <Link href="/private/dashboard/destinations/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Destination
+            </Button>
+          </Link>
         </div>
 
         <CardDestinationStats destinations={data.destinations} />
@@ -82,7 +119,7 @@ export default function DestinationsPage() {
 
         <DataTable
           columns={columns}
-          data={data.destinations}
+          data={formattedDestinations}
           searchKey="name"
           searchPlaceholder="Search destinations..."
           pagination={{
@@ -93,4 +130,4 @@ export default function DestinationsPage() {
       </div>
     </div>
   );
-};
+}

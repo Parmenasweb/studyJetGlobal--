@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import connectDB from "@/lib/db";
 import Destination from "@/models/Destination";
 import { serializeMongoose } from "@/lib/utils/serialize";
+import { auth } from "@/auth";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -69,22 +70,37 @@ export async function getDestination(id) {
 
 export async function createDestination(data) {
   try {
+    // Ensure media objects have all required fields
+    const formattedData = {
+      ...data,
+      media: {
+        mainImage: data.media?.mainImage || null,
+        flagImage: data.media?.flagImage || null,
+        galleryImages: data.media?.galleryImages || [],
+        videoUrl: data.media?.videoUrl || null,
+      },
+    };
+
     const url = new URL("/api/destinations", BASE_URL);
     const response = await fetch(url.toString(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(formattedData),
       cache: "no-store",
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || "Failed to create destination");
+      throw new Error(error.error || "Failed to create destination");
     }
 
-    const newDestination = await response.json();
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to create destination");
+    }
+
     revalidatePath("/private/dashboard/destinations");
-    return serializeMongoose(newDestination);
+    return result;
   } catch (error) {
     console.error("Error creating destination:", error);
     throw new Error(error.message || "Failed to create destination");
@@ -93,23 +109,38 @@ export async function createDestination(data) {
 
 export async function updateDestination(id, data) {
   try {
+    // Ensure media objects have all required fields
+    const formattedData = {
+      ...data,
+      media: {
+        mainImage: data.media?.mainImage || null,
+        flagImage: data.media?.flagImage || null,
+        galleryImages: data.media?.galleryImages || [],
+        videoUrl: data.media?.videoUrl || null,
+      },
+    };
+
     const url = new URL(`/api/destinations/${id}`, BASE_URL);
     const response = await fetch(url.toString(), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(formattedData),
       cache: "no-store",
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || "Failed to update destination");
+      throw new Error(error.error || "Failed to update destination");
     }
 
-    const updatedDestination = await response.json();
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Failed to update destination");
+    }
+
     revalidatePath("/private/dashboard/destinations");
     revalidatePath(`/private/dashboard/destinations/${id}`);
-    return serializeMongoose(updatedDestination);
+    return result;
   } catch (error) {
     console.error("Error updating destination:", error);
     throw new Error(error.message || "Failed to update destination");
@@ -118,22 +149,25 @@ export async function updateDestination(id, data) {
 
 export async function deleteDestination(id) {
   try {
-    const url = new URL(`/api/destinations/${id}`, BASE_URL);
-    const response = await fetch(url.toString(), {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      cache: "no-store",
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to delete destination");
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Unauthorized");
     }
 
-    revalidatePath("/private/dashboard/destinations");
-    return { success: true, message: data.message };
+    await connectDB();
+    
+    const destination = await Destination.findById(id);
+    if (!destination) {
+      throw new Error("Destination not found");
+    }
+
+    // Delete the destination
+    await Destination.findByIdAndDelete(id);
+
+    // Revalidate the destinations page
+    revalidatePath('/private/dashboard/destinations');
+    
+    return { success: true };
   } catch (error) {
     console.error("Error deleting destination:", error);
     throw new Error(error.message || "Failed to delete destination");

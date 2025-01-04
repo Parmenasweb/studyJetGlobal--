@@ -33,22 +33,35 @@ export async function GET(req, { params }) {
 
 export async function PATCH(req, { params }) {
   try {
-    const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const session = await auth();
+    // if (!session?.user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
 
     await connectDB();
     const data = await req.json();
 
+    // Ensure media objects have all required fields
+    const media = {
+      mainImage: data.media?.mainImage || null,
+      flagImage: data.media?.flagImage || null,
+      galleryImages: data.media?.galleryImages || [],
+      videoUrl: data.media?.videoUrl || null,
+    };
+
+    // Update the destination with validated data
     const destination = await Destination.findByIdAndUpdate(
       params.destinationId,
       {
         ...data,
-        updatedBy: session.user.id,
-        updatedAt: new Date(),
+        media,
+        
       },
-      { new: true, runValidators: true }
+      { 
+        new: true, 
+        runValidators: true,
+        lean: true,
+      }
     );
 
     if (!destination) {
@@ -58,11 +71,17 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    return NextResponse.json(destination);
+    return NextResponse.json({
+      success: true,
+      destination
+    });
   } catch (error) {
     console.error("Error updating destination:", error);
     return NextResponse.json(
-      { error: "Failed to update destination" },
+      { 
+        success: false,
+        error: error.message || "Failed to update destination" 
+      },
       { status: 500 }
     );
   }

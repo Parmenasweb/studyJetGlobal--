@@ -3,11 +3,23 @@
 import { revalidatePath } from "next/cache";
 import connectDB from "@/lib/db";
 import Consultation from "@/models/consultationForm";
+import { unstable_noStore as noStore } from "next/cache";
 
-export async function getConsultations() {
+export async function getConsultations(dateRange = null) {
   try {
     await connectDB();
-    const consultations = await Consultation.find()
+    
+    let query = {};
+    
+    // Add date range filter if provided
+    if (dateRange?.from && dateRange?.to) {
+      query.createdAt = {
+        $gte: new Date(dateRange.from),
+        $lte: new Date(dateRange.to),
+      };
+    }
+
+    const consultations = await Consultation.find(query)
       .sort({ createdAt: -1 })
       .populate("assignedTo", "firstName lastName email")
       .populate("notes.author", "firstName lastName");
@@ -24,7 +36,8 @@ export async function getConsultationById(id) {
     await connectDB();
     const consultation = await Consultation.findById(id)
       .populate("assignedTo", "firstName lastName email")
-      .populate("notes.author", "firstName lastName");
+      .populate("notes.author", "firstName lastName")
+      .lean();
 
     if (!consultation) {
       throw new Error("Consultation not found");
@@ -52,9 +65,16 @@ export async function createConsultation(data) {
 export async function updateConsultation(id, data) {
   try {
     await connectDB();
+    
+    // Ensure the date is properly formatted
+    const formattedData = {
+      ...data,
+      selectedDate: data.selectedDate ? new Date(data.selectedDate) : null,
+    };
+
     const consultation = await Consultation.findByIdAndUpdate(
       id,
-      { ...data },
+      { ...formattedData },
       { new: true }
     )
       .populate("assignedTo", "firstName lastName email")
@@ -72,16 +92,36 @@ export async function updateConsultation(id, data) {
   }
 }
 
-export async function deleteConsultation(id) {
+export async function assignStaffToConsultation(id, staffId) {
   try {
     await connectDB();
-    const consultation = await Consultation.findByIdAndDelete(id);
+    const consultation = await Consultation.findByIdAndUpdate(
+      id,
+      { assignedTo: staffId },
+      { new: true }
+    ).populate("assignedTo", "firstName lastName email");
 
     if (!consultation) {
       throw new Error("Consultation not found");
     }
 
     revalidatePath("/private/dashboard/consultations");
+    return [consultation, null];
+  } catch (error) {
+    console.error("Error assigning staff:", error);
+    return [null, "Failed to assign staff"];
+  }
+}
+
+export async function deleteConsultation(id) {
+  try {
+    await connectDB();
+    await Consultation.findByIdAndDelete(id);
+    
+    // Add revalidation for both the list and detail pages
+    revalidatePath("/private/dashboard/consultations");
+    revalidatePath(`/private/dashboard/consultations/${id}`);
+    
     return [true, null];
   } catch (error) {
     console.error("Error deleting consultation:", error);
@@ -89,22 +129,32 @@ export async function deleteConsultation(id) {
   }
 }
 
-export async function addConsultationNote(id, note) {
+export async function addConsultationNote(consultationId, noteData) {
   try {
     await connectDB();
+    
     const consultation = await Consultation.findByIdAndUpdate(
-      id,
-      { $push: { notes: note } },
+      consultationId,
+      {
+        $push: {
+          notes: {
+            content: noteData.content,
+            author: noteData.authorId,
+            createdAt: new Date()
+          }
+        }
+      },
       { new: true }
     )
-      .populate("assignedTo", "firstName lastName email")
-      .populate("notes.author", "firstName lastName");
+    .populate("assignedTo", "firstName lastName email")
+    .populate("notes.author", "firstName lastName");
 
     if (!consultation) {
       throw new Error("Consultation not found");
     }
 
     revalidatePath("/private/dashboard/consultations");
+    revalidatePath(`/private/dashboard/consultations/${consultationId}`);
     return [consultation, null];
   } catch (error) {
     console.error("Error adding note:", error);
@@ -133,4 +183,4 @@ export async function updateConsultationStatus(id, status) {
     console.error("Error updating status:", error);
     return [null, "Failed to update status"];
   }
-}
+};

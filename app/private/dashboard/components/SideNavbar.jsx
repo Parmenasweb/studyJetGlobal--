@@ -20,10 +20,11 @@ import {
   PenSquare,
   Menu,
   MessageSquare,
+  Handshake,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-// Base navigation items available to all users
+// Define navigation items with their respective icons
 const baseNavItems = [
   {
     title: "Overview",
@@ -67,8 +68,12 @@ const baseNavItems = [
   },
 ];
 
-// Admin-only navigation items
 const adminNavItems = [
+  {
+    title: "Partners",
+    href: "/private/dashboard/partners",
+    icon: Handshake,
+  },
   {
     title: "Finances",
     href: "/private/dashboard/finances",
@@ -92,33 +97,6 @@ export default function SideNavbar() {
       ? [...baseNavItems, ...adminNavItems]
       : baseNavItems;
 
-  const NavLinks = () => (
-    <>
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive =
-          pathname === item.href || pathname.startsWith(item.href + "/");
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setIsOpen(false)}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
-              isActive
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground"
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            {item.title}
-          </Link>
-        );
-      })}
-    </>
-  );
-
   return (
     <>
       {/* Mobile Navigation */}
@@ -132,16 +110,34 @@ export default function SideNavbar() {
         <SheetContent side="left" className="w-[300px] p-0">
           <div className="flex h-full flex-col">
             <div className="flex h-14 items-center border-b px-6">
-              <Link
-                href="/private/dashboard"
-                className="flex items-center gap-2"
-              >
+              <Link href="/private/dashboard" className="flex items-center gap-2">
                 <GraduationCap className="h-6 w-6" />
                 <span className="font-bold">StudyJet Global</span>
               </Link>
             </div>
             <ScrollArea className="flex-1 px-3 py-4">
-              <NavLinks />
+              <div className="space-y-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
+                        isActive
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.title}
+                    </Link>
+                  );
+                })}
+              </div>
             </ScrollArea>
             <div className="border-t p-4">
               <ThemeToggle />
@@ -159,7 +155,27 @@ export default function SideNavbar() {
           </Link>
         </div>
         <ScrollArea className="flex-1 px-3 py-4">
-          <NavLinks />
+          <div className="space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
+                    isActive
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.title}
+                </Link>
+              );
+            })}
+          </div>
         </ScrollArea>
         <div className="border-t p-4">
           <ThemeToggle />

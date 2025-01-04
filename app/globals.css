@@ -126,41 +126,82 @@
 
 /* Phone Input Styling */
 .phone-input-container {
-  @apply relative w-full;
-}
-
-.phone-input-container .react-tel-input {
   @apply w-full;
 }
 
-.phone-input-container .react-tel-input .form-control {
-  @apply w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 !pl-[3.5rem];
+.phone-input-container .form-control {
+  @apply w-full h-11 text-base rounded-md border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
 }
 
-.phone-input-container .react-tel-input .flag-dropdown {
-  @apply !border-0 !bg-transparent !w-12;
+.phone-input-container .flag-dropdown {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
 }
 
-.phone-input-container .react-tel-input .selected-flag {
-  @apply !bg-transparent !w-12 !pl-3;
+.phone-input-container .selected-flag:hover,
+.phone-input-container .selected-flag:focus {
+  @apply bg-accent;
 }
 
-.phone-input-container .react-tel-input .country-list {
-  @apply !bg-background !border !border-input !rounded-md !mt-1 !shadow-md;
+.phone-input-container .country-list {
+  @apply bg-background border border-input;
 }
 
-.phone-input-container .react-tel-input .country-list .country {
-  @apply !bg-background hover:!bg-accent hover:!text-accent-foreground;
+.phone-input-container .country-list .country:hover {
+  @apply bg-accent;
 }
 
-.phone-input-container .react-tel-input .country-list .country.highlight {
-  @apply !bg-accent !text-accent-foreground;
+.phone-input-container .country-list .country.highlight {
+  @apply bg-accent;
 }
 
-.phone-input-container .react-tel-input .country-list .search {
-  @apply !bg-background !border !border-input !rounded-md !m-2 !p-2;
+/* Phone Input Dark Mode Styling */
+.dark .phone-input-container .form-control {
+  @apply bg-background text-foreground border-input;
 }
 
-.phone-input-container .react-tel-input .country-list .search-box {
-  @apply !bg-background !text-foreground !border-0 !w-full;
+.dark .phone-input-container .flag-dropdown {
+  @apply bg-background border-input;
+}
+
+.dark .phone-input-container .selected-flag:hover,
+.dark .phone-input-container .selected-flag:focus {
+  @apply bg-accent;
+}
+
+.dark .phone-input-container .country-list {
+  @apply bg-background border-input;
+}
+
+.dark .phone-input-container .country-list .country {
+  @apply text-foreground;
+}
+
+.dark .phone-input-container .country-list .country:hover {
+  @apply bg-accent text-accent-foreground;
+}
+
+.dark .phone-input-container .country-list .country.highlight {
+  @apply bg-accent text-accent-foreground;
+}
+
+/* Dark dropdown specific styles */
+.dark-dropdown {
+  @apply bg-background border-input !important;
+}
+
+.dark-dropdown .country {
+  @apply text-foreground !important;
+}
+
+.dark-dropdown .country:hover {
+  @apply bg-accent text-accent-foreground !important;
+}
+
+.dark-dropdown .selected-flag {
+  @apply bg-background !important;
+}
+
+.dark-dropdown .selected-flag:hover,
+.dark-dropdown .selected-flag:focus {
+  @apply bg-accent !important;
 }

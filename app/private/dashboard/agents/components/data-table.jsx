@@ -91,7 +91,7 @@ export function DataTable({
           />
           <Select
             value={
-              (table.getColumn("status")?.getFilterValue() as string) ?? ""
+              table.getColumn("status")?.getFilterValue() || ""
             }
             onValueChange={(value) =>
               table.getColumn("status")?.setFilterValue(value)

@@ -15,7 +15,10 @@ import {
   Languages,
   Coins,
   Sun,
-  School
+  School,
+  Award,
+  CheckCircle,
+  Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,60 +37,57 @@ export default function CardDestinationOverview({ destination }) {
 
   const stats = [
     {
-      label: "Student Satisfaction",
-      value: `${destination?.statistics?.studentSatisfactionRate}%`,
-      icon: Users,
+      label: "Universities",
+      value: destination?.totalUniversities || 0,
+      subtext: `${destination?.activeUniversities || 0} Active`,
+      icon: Building2,
     },
     {
-      label: "Employment Rate",
-      value: `${destination?.statistics?.employmentRate}%`,
-      icon: BarChart,
+      label: "Programs",
+      value: destination?.totalPrograms || 0,
+      subtext: "Across universities",
+      icon: GraduationCap,
     },
     {
-      label: "Int'l Students",
-      value: `${destination?.statistics?.internationalStudentRatio}%`,
-      icon: Globe,
+      label: "Scholarships",
+      value: destination?.totalScholarships || 0,
+      subtext: "Available",
+      icon: Award,
     },
   ];
 
   const quickFacts = [
     {
-      label: "Population",
-      value: destination?.quickFacts?.population,
-      icon: Users,
-    },
-    {
-      label: "Language",
-      value: destination?.quickFacts?.language,
-      icon: Languages,
-    },
-    {
-      label: "Currency",
-      value: destination?.quickFacts?.currency,
-      icon: Coins,
-    },
-    {
-      label: "Climate",
-      value: destination?.quickFacts?.climateInfo,
-      icon: Sun,
-    },
-  ];
-
-  const studyInfo = [
-    {
       label: "Avg. Tuition",
-      value: `$${destination?.studyInfo?.averageTuitionFee?.toLocaleString()}/year`,
+      value: destination?.studyInfo?.averageTuitionFee 
+        ? `$${destination.studyInfo.averageTuitionFee.toLocaleString()}`
+        : "N/A",
+      subtext: "Per year",
       icon: DollarSign,
     },
     {
-      label: "Academic Year",
-      value: destination?.studyInfo?.academicYear,
-      icon: School,
+      label: "Living Cost",
+      value: destination?.quickFacts?.averageCostOfLiving
+        ? `$${destination.quickFacts.averageCostOfLiving.toLocaleString()}`
+        : "N/A",
+      subtext: "Per year",
+      icon: Building2,
     },
     {
-      label: "Living Cost",
-      value: `$${destination?.quickFacts?.averageCostOfLiving?.toLocaleString()}/year`,
-      icon: Building2,
+      label: "Visa Success",
+      value: destination?.statistics?.visaSuccessRate
+        ? `${destination.statistics.visaSuccessRate}%`
+        : "N/A",
+      subtext: "Approval rate",
+      icon: CheckCircle,
+    },
+    {
+      label: "Employment",
+      value: destination?.statistics?.employmentRate
+        ? `${destination.statistics.employmentRate}%`
+        : "N/A",
+      subtext: "After graduation",
+      icon: Briefcase,
     },
   ];
 
@@ -95,10 +95,10 @@ export default function CardDestinationOverview({ destination }) {
     <Card className="group overflow-hidden transition-all hover:shadow-lg">
       <CardHeader className="p-0">
         <div className="relative h-48 w-full overflow-hidden">
-          {destination?.media?.mainImage ? (
+          {destination?.media?.mainImage?.url ? (
             <Image
-              src={destination?.media?.mainImage}
-              alt={destination?.name}
+              src={destination.media.mainImage.url}
+              alt={destination.media.mainImage.alt || destination.name}
               fill
               className="object-cover transition-transform group-hover:scale-105"
             />
@@ -110,10 +110,10 @@ export default function CardDestinationOverview({ destination }) {
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
             <div className="flex items-center gap-3">
               <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-white">
-                {destination?.media?.flagImage ? (
+                {destination?.media?.flagImage?.url ? (
                   <Image
-                    src={destination?.media?.flagImage}
-                    alt={`${destination?.name} flag`}
+                    src={destination.media.flagImage.url}
+                    alt={destination.media.flagImage.alt || `${destination.name} flag`}
                     fill
                     className="object-cover"
                   />
@@ -125,9 +125,11 @@ export default function CardDestinationOverview({ destination }) {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">
-                    {destination?.name}
+                  {destination?.name}
                 </h3>
-                <p className="text-sm text-white/80">{destination?.capital}</p>
+                <p className="text-sm text-white/80">
+                  {destination?.capital}, {destination?.countryCode}
+                </p>
               </div>
             </div>
           </div>
@@ -144,6 +146,9 @@ export default function CardDestinationOverview({ destination }) {
               <stat.icon className="mb-1 h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">{stat.value}</span>
               <span className="text-xs text-muted-foreground">{stat.label}</span>
+              {stat.subtext && (
+                <span className="text-xs text-muted-foreground/80">{stat.subtext}</span>
+              )}
             </div>
           ))}
         </div>
@@ -154,31 +159,16 @@ export default function CardDestinationOverview({ destination }) {
             {quickFacts.map((fact, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 rounded-md bg-muted/50 p-2"
+                className="flex flex-col gap-1 rounded-md bg-muted/50 p-2"
               >
-                <fact.icon className="h-4 w-4 text-muted-foreground" />
-                <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <fact.icon className="h-4 w-4 text-muted-foreground" />
                   <p className="text-xs text-muted-foreground">{fact.label}</p>
-                  <p className="text-sm font-medium truncate">{fact.value}</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <h4 className="font-medium">Study Information</h4>
-          <div className="grid grid-cols-2 gap-2">
-            {studyInfo.map((info, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 rounded-md bg-muted/50 p-2"
-              >
-                <info.icon className="h-4 w-4 text-muted-foreground" />
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">{info.label}</p>
-                  <p className="text-sm font-medium truncate">{info.value}</p>
-                </div>
+                <p className="text-sm font-medium">{fact.value}</p>
+                {fact.subtext && (
+                  <p className="text-xs text-muted-foreground/80">{fact.subtext}</p>
+                )}
               </div>
             ))}
           </div>
@@ -194,7 +184,7 @@ export default function CardDestinationOverview({ destination }) {
             ))}
             {destination?.studyInfo?.popularPrograms?.length > 3 && (
               <Badge variant="outline">
-                +{destination?.studyInfo?.popularPrograms?.length - 3} more
+                +{destination.studyInfo.popularPrograms.length - 3} more
               </Badge>
             )}
           </div>

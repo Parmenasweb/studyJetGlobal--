@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -16,102 +22,61 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { consultationSchema } from "@/lib/validations/consultation";
-import FormError from "@/components/dynamicComps/form-error";
-import FormSuccess from "@/components/dynamicComps/form-success";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
 import { useToast } from "@/components/ui/use-toast";
+import { createConsultation, updateConsultation } from "@/actions/consultation";
+import { consultationSchema } from "@/lib/validations/consultation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
-const timeSlots = Array.from({ length: 24 }, (_, i) => {
-  const hour = i.toString().padStart(2, "0");
-  return [
-    { value: `${hour}:00`, label: `${hour}:00` },
-    { value: `${hour}:30`, label: `${hour}:30` },
-  ];
-}).flat();
-
-const countries = [
-  "United States",
-  "United Kingdom",
-  "Canada",
-  "Australia",
-  "New Zealand",
-  "Ireland",
-  "Germany",
-  "France",
-  "Spain",
-  "Italy",
-  // Add more countries as needed
-];
-
-export default function ConsultationForm({ initialData }) {
+export default function ConsultationForm({ initialData, consultationId }) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Format the date for the form
+  const formattedInitialData = {
+    ...initialData,
+    selectedDate: initialData?.selectedDate 
+      ? new Date(initialData.selectedDate).toISOString().split('T')[0] 
+      : '',
+  };
+
   const form = useForm({
+    defaultValues: formattedInitialData,
     resolver: zodResolver(consultationSchema),
-    defaultValues: initialData || {
-      consulteeName: "",
-      email: "",
-      contactNumber: "",
-      whatsAppNumber: "",
-      selectedDate: new Date(),
-      selectedTime: "",
-      consultationType: "",
-      preferredMode: "",
-      interestedCountries: [],
-      description: "",
-      status: "pending",
-    },
   });
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const url = initialData
-        ? `/api/consultations/${initialData._id}`
-        : "/api/consultations";
+      // Convert the date string back to a Date object before sending to the server
+      const formattedData = {
+        ...data,
+        selectedDate: data.selectedDate ? new Date(data.selectedDate) : null,
+      };
 
-      const method = initialData ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to save consultation");
+      if (consultationId) {
+        const [result, error] = await updateConsultation(consultationId, formattedData);
+        if (error) throw new Error(error);
+        toast({
+          title: "Success",
+          description: "Consultation updated successfully",
+        });
+      } else {
+        const [result, error] = await createConsultation(formattedData);
+        if (error) throw new Error(error);
+        toast({
+          title: "Success",
+          description: "Consultation created successfully",
+        });
       }
-
-      toast({
-        title: initialData ? "Consultation Updated" : "Consultation Created",
-        description: initialData
-          ? "The consultation has been updated successfully."
-          : "A new consultation has been created successfully.",
-      });
-
       router.push("/private/dashboard/consultations");
       router.refresh();
     } catch (error) {
       toast({
-        title: "Error",
-        description: error.message || "Something went wrong",
         variant: "destructive",
+        title: "Error",
+        description: error.message,
       });
     } finally {
       setIsLoading(false);
@@ -119,250 +84,231 @@ export default function ConsultationForm({ initialData }) {
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <Card>
-        <CardContent className="p-6">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Link href="/private/dashboard/consultations">
+            <Button variant="ghost" className="flex items-center">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          </Link>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {consultationId ? "Edit" : "Create"} Consultation
+          </h2>
+        </div>
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="consulteeName">Full Name</Label>
-              <Input
-                id="consulteeName"
-                {...form.register("consulteeName")}
-                disabled={isLoading}
-              />
-              {form.formState.errors.consulteeName && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.consulteeName.message}
-                </p>
+            <FormField
+              control={form.control}
+              name="consulteeName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                {...form.register("email")}
-                disabled={isLoading}
-              />
-              {form.formState.errors.email && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.email.message}
-                </p>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label>Contact Number</Label>
-              <PhoneInput
-                country="us"
-                value={form.watch("contactNumber")}
-                onChange={(phone) => form.setValue("contactNumber", phone)}
-                disabled={isLoading}
-                inputProps={{
-                  required: true,
-                  className: "w-full p-2 border rounded-md",
-                }}
-                containerClass="w-full"
-              />
-              {form.formState.errors.contactNumber && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.contactNumber.message}
-                </p>
+            <FormField
+              control={form.control}
+              name="contactNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label>WhatsApp Number</Label>
-              <PhoneInput
-                country="us"
-                value={form.watch("whatsAppNumber")}
-                onChange={(phone) => form.setValue("whatsAppNumber", phone)}
-                disabled={isLoading}
-                inputProps={{
-                  required: true,
-                  className: "w-full p-2 border rounded-md",
-                }}
-                containerClass="w-full"
-              />
-              {form.formState.errors.whatsAppNumber && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.whatsAppNumber.message}
-                </p>
+            <FormField
+              control={form.control}
+              name="whatsAppNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>WhatsApp Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !form.watch("selectedDate") && "text-muted-foreground"
-                    )}
+            <FormField
+              control={form.control}
+              name="selectedDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="date" 
+                      {...field} 
+                      value={field.value || ''} 
+                      disabled={isLoading} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="selectedTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="consultationType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Consultation Type</FormLabel>
+                  <Select
                     disabled={isLoading}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    defaultValue={field.value}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {form.watch("selectedDate") ? (
-                      format(form.watch("selectedDate"), "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={form.watch("selectedDate")}
-                    onSelect={(date) => form.setValue("selectedDate", date)}
-                    disabled={(date) =>
-                      date < new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              {form.formState.errors.selectedDate && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.selectedDate.message}
-                </p>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select consultation type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="study">Study</SelectItem>
+                      <SelectItem value="work">Work</SelectItem>
+                      <SelectItem value="other">other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label>Time</Label>
-              <Select
-                value={form.watch("selectedTime")}
-                onValueChange={(value) => form.setValue("selectedTime", value)}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map((slot) => (
-                    <SelectItem key={slot.value} value={slot.value}>
-                      {slot.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.selectedTime && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.selectedTime.message}
-                </p>
+            <FormField
+              control={form.control}
+              name="preferredMode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preferred Mode</FormLabel>
+                  <Select
+                    disabled={isLoading}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select preferred mode" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="online">Online</SelectItem>
+                      <SelectItem value="phone">Phone</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label>Consultation Type</Label>
-              <Select
-                value={form.watch("consultationType")}
-                onValueChange={(value) =>
-                  form.setValue("consultationType", value)
-                }
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="study">Study</SelectItem>
-                  <SelectItem value="work">Work</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                </SelectContent>
-              </Select>
-              {form.formState.errors.consultationType && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.consultationType.message}
-                </p>
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    disabled={isLoading}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
+            />
 
-            <div className="space-y-2">
-              <Label>Preferred Mode</Label>
-              <Select
-                value={form.watch("preferredMode")}
-                onValueChange={(value) => form.setValue("preferredMode", value)}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="in-person">In-Person</SelectItem>
-                </SelectContent>
-              </Select>
-              {form.formState.errors.preferredMode && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.preferredMode.message}
-                </p>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </div>
-
-            <div className="space-y-2 col-span-2">
-              <Label>Interested Countries</Label>
-              <Select
-                value={form.watch("interestedCountries")}
-                onValueChange={(value) =>
-                  form.setValue("interestedCountries", [value])
-                }
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select countries" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map((country) => (
-                    <SelectItem key={country} value={country}>
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.interestedCountries && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.interestedCountries.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2 col-span-2">
-              <Label>Description</Label>
-              <Textarea
-                {...form.register("description")}
-                disabled={isLoading}
-                className="min-h-[100px]"
-                placeholder="Please provide details about your consultation request..."
-              />
-              {form.formState.errors.description && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.description.message}
-                </p>
-              )}
-            </div>
+            />
           </div>
 
-          <div className="mt-6 flex justify-end">
+          <div className="flex items-center gap-x-2">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => router.back()}
-              className="mr-2"
               disabled={isLoading}
             >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {initialData ? "Update" : "Create"} Consultation
+              {isLoading ? (
+                <>Saving...</>
+              ) : (
+                <>{consultationId ? "Update" : "Create"} Consultation</>
+              )}
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </form>
+        </form>
+      </Form>
+    </div>
   );
 }

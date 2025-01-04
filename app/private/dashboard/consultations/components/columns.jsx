@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import AssignStaffDialog from "./AssignStaffDialog";
+import DeleteConsultationDialog from "./DeleteConsultationDialog";
 
 const statusVariants = {
   pending: "warning",
@@ -122,6 +123,7 @@ export const columns = [
     cell: ({ row }) => {
       const consultation = row.original;
       const [showAssignDialog, setShowAssignDialog] = useState(false);
+      const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
       return (
         <>
@@ -135,16 +137,14 @@ export const columns = [
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem asChild>
-                <Link
-                  href={`/private/dashboard/consultations/${consultation._id}`}
-                >
+                <Link href={`/private/dashboard/consultations/${consultation.id}`}>
                   <Eye className="mr-2 h-4 w-4" />
                   View Details
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/private/dashboard/consultations/${consultation._id}/edit`}
+                  href={`/private/dashboard/consultations/${consultation.id}/edit`}
                 >
                   <FileEdit className="mr-2 h-4 w-4" />
                   Edit Consultation
@@ -157,14 +157,17 @@ export const columns = [
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/private/dashboard/consultations/${consultation._id}/notes`}
+                  href={`/private/dashboard/consultations/${consultation.id}/notes`}
                 >
                   <MessageSquare className="mr-2 h-4 w-4" />
                   View Notes
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive"
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Consultation
               </DropdownMenuItem>
@@ -180,6 +183,12 @@ export const columns = [
               { _id: "1", firstName: "John", lastName: "Doe" },
               { _id: "2", firstName: "Jane", lastName: "Smith" },
             ]}
+          />
+
+          <DeleteConsultationDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            consultation={consultation}
           />
         </>
       );

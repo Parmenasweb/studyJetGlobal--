@@ -119,10 +119,31 @@ const destinationSchema = new mongoose.Schema(
     },
     universities: [universitySchema],
     media: {
-      mainImage: String,
-      flagImage: String,
-      galleryImages: [String],
-      videoUrl: String
+      mainImage: {
+        url: { type: String },
+        alt: { type: String, default: "" },
+        width: { type: Number, required: false },
+        height: { type: Number, required: false },
+        size: { type: Number, required: false },
+        caption: { type: String, required: false },
+      },
+      flagImage: {
+        url: { type: String },
+        alt: { type: String, default: "" },
+        width: { type: Number, required: false },
+        height: { type: Number, required: false },
+        size: { type: Number, required: false },
+        caption: { type: String, required: false },
+      },
+      galleryImages: [{
+        url: { type: String },
+        alt: { type: String, default: "" },
+        width: { type: Number, required: false },
+        height: { type: Number, required: false },
+        size: { type: Number, required: false },
+        caption: { type: String, required: false },
+      }],
+      videoUrl: { type: String, required: false },
     },
     statistics: {
       studentSatisfactionRate: Number,

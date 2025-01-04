@@ -1,51 +1,116 @@
-import Link from "next/link";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { getPrograms } from "@/actions/program";
-import { getUniversity } from "@/actions/university";
-import CardProgramOverview from "./components/CardProgramOverview";
-import { Separator } from "@/components/ui/separator";
+"use client";
 
-export default async function ProgramsPage({ params }) {
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { DataTable } from "@/components/ui/data-table";
+import { useToast } from "@/components/ui/use-toast";
+import { getUniversity } from "@/actions/destination";
+import { LoadingPage } from "@/components/loading";
+import { ErrorPage } from "@/components/error";
+import { ChevronLeft, Plus } from "lucide-react";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { programColumns } from "./components/columns";
+import { ProgramForm } from "./components/ProgramForm";
+import { createProgramColumns } from "./components/columns";
+
+export default function UniversityProgramsPage({ params }) {
   const { destinationId, universityId } = params;
-  const university = await getUniversity(destinationId, universityId);
-  const programs = await getPrograms(destinationId, universityId);
+  const router = useRouter();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [university, setUniversity] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  useEffect(() => {
+    fetchUniversity();
+  }, []);
+
+  async function fetchUniversity() {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getUniversity(destinationId, universityId);
+      setUniversity(data);
+    } catch (error) {
+      console.error("Error fetching university:", error);
+      setError(error.message || "Failed to fetch university");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch university",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return <LoadingPage />;
+  }
+
+  if (error) {
+    return <ErrorPage message={error} />;
+  }
+
+  const breadcrumbItems = [
+    { label: "Dashboard", href: "/private/dashboard" },
+    { label: "Destinations", href: "/private/dashboard/destinations" },
+    { 
+      label: university.destination?.name || "Destination", 
+      href: `/private/dashboard/destinations/${destinationId}` 
+    },
+    { 
+      label: university.name, 
+      href: `/private/dashboard/destinations/${destinationId}/universities/${universityId}` 
+    },
+    { label: "Programs", href: "#" },
+  ];
+
+  const columns = createProgramColumns(
+    destinationId, 
+    universityId, 
+    () => fetchUniversity()
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Programs</h1>
-          <p className="text-muted-foreground">
-            Manage programs for {university.name}
-          </p>
-        </div>
-        <Link
-          href={`/private/dashboard/destinations/${destinationId}/universities/${universityId}/programs/new`}
-        >
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Program
-          </Button>
-        </Link>
-      </div>
-      <Separator />
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {programs.map((program) => (
-          <CardProgramOverview
-            key={program._id}
-            program={program}
-            destinationId={destinationId}
-            universityId={universityId}
-          />
-        ))}
-        {programs.length === 0 && (
-          <div className="col-span-full">
-            <p className="text-center text-muted-foreground">
-              No programs found. Add your first program to get started.
-            </p>
+    <div className="container mx-auto py-10">
+      <div className="mb-8 space-y-4">
+        <div className="flex flex-col gap-4">
+          <Breadcrumb items={breadcrumbItems} />
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">Programs</h2>
+              <p className="text-muted-foreground">
+                Manage programs for {university.name}
+              </p>
+            </div>
+            <Button onClick={() => setShowAddForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Program
+            </Button>
           </div>
-        )}
+        </div>
+
+        <Separator />
+
+        <DataTable
+          columns={columns}
+          data={university.programs || []}
+          searchKey="name"
+          searchPlaceholder="Search programs..."
+        />
+
+        <ProgramForm
+          open={showAddForm}
+          onClose={() => setShowAddForm(false)}
+          destinationId={destinationId}
+          universityId={universityId}
+          onSuccess={fetchUniversity}
+        />
       </div>
     </div>
   );

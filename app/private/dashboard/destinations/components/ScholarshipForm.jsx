@@ -22,25 +22,24 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
-import { toast } from "react-hot-toast";
-import { scholarshipSchema } from "@/lib/validations/scholarship";
-import { addScholarship, updateScholarship } from "@/actions/destination";
+import { scholarshipSchema } from "@/lib/validations/destination";
 
-export default function ScholarshipForm({
-  destinationId,
-  universityId,
-  initialData,
-  onSuccess,
-  onError,
+export default function ScholarshipForm({ 
+  destinationId, 
+  initialData = null, 
+  onSuccess, 
+  onCancel 
 }) {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(scholarshipSchema),
     defaultValues: initialData || {
       name: "",
-      amount: 0,
+      amount: "",
       description: "",
       criteria: "",
       deadline: "",
@@ -52,37 +51,42 @@ export default function ScholarshipForm({
     },
   });
 
-  async function onSubmit(data) {
+  const onSubmit = async (data) => {
     try {
       setIsLoading(true);
+      
+      const response = await fetch(`/api/destinations/${destinationId}/scholarships${initialData ? `/${initialData._id}` : ''}`, {
+        method: initialData ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
 
-      if (initialData) {
-        await updateScholarship(
-          destinationId,
-          universityId,
-          initialData._id,
-          data
-        );
-        toast.success("Scholarship updated successfully");
-      } else {
-        await addScholarship(destinationId, universityId, data);
-        toast.success("Scholarship added successfully");
+      if (!response.ok) {
+        throw new Error('Failed to save scholarship');
       }
+
+      toast({
+        title: "Success",
+        description: `Scholarship ${initialData ? "updated" : "added"} successfully`,
+      });
 
       onSuccess?.();
     } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error(error.message || "Something went wrong");
-      onError?.(error);
+      console.error('Error saving scholarship:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to save scholarship",
+      });
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid gap-4 md:grid-cols-2">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="name"
@@ -90,10 +94,7 @@ export default function ScholarshipForm({
               <FormItem>
                 <FormLabel>Scholarship Name</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="e.g., International Merit Scholarship"
-                    {...field}
-                  />
+                  <Input placeholder="e.g., Merit Excellence Scholarship" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -107,14 +108,13 @@ export default function ScholarshipForm({
               <FormItem>
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 10000"
+                  <Input 
+                    type="number" 
+                    placeholder="e.g., 10000" 
                     {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
                   />
                 </FormControl>
-                <FormDescription>Amount in USD</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -133,8 +133,8 @@ export default function ScholarshipForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="merit">Merit-based</SelectItem>
-                    <SelectItem value="need-based">Need-based</SelectItem>
+                    <SelectItem value="merit">Merit Based</SelectItem>
+                    <SelectItem value="need-based">Need Based</SelectItem>
                     <SelectItem value="research">Research</SelectItem>
                     <SelectItem value="sports">Sports</SelectItem>
                     <SelectItem value="cultural">Cultural</SelectItem>
@@ -159,9 +159,9 @@ export default function ScholarshipForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="full">Full</SelectItem>
-                    <SelectItem value="partial">Partial</SelectItem>
-                    <SelectItem value="specific">Specific</SelectItem>
+                    <SelectItem value="full">Full Coverage</SelectItem>
+                    <SelectItem value="partial">Partial Coverage</SelectItem>
+                    <SelectItem value="specific">Specific Amount</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -176,7 +176,11 @@ export default function ScholarshipForm({
               <FormItem>
                 <FormLabel>Application Deadline</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input 
+                    type="date" 
+                    {...field}
+                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -214,8 +218,9 @@ export default function ScholarshipForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Detailed description of the scholarship..."
+                <Textarea 
+                  placeholder="Scholarship description..."
+                  className="min-h-[100px]"
                   {...field}
                 />
               </FormControl>
@@ -231,8 +236,9 @@ export default function ScholarshipForm({
             <FormItem>
               <FormLabel>Eligibility Criteria</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="List the eligibility criteria..."
+                <Textarea 
+                  placeholder="Eligibility criteria..."
+                  className="min-h-[100px]"
                   {...field}
                 />
               </FormControl>
@@ -248,8 +254,9 @@ export default function ScholarshipForm({
             <FormItem>
               <FormLabel>Application Process</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Describe the application process..."
+                <Textarea 
+                  placeholder="Application process details..."
+                  className="min-h-[100px]"
                   {...field}
                 />
               </FormControl>
@@ -268,27 +275,38 @@ export default function ScholarshipForm({
                 <Input
                   placeholder="Enter required documents separated by commas"
                   {...field}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value.split(",").map((item) => item.trim())
-                    )
-                  }
                   value={field.value?.join(", ") || ""}
+                  onChange={(e) => {
+                    const documents = e.target.value
+                      .split(",")
+                      .map((d) => d.trim())
+                      .filter(Boolean);
+                    field.onChange(documents);
+                  }}
                 />
               </FormControl>
               <FormDescription>
-                Enter documents separated by commas (e.g., Passport, Transcripts,
-                CV)
+                List all required documents for application
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {initialData ? "Update Scholarship" : "Add Scholarship"}
-        </Button>
+        <div className="flex justify-end space-x-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {initialData ? "Update" : "Add"} Scholarship
+          </Button>
+        </div>
       </form>
     </Form>
   );

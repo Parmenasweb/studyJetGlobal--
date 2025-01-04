@@ -1,16 +1,12 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { getConsultationById } from "@/actions/consultation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { ArrowLeft, FileEdit, Trash2 } from "lucide-react";
-import { mockConsultations } from "../data/mock-consultations";
-import { getConsultation } from "@/actions/consultation";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ConsultationNotes from "../components/ConsultationNotes";
 
 const statusVariants = {
   pending: "warning",
@@ -20,14 +16,14 @@ const statusVariants = {
 };
 
 export default async function ConsultationDetailsPage({ params }) {
-  const { data: consultation, error } = await getConsultation(params.id);
+  const [consultation, error] = await getConsultationById(params.id);
 
   if (error || !consultation) {
     notFound();
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 h-full space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Link href="/private/dashboard/consultations">
@@ -41,17 +37,17 @@ export default async function ConsultationDetailsPage({ params }) {
           </h2>
         </div>
         <div className="flex items-center space-x-2">
-          <Link href={`/private/dashboard/consultations/${params.id}/edit`}>
+          <Link href={`/private/dashboard/consultations/${consultation._id}/edit`}>
             <Button>Edit Consultation</Button>
           </Link>
-          <Link href={`/private/dashboard/consultations/${params.id}/notes`}>
+          <Link href={`/private/dashboard/consultations/${consultation._id}/notes`}>
             <Button variant="outline">View Notes</Button>
           </Link>
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 p-6">
+        <Card className="p-4">
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
           </CardHeader>
@@ -77,7 +73,7 @@ export default async function ConsultationDetailsPage({ params }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="p-4">
           <CardHeader>
             <CardTitle>Consultation Details</CardTitle>
           </CardHeader>
@@ -103,7 +99,7 @@ export default async function ConsultationDetailsPage({ params }) {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-2 p-4">
           <CardHeader>
             <CardTitle>Additional Information</CardTitle>
           </CardHeader>
@@ -132,7 +128,7 @@ export default async function ConsultationDetailsPage({ params }) {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-2 p-4">
           <CardHeader>
             <CardTitle>Status Information</CardTitle>
           </CardHeader>
@@ -140,7 +136,9 @@ export default async function ConsultationDetailsPage({ params }) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Status</p>
-                <p className="capitalize">{consultation.status}</p>
+                <Badge variant={statusVariants[consultation.status]}>
+                  {consultation.status}
+                </Badge>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Created At</p>
@@ -153,12 +151,40 @@ export default async function ConsultationDetailsPage({ params }) {
               {consultation.assignedTo && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Assigned To</p>
-                  <p>{consultation.assignedTo}</p>
+                  <p>{`${consultation.assignedTo.firstName} ${consultation.assignedTo.lastName}`}</p>
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="rounded-md border p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium">Notes</h3>
+          <ConsultationNotes 
+            notes={consultation.notes} 
+            consultationId={consultation.id}
+          />
+        </div>
+        
+        {consultation.notes && consultation.notes.length > 0 ? (
+          <div className="bg-muted p-4 rounded-lg">
+            <p className="text-sm whitespace-pre-wrap">
+              {consultation.notes[consultation.notes.length - 1].content}
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Latest note from{" "}
+              {consultation.notes[consultation.notes.length - 1].author
+                ? `${consultation.notes[consultation.notes.length - 1].author.firstName} ${
+                    consultation.notes[consultation.notes.length - 1].author.lastName
+                  }`
+                : "System"}
+            </p>
+          </div>
+        ) : (
+          <p className="text-muted-foreground">No notes available</p>
+        )}
       </div>
     </div>
   );

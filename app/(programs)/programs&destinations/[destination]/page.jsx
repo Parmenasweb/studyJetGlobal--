@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { unstable_noStore as noStore } from "next/cache";
 import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
-import ApplicationForm from "@/components/forms/applicationsForm";
+import ApplicationForm from "@/components/forms/ApplicationFormNew";
 import { countries } from "@/lib/countrydetails";
 import QuickFacts from "@/app/(ProgramsPage)/programs/components/QuickFacts";
 import {

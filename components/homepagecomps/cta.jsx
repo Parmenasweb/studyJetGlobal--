@@ -1,5 +1,4 @@
 import Link from "next/link";
-import ApplyButton from "../Applybutton";
 export default function CTA() {
   return (
     <section className="w-full py-12 md:py-24 lg:py-32 border-t">

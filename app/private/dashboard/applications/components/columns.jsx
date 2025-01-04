@@ -20,142 +20,206 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Link from "next/link";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const statusVariants = {
   draft: "secondary",
   submitted: "warning",
-  reviewing: "secondary",
-  documents_pending: "warning",
-  documents_submitted: "secondary",
-  visa_processing: "warning",
+  under_review: "secondary",
   approved: "success",
   rejected: "destructive",
-  deferred: "secondary",
-  withdrawn: "destructive",
+  pending_documents: "warning",
 };
 
 const priorityVariants = {
   low: "secondary",
   medium: "warning",
   high: "destructive",
-  urgent: "destructive",
 };
 
-export function getColumns({ onDeleteApplication }) {
-  return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "personalInfo.fullName",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Applicant Name
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-    },
-    {
-      accessorKey: "applicationType",
-      header: "Type",
-      cell: ({ row }) => {
-        const type = row.getValue("applicationType");
-        return (
-          <Badge variant="outline">
-            {type.charAt(0).toUpperCase() + type.slice(1)}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => {
-        const status = row.getValue("status");
-        return (
-          <Badge variant={statusVariants[status]}>
-            {status
-              .split("_")
-              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(" ")}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "priority",
-      header: "Priority",
-      cell: ({ row }) => {
-        const priority = row.getValue("priority");
-        return (
-          <Badge variant={priorityVariants[priority]}>
-            {priority.charAt(0).toUpperCase() + priority.slice(1)}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "progress",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Progress
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const progress = row.getValue("progress");
-        return <Badge variant="outline">{progress}%</Badge>;
-      },
-    },
-    {
-      accessorKey: "submissionDate",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Submitted
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) =>
-        format(new Date(row.getValue("submissionDate")), "PPP"),
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const application = row.original;
+function formatValue(value) {
+  if (!value) return "N/A";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 
-        return (
+async function deleteApplication(id) {
+  try {
+    const response = await fetch(`/api/applications/${id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete application');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting application:', error);
+    throw error;
+  }
+}
+
+export const columns = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "studentName",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Student Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: "studentEmail",
+    header: "Email",
+  },
+  {
+    accessorKey: "type",
+    header: "Type",
+    cell: ({ row }) => {
+      const type = row.getValue("type");
+      return (
+        <Badge variant="outline">
+          {formatValue(type)}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "destination",
+    header: "Destination",
+  },
+  {
+    accessorKey: "program",
+    header: "Program",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status");
+      return (
+        <Badge variant={statusVariants[status] || "secondary"}>
+          {status ? status
+            .split("_")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ") : "N/A"}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "priority",
+    header: "Priority",
+    cell: ({ row }) => {
+      const priority = row.getValue("priority");
+      return (
+        <Badge variant={priorityVariants[priority] || "secondary"}>
+          {formatValue(priority)}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "submittedAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Submitted
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: "updatedAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Last Updated
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const router = useRouter();
+      const application = row.original;
+      const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+      const [isDeleting, setIsDeleting] = useState(false);
+
+      const handleDelete = async () => {
+        try {
+          setIsDeleting(true);
+          await deleteApplication(application.id);
+          toast.success("Application deleted successfully");
+          router.refresh();
+        } catch (error) {
+          toast.error(error.message || "Failed to delete application");
+        } finally {
+          setIsDeleting(false);
+          setShowDeleteDialog(false);
+        }
+      };
+
+      const handleView = () => {
+        router.push(`/private/dashboard/applications/${application.id}`);
+      };
+
+      const handleEdit = () => {
+        router.push(`/private/dashboard/applications/${application.id}/edit`);
+      };
+
+      const handleNotes = () => {
+        router.push(`/private/dashboard/applications/${application.id}/notes`);
+      };
+
+      return (
+        <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -165,43 +229,53 @@ export function getColumns({ onDeleteApplication }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/private/dashboard/applications/${application._id}`}
-                >
-                  <Eye className="mr-2 h-4 w-4" />
-                  View Details
-                </Link>
+              <DropdownMenuItem onClick={handleView}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/private/dashboard/applications/${application._id}/edit`}
-                >
-                  <FileEdit className="mr-2 h-4 w-4" />
-                  Edit Application
-                </Link>
+              <DropdownMenuItem onClick={handleEdit}>
+                <FileEdit className="mr-2 h-4 w-4" />
+                Edit Application
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/private/dashboard/applications/${application._id}/notes`}
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  View Notes
-                </Link>
+              <DropdownMenuItem onClick={handleNotes}>
+                <MessageSquare className="mr-2 h-4 w-4" />
+                View Notes
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
+              <DropdownMenuItem 
+                onClick={() => setShowDeleteDialog(true)}
                 className="text-destructive"
-                onClick={() => onDeleteApplication(application._id)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        );
-      },
+
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the application
+                  and remove all associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      );
     },
-  ];
-}
+  },
+];

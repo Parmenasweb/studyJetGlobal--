@@ -26,81 +26,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
 
 export function DataTable({
   columns,
-  data = [],
+  data,
   searchKey,
-  searchPlaceholder = "Search...",
-  emptyMessage = "No data found.",
-  pagination,
+  filters = [],
 }) {
-  const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
-  const [rowSelection, setRowSelection] = useState({});
-  const [pageSize, setPageSize] = useState(10);
+  const [sorting, setSorting] = useState([]);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
-    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
     state: {
-      sorting,
       columnFilters,
-      rowSelection,
-    },
-    initialState: {
-      pagination: {
-        pageSize,
-      },
+      sorting,
     },
   });
 
-  // Get the search column if it exists
-  const searchColumn = table.getColumn(searchKey);
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-1 items-center space-x-2">
-          {searchColumn && (
-            <Input
-              placeholder={searchPlaceholder}
-              value={searchColumn.getFilterValue() ?? ""}
-              onChange={(event) =>
-                searchColumn.setFilterValue(event.target.value)
-              }
-              className="max-w-sm"
-            />
-          )}
-        </div>
-        <div className="flex items-center space-x-2">
+    <div>
+      <div className="flex items-center gap-4 py-4">
+        <Input
+          placeholder={`Search by ${searchKey}...`}
+          value={(table.getColumn(searchKey)?.getFilterValue() ?? "")}
+          onChange={(event) =>
+            table.getColumn(searchKey)?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
+        {filters.map((filter) => (
           <Select
-            value={pageSize.toString()}
-            onValueChange={(value) => {
-              setPageSize(Number(value));
-              table.setPageSize(Number(value));
-            }}
+            key={filter.key}
+            value={(table.getColumn(filter.key)?.getFilterValue() ?? "")}
+            onValueChange={(value) =>
+              table.getColumn(filter.key)?.setFilterValue(value)
+            }
           >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={pageSize} />
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={`Filter by ${filter.key}`} />
             </SelectTrigger>
-            <SelectContent side="top">
-              {[10, 20, 30, 40, 50].map((size) => (
-                <SelectItem key={size} value={size.toString()}>
-                  {size}
+            <SelectContent>
+              <SelectItem value="">All</SelectItem>
+              {filter.options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
+        ))}
       </div>
 
       <div className="rounded-md border">
@@ -146,7 +128,7 @@ export function DataTable({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  {emptyMessage}
+                  No results.
                 </TableCell>
               </TableRow>
             )}
@@ -154,31 +136,23 @@ export function DataTable({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        {pagination && (
-          <div className="space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => pagination.onPageChange(pagination.page - 1)}
-              disabled={pagination.page <= 1}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => pagination.onPageChange(pagination.page + 1)}
-              disabled={pagination.page >= pagination.pages}
-            >
-              Next
-            </Button>
-          </div>
-        )}
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );

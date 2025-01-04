@@ -33,7 +33,7 @@ const consultationSchema = new mongoose.Schema(
     },
     preferredMode: {
       type: String,
-      enum: ["online", "in-person"],
+      enum: ["online", "phone"],
       required: true,
     },
     interestedCountries: {

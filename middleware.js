@@ -1,27 +1,68 @@
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const isAdmin = token?.role === "admin";
-    const pathname = req.nextUrl.pathname;
+const { auth } = NextAuth(authConfig);
 
-    // Protect finance page - only admins can access
-    if (pathname.startsWith("/private/dashboard/finances") && !isAdmin) {
-      return NextResponse.redirect(new URL("/private/dashboard", req.url));
+export default auth((req) => {
+  const isLoggedIn = !!req.auth;
+  const { nextUrl } = req;
+
+  const isApiAuthRoute = nextUrl.pathname.startsWith('/api/auth');
+  const isAuthRoute = nextUrl.pathname.startsWith('/auth');
+  const isDashboardRoute = nextUrl.pathname.startsWith('/private/dashboard');
+  const isAdminRoute = nextUrl.pathname.startsWith('/private/dashboard/finance');
+  const isPublicRoute = nextUrl.pathname === '/' || 
+                       nextUrl.pathname.startsWith('/about') || 
+                       nextUrl.pathname.startsWith('/contact');
+
+  // Allow public routes and API routes
+  if (isPublicRoute || isApiAuthRoute) {
+    return null;
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (isAuthRoute) {
+    if (isLoggedIn) {
+      return Response.redirect(new URL('/dashboard', nextUrl));
+    }
+    return null;
+  }
+
+  // Protect dashboard routes
+  if (isDashboardRoute || isAdminRoute) {
+    if (!isLoggedIn) {
+      let callbackUrl = nextUrl.pathname;
+      if (nextUrl.search) {
+        callbackUrl += nextUrl.search;
+      }
+      
+      const encodedCallbackUrl = encodeURIComponent(callbackUrl);
+      return Response.redirect(new URL(`/auth/login?callbackUrl=${encodedCallbackUrl}`, nextUrl));
     }
 
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => !!token, // Requires authentication for all matched routes
-    },
+    // Check for admin role in admin routes
+    if (isAdminRoute) {
+      const userRole = req.auth?.user?.role;
+      if (userRole !== "ADMIN") {
+        return Response.redirect(new URL('/dashboard', nextUrl));
+      }
+    }
+    
+    return null;
   }
-);
 
-// Protect all dashboard routes
+  // Default: allow access
+  return null;
+});
+
+// Configure protected routes
 export const config = {
-  matcher: ["/private/dashboard/:path*"],
-};
+  matcher: [
+    // Protect these routes
+    '/private/dashboard/:path*',
+    '/admin/:path*',
+    
+    // Exclude these routes
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
+}

@@ -2,28 +2,67 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth"
 import connectDB from "@/lib/db";
 import Destination from "@/models/Destination";
+import { destinationSchema } from "@/lib/validations/destination";
 
 export async function POST(req) {
   try {
-    const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    
 
     await connectDB();
     const data = await req.json();
 
+    console.log("Received data:", JSON.stringify(data, null, 2));
+
+    // Validate the data against the schema
+    try {
+      const validatedData = await destinationSchema.parseAsync(data);
+      console.log("Validated data:", JSON.stringify(validatedData, null, 2));
+    } catch (error) {
+      console.error("Validation error details:", JSON.stringify(error.errors, null, 2));
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "Invalid destination data", 
+          details: error.errors.map(err => ({
+            path: err.path.join('.'),
+            message: err.message
+          }))
+        },
+        { status: 400 }
+      );
+    }
+
+    // Ensure media objects have all required fields
+    const media = {
+      mainImage: data.media?.mainImage || null,
+      flagImage: data.media?.flagImage || null,
+      galleryImages: data.media?.galleryImages || [],
+      videoUrl: data.media?.videoUrl || null,
+    };
+
+    // Create the destination with validated data
     const destination = await Destination.create({
       ...data,
-      createdBy: session.user.id,
-      updatedBy: session.user.id,
+      media,
     });
 
-    return NextResponse.json(destination, { status: 201 });
+    if (!destination) {
+      throw new Error("Failed to create destination");
+    }
+
+    return NextResponse.json({
+      success: true,
+      destination
+    }, { status: 201 });
+
   } catch (error) {
     console.error("Error creating destination:", error);
     return NextResponse.json(
-      { error: "Failed to create destination" },
+      { 
+        success: false,
+        error: error.message || "Failed to create destination",
+        details: error.errors || []
+      },
       { status: 500 }
     );
   }
