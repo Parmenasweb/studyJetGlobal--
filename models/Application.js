@@ -76,15 +76,14 @@ const workExperienceSchema = new mongoose.Schema({
 const travelHistorySchema = new mongoose.Schema({
   country: {
     type: String,
-    required: true,
   },
   purpose: {
     type: String,
-    required: true,
+    
   },
   year: {
     type: Number,
-    required: true,
+    
   },
   duration: String,
 });
@@ -119,7 +118,6 @@ const applicationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      required: true,
       enum: [
         "draft",
         "submitted",
@@ -132,7 +130,6 @@ const applicationSchema = new mongoose.Schema(
     },
     priority: {
       type: String,
-      required: true,
       enum: ["low", "medium", "high"],
       default: "medium",
     },
@@ -258,7 +255,6 @@ const applicationSchema = new mongoose.Schema(
       },
       hasExistingFunds: {
         type: Boolean,
-        required: true,
       },
       fundingAmount: {
         type: Number,
@@ -277,7 +273,6 @@ const applicationSchema = new mongoose.Schema(
     additionalInfo: {
       previousVisaRejections: {
         type: Boolean,
-        required: true,
         default: false,
       },
       rejectionDetails: {

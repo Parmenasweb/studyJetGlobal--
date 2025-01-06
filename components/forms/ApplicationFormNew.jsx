@@ -73,6 +73,17 @@ import ReactConfetti from 'react-confetti';
 import { useTheme } from "next-themes";
 import { addYears, subYears } from "date-fns";
 
+// Validation helpers
+const ensureNumber = (value) => {
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
+};
+
+const ensurePositiveNumber = (value) => {
+  const num = ensureNumber(value);
+  return num < 0 ? 0 : num;
+};
+
 export default function ApplicationForm({ isEditing = false, initialData = null }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -135,30 +146,30 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
         passportExpiry: null,
         gender: "",
         maritalStatus: "",
-        languages: [{ language: "", proficiencyLevel: "basic" }],
+        languages: [{ language: "English", proficiencyLevel: "basic" }],
       },
       studyDetails: {
         destinationCountry: "",
-        preferredCities: [],
+        preferredCities: [""],
         intakeDate: "",
         programLevel: "",
         fieldOfStudy: "",
         specificProgram: "",
-        preferredUniversities: [],
+        preferredUniversities: [""],
         academicBackground: [
           {
             institution: "",
             qualification: "",
             fieldOfStudy: "",
             grade: "",
-            yearCompleted: new Date().getFullYear(),
+            yearCompleted: 2024,
           },
         ],
         englishProficiency: {
           testType: "ielts",
           overallScore: 0,
           testDate: new Date(),
-          expiryDate: new Date(),
+          expiryDate: addYears(new Date(), 2),
         },
         hasScholarshipRequirement: false,
         studyGoals: "",
@@ -194,6 +205,22 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
 
   // Watch for form values changes
   const applicationType = form.watch("applicationType");
+  const fundingSource = form.watch("financialInfo.fundingSource");
+  const hasExistingFunds = form.watch("financialInfo.hasExistingFunds");
+
+  // Handle numeric field changes
+  const handleNumericChange = (field, value) => {
+    form.setValue(field, ensurePositiveNumber(value), { shouldValidate: true });
+  };
+
+  // Handle array field changes
+  const handleArrayFieldChange = (field, value, minLength = 1) => {
+    const array = Array.isArray(value) ? value : [value];
+    if (array.length < minLength) {
+      array.push(""); // Ensure minimum length
+    }
+    form.setValue(field, array, { shouldValidate: true });
+  };
 
   // Reset irrelevant sections when application type changes
   useEffect(() => {
@@ -234,7 +261,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
           destinationCountry: "",
           jobCategory: "",
           preferredPosition: "",
-          yearsOfExperience: 1,
+          yearsOfExperience: "",
           workExperience: [
             {
               company: "",
@@ -244,37 +271,64 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
             },
           ],
           careerGoals: "",
-          skills: [],
+          skills: [""],
         });
       }
     }
   }, [applicationType, form]);
 
-  const onSubmit = async (data) => {
-      setError("");
-    setSuccess("");
-    setIsLoading(true);
-
+  const onSubmit = async (values) => {
     try {
-      const res = await fetch(`/api/applications`, {
-        method: "POST",
+      setIsLoading(true);
+      setError("");
+      setSuccess("");
+
+      // Ensure proper data types
+      if (values.studyDetails) {
+        values.studyDetails.academicBackground = values.studyDetails.academicBackground.map(bg => ({
+          ...bg,
+          yearCompleted: ensureNumber(bg.yearCompleted)
+        }));
+        values.studyDetails.englishProficiency.overallScore = ensureNumber(values.studyDetails.englishProficiency.overallScore);
+        values.studyDetails.preferredCities = values.studyDetails.preferredCities.filter(city => city.trim());
+        values.studyDetails.preferredUniversities = values.studyDetails.preferredUniversities.filter(uni => uni.trim());
+      }
+
+      if (values.workDetails) {
+        values.workDetails.skills = values.workDetails.skills.filter(skill => skill.trim());
+      }
+
+      values.financialInfo.annualFamilyIncome = ensureNumber(values.financialInfo.annualFamilyIncome);
+      values.financialInfo.fundingAmount = ensureNumber(values.financialInfo.fundingAmount);
+
+      // Remove empty arrays
+      if (values.additionalInfo.travelHistory?.length === 0) {
+        values.additionalInfo.travelHistory = undefined;
+      }
+
+      const response = await fetch(isEditing ? `/api/applications/${initialData._id}` : "/api/applications", {
+        method: isEditing ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(values),
       });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to submit application");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong");
       }
 
-      const result = await res.json();
-      form.reset();
-      setSuccess("🎉 Your application has been submitted successfully!, our team will reahc out to you after reviewing your application!.");
-      setShowConfetti(true); // Trigger confetti
+      setSuccess(isEditing ? "Application updated successfully!" : "Application submitted successfully!");
+      setShowConfetti(true);
+      
+      if (!isEditing) {
+        form.reset(); // Only reset if creating new application
+      }
     } catch (error) {
-      setError(error.message || "Something went wrong. Please try again.");
+      setError(error.message);
+      console.error("Error submitting application:", error);
     } finally {
       setIsLoading(false);
     }

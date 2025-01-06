@@ -5,19 +5,18 @@ import { auth } from "@/auth";
 
 export async function POST(req) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    // const session = await auth();
+    // if (!session) {
+    //   return NextResponse.json(
+    //     { error: "Unauthorized" },
+    //     { status: 401 }
+    //   );
+    // }
 
     await connectDB();
     const data = await req.json();
 
     // Add metadata
-    data.createdBy = session.user.id;
     data.submittedAt = new Date();
 
     const application = await Application.create(data);
