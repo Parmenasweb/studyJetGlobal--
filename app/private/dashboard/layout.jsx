@@ -9,9 +9,12 @@ export default async function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="relative">
       <SideNavbar />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+
+      <main className="fixed top-8 lg:left-48 left-0 right-0 bottom-0 overflow-y-auto bg-background p-4 lg:p-6">
+        {children}
+      </main>
     </div>
   );
 }

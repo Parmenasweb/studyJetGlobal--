@@ -80,7 +80,7 @@ export default function HeroSection() {
           {/* Right Column - Image */}
           <div className="relative h-[500px] w-full rounded-lg overflow-hidden">
             <Image
-              src="/images/studyjet-hero-plain.webp"
+              src="/images/studyjet-hero-advanced.webp"
               alt="Students studying abroad"
               fill
               className="object-cover rounded-lg"

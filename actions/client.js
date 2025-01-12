@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import connectDB from "@/lib/db";
-import { Client } from "@/models/Client";
+import Client from "@/models/Client";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -16,9 +16,8 @@ export async function getClients(query = {}) {
     if (query.clientType) dbQuery.clientType = query.clientType;
     if (query.search) {
       dbQuery.$or = [
-        { name: { $regex: query.search, $options: "i" } },
-        { email: { $regex: query.search, $options: "i" } },
-        { destination: { $regex: query.search, $options: "i" } },
+        { "personalInfo.fullName": { $regex: query.search, $options: "i" } },
+        { "personalInfo.email": { $regex: query.search, $options: "i" } },
       ];
     }
 
@@ -68,18 +67,24 @@ export async function getClient(id) {
 
 export async function createClient(data) {
   try {
+    console.log('Creating client with data:', data);
+
     const response = await fetch(`${BASE_URL}/api/clients`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+      cache: 'no-store',
     });
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('Server error response:', error);
       throw new Error(error.message || "Failed to create client");
     }
 
     const newClient = await response.json();
+    console.log('Created client response:', newClient);
+    
     revalidatePath("/private/dashboard/students");
     return newClient;
   } catch (error) {
@@ -90,18 +95,24 @@ export async function createClient(data) {
 
 export async function updateClient(id, data) {
   try {
+    console.log('Updating client with data:', { id, data });
+
     const response = await fetch(`${BASE_URL}/api/clients/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+      cache: 'no-store',
     });
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('Server error response:', error);
       throw new Error(error.message || "Failed to update client");
     }
 
     const updatedClient = await response.json();
+    console.log('Updated client response:', updatedClient);
+
     revalidatePath("/private/dashboard/students");
     revalidatePath(`/private/dashboard/students/${id}`);
     return updatedClient;
@@ -113,15 +124,20 @@ export async function updateClient(id, data) {
 
 export async function deleteClient(id) {
   try {
+    console.log('Deleting client:', id);
+
     const response = await fetch(`${BASE_URL}/api/clients/${id}`, {
       method: "DELETE",
+      cache: 'no-store',
     });
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('Server error response:', error);
       throw new Error(error.message || "Failed to delete client");
     }
 
+    console.log('Client deleted successfully');
     revalidatePath("/private/dashboard/students");
     return { success: true };
   } catch (error) {

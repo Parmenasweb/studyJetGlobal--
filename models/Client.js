@@ -11,9 +11,7 @@ const documentSchema = new mongoose.Schema({
       "academic_transcript",
       "english_proficiency",
       "financial_statement",
-      "accommodation_proof",
-      "health_insurance",
-      "other",
+      "other"
     ],
   },
   title: {
@@ -24,122 +22,51 @@ const documentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  fileType: {
-    type: String,
-    required: true,
-  },
-  uploadDate: {
-    type: Date,
-    default: Date.now,
-  },
   status: {
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
-  notes: String,
-});
-
-const academicProgressSchema = new mongoose.Schema({
-  semester: {
-    type: String,
-    required: true,
-  },
-  startDate: {
+  uploadDate: {
     type: Date,
-    required: true,
+    default: Date.now,
   },
-  endDate: {
-    type: Date,
-    required: true,
-  },
-  courses: [
-    {
-      name: String,
-      credits: Number,
-      grade: String,
-    },
-  ],
-  gpa: Number,
-  status: {
-    type: String,
-    enum: ["ongoing", "completed", "deferred", "withdrawn"],
-    default: "ongoing",
-  },
-  notes: String,
 });
 
-const paymentSchema = new mongoose.Schema({
-  type: {
+const emergencyContactSchema = new mongoose.Schema({
+  name: {
     type: String,
     required: true,
-    enum: ["tuition", "accommodation", "insurance", "visa", "other"],
   },
-  amount: {
-    type: Number,
-    required: true,
-  },
-  currency: {
+  relationship: {
     type: String,
     required: true,
-    default: "USD",
   },
-  status: {
+  phone: {
     type: String,
-    enum: ["pending", "paid", "overdue", "refunded"],
-    default: "pending",
-  },
-  dueDate: Date,
-  paidDate: Date,
-  paymentMethod: String,
-  transactionId: String,
-  notes: String,
-});
-
-const accommodationSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    enum: ["university_housing", "private_housing", "homestay"],
     required: true,
   },
-  address: {
-    street: String,
-    city: String,
-    state: String,
-    postalCode: String,
-    country: String,
-  },
-  startDate: Date,
-  endDate: Date,
-  monthlyRent: Number,
-  currency: {
-    type: String,
-    default: "USD",
-  },
-  status: {
-    type: String,
-    enum: ["pending", "confirmed", "active", "ended"],
-    default: "pending",
-  },
-  contactPerson: {
-    name: String,
-    phone: String,
-    email: String,
-  },
-  notes: String,
+  email: String,
+  address: String,
 });
 
 const clientSchema = new mongoose.Schema(
   {
-    applicationId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Application",
-      required: true,
+    clientId: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true,
     },
     status: {
       type: String,
-      enum: ["active", "graduated", "withdrawn", "deferred"],
-      default: "active",
+      enum: ["lead", "active", "inactive"],
+      default: "lead",
+    },
+    commission: {
+      type: Number,
+      min: 0,
+      default: 0,
     },
     personalInfo: {
       fullName: {
@@ -149,124 +76,107 @@ const clientSchema = new mongoose.Schema(
       email: {
         type: String,
         required: true,
+        unique: true,
       },
-      phone: String,
-      dateOfBirth: Date,
-      nationality: String,
-      passportNumber: String,
-      emergencyContact: {
-        name: String,
-        relationship: String,
-        phone: String,
-        email: String,
+      phone: {
+        type: String,
+        required: true,
       },
+      dateOfBirth: {
+        type: Date,
+        required: true,
+      },
+      nationality: {
+        type: String,
+        required: true,
+      },
+      currentResidence: {
+        country: {
+          type: String,
+          required: true,
+        },
+        city: String,
+        address: String,
+      },
+      passportNumber: {
+        type: String,
+        required: true,
+      },
+      emergencyContact: emergencyContactSchema,
     },
     academicInfo: {
       university: {
-        name: String,
-        country: String,
-        city: String,
+        name: {
+          type: String,
+          required: true,
+        },
+        country: {
+          type: String,
+          required: true,
+        },
       },
       program: {
-        name: String,
-        level: String,
-        duration: String,
+        name: {
+          type: String,
+          required: true,
+        },
+        level: {
+          type: String,
+          enum: ["foundation", "bachelor", "master", "phd"],
+          required: true,
+        },
+        major: {
+          type: String,
+          required: true,
+        },
       },
-      studentId: String,
       enrollmentDate: Date,
       expectedGraduationDate: Date,
-      academicProgress: [academicProgressSchema],
     },
     documents: [documentSchema],
-    payments: [paymentSchema],
-    accommodation: accommodationSchema,
     visaInfo: {
-      type: String,
-      number: String,
-      issueDate: Date,
-      expiryDate: Date,
+      type: {
+        type: String,
+      },
+      number: {
+        type: String,
+      },
+      issueDate: {
+        type: Date,
+      },
+      expiryDate: {
+        type: Date,
+      },
+      issuingCountry: {
+        type: String,
+      },
       status: {
         type: String,
-        enum: ["active", "expired", "renewal_needed", "processing"],
+        enum: ["active", "expired", "renewal_needed", "processing", "rejected"],
+      },
+      permitNumber: {
+        type: String,
       },
     },
-    notes: [
-      {
-        content: String,
-        createdBy: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    assignedAdvisor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    lastContactDate: Date,
-    nextFollowUpDate: Date,
   },
   {
     timestamps: true,
   }
 );
 
-// Indexes for better query performance
-clientSchema.index({ "personalInfo.fullName": 1 });
-clientSchema.index({ "personalInfo.email": 1 });
-clientSchema.index({ applicationId: 1 });
-clientSchema.index({ status: 1 });
-clientSchema.index({ assignedAdvisor: 1 });
-
-// Virtual field for age calculation
-clientSchema.virtual("personalInfo.age").get(function () {
-  if (!this.personalInfo.dateOfBirth) return null;
-  const today = new Date();
-  const birthDate = new Date(this.personalInfo.dateOfBirth);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
+// Generate clientId after validation but before saving
+clientSchema.pre("save", async function (next) {
+  if (!this.clientId) {
+    try {
+      const count = await mongoose.models.Client.countDocuments();
+      this.clientId = `CLT${String(count + 1).padStart(5, "0")}`;
+    } catch (error) {
+      console.error("Error generating clientId:", error);
+    }
   }
-  return age;
+  next();
 });
 
-// Method to check if any documents are expiring soon
-clientSchema.methods.getExpiringDocuments = function (daysThreshold = 30) {
-  const today = new Date();
-  const threshold = new Date(today.setDate(today.getDate() + daysThreshold));
+const Client = mongoose.models.Client || mongoose.model("Client", clientSchema);
 
-  const expiringDocs = [];
-  if (
-    this.visaInfo &&
-    this.visaInfo.expiryDate &&
-    this.visaInfo.expiryDate <= threshold
-  ) {
-    expiringDocs.push({
-      type: "visa",
-      expiryDate: this.visaInfo.expiryDate,
-    });
-  }
-
-  return expiringDocs;
-};
-
-// Method to calculate total payments
-clientSchema.methods.calculateTotalPayments = function () {
-  return this.payments.reduce((total, payment) => {
-    if (payment.status === "paid") {
-      return total + payment.amount;
-    }
-    return total;
-  }, 0);
-};
-
-export const Client =
-  mongoose.models.Client || mongoose.model("Client", clientSchema);
+export default Client;

@@ -24,8 +24,8 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-// Define navigation items with their respective icons
-const baseNavItems = [
+// Combined navigation items
+const navItems = [
   {
     title: "Overview",
     href: "/private/dashboard",
@@ -66,9 +66,6 @@ const baseNavItems = [
     href: "/private/dashboard/deadlines",
     icon: Calendar,
   },
-];
-
-const adminNavItems = [
   {
     title: "Partners",
     href: "/private/dashboard/partners",
@@ -91,32 +88,30 @@ export default function SideNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
 
-  // Determine which nav items to show based on user role
-  const navItems =
-    session?.user?.role === "admin"
-      ? [...baseNavItems, ...adminNavItems]
-      : baseNavItems;
-
   return (
     <>
       {/* Mobile Navigation */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild className="lg:hidden">
-          <Button variant="ghost" size="icon" className="lg:hidden">
-            <Menu className="h-6 w-6" />
+        <SheetTrigger asChild className="fixed top-[1.2rem] left-4 z-40 lg:hidden">
+          <Button variant="ghost" size="icon">
+            <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[300px] p-0">
-          <div className="flex h-full flex-col">
-            <div className="flex h-14 items-center border-b px-6">
-              <Link href="/private/dashboard" className="flex items-center gap-2">
-                <GraduationCap className="h-6 w-6" />
-                <span className="font-bold">StudyJet Global</span>
+        <SheetContent side="left" className="w-[280px] p-0">
+          <div className="flex h-[calc(100vh-4rem)] flex-col">
+            <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
+              <Link 
+                href="/private/dashboard" 
+                className="flex items-center gap-2"
+                onClick={() => setIsOpen(false)}
+              >
+                <GraduationCap className="h-5 w-5" />
+                <span className="font-semibold">StudyJet Global</span>
               </Link>
             </div>
-            <ScrollArea className="flex-1 px-3 py-4">
-              <div className="space-y-1">
+            <ScrollArea className="flex-1">
+              <div className="space-y-1 p-2">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
@@ -139,7 +134,7 @@ export default function SideNavbar() {
                 })}
               </div>
             </ScrollArea>
-            <div className="border-t p-4">
+            <div className="border-t p-4 shrink-0">
               <ThemeToggle />
             </div>
           </div>
@@ -147,15 +142,15 @@ export default function SideNavbar() {
       </Sheet>
 
       {/* Desktop Navigation */}
-      <nav className="hidden lg:flex h-screen w-64 flex-col border-r bg-background">
-        <div className="flex h-14 items-center border-b px-6">
+      <nav className="hidden lg:flex fixed top-16 left-0 w-64 flex-col border-r bg-background h-[calc(100vh-4rem)]">
+        <div className="flex h-14 shrink-0 items-center border-b px-6">
           <Link href="/private/dashboard" className="flex items-center gap-2">
             <GraduationCap className="h-6 w-6" />
             <span className="font-bold">StudyJet Global</span>
           </Link>
         </div>
-        <ScrollArea className="flex-1 px-3 py-4">
-          <div className="space-y-1">
+        <ScrollArea className="flex-1">
+          <div className="space-y-1 p-3">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -177,7 +172,7 @@ export default function SideNavbar() {
             })}
           </div>
         </ScrollArea>
-        <div className="border-t p-4">
+        <div className="border-t p-4 shrink-0">
           <ThemeToggle />
         </div>
       </nav>

@@ -1,247 +1,303 @@
-import { notFound } from "next/navigation";
 import { getClient } from "@/actions/client";
 import { format } from "date-fns";
+import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Briefcase,
-  Calendar,
-  GraduationCap,
-  MapPin,
-  Phone,
-  Mail,
-  DollarSign,
-  FileText,
-  Clock,
-} from "lucide-react";
+import { ImageView } from "@/components/ImageView";
 import Link from "next/link";
+import { Edit, ArrowLeft } from "lucide-react";
 
-export default async function ClientDetailsPage({ params }) {
-  const client = await getClient(params.id);
+// Mark as async Server Component
+async function ClientPage({ params }) {
+  try {
+    const client = await getClient(params.id);
 
-  if (!client) {
-    notFound();
-  }
+    if (!client) {
+      notFound();
+    }
 
-  return (
-    <div className="container mx-auto py-10">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{client.name}</h2>
-          <p className="text-muted-foreground">Client Details</p>
-        </div>
-        <div className="flex space-x-4">
-          <Button variant="outline" asChild>
+    const getStatusColor = (status) => {
+      switch (status) {
+        case "active":
+          return "bg-green-500";
+        case "lead":
+          return "bg-blue-500";
+        case "inactive":
+          return "bg-gray-500";
+        default:
+          return "bg-gray-500";
+      }
+    };
+
+    return (
+      <div className="container mx-auto py-10">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/private/dashboard/students">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">{client.personalInfo.fullName}</h1>
+              <p className="text-gray-500">{client.clientId}</p>
+            </div>
+          </div>
+          <Button asChild>
             <Link href={`/private/dashboard/students/${client._id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" />
               Edit Client
             </Link>
           </Button>
-          <Button variant="default" asChild>
-            <Link href="/private/dashboard/students">Back to Clients</Link>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <Badge className={getStatusColor(client.status)}>
+                    {client.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Commission</p>
+                  <p className="font-medium">${client.commission.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p>{client.personalInfo.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p>{client.personalInfo.phone}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Date of Birth</p>
+                  <p>{format(new Date(client.personalInfo.dateOfBirth), "PPP")}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Nationality</p>
+                  <p>{client.personalInfo.nationality}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Passport Number</p>
+                  <p>{client.personalInfo.passportNumber}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Current Residence</p>
+                <p>{client.personalInfo.currentResidence.country}</p>
+                {client.personalInfo.currentResidence.city && (
+                  <p className="text-sm text-gray-500">
+                    {client.personalInfo.currentResidence.city}
+                  </p>
+                )}
+                {client.personalInfo.currentResidence.address && (
+                  <p className="text-sm text-gray-500">
+                    {client.personalInfo.currentResidence.address}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Emergency Contact</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Name</p>
+                    <p>{client.personalInfo.emergencyContact.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Relationship</p>
+                    <p>{client.personalInfo.emergencyContact.relationship}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Phone</p>
+                    <p>{client.personalInfo.emergencyContact.phone}</p>
+                  </div>
+                  {client.personalInfo.emergencyContact.email && (
+                    <div>
+                      <p className="text-sm text-gray-500">Email</p>
+                      <p>{client.personalInfo.emergencyContact.email}</p>
+                    </div>
+                  )}
+                </div>
+                {client.personalInfo.emergencyContact.address && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">Address</p>
+                    <p>{client.personalInfo.emergencyContact.address}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Academic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">University</p>
+                <p>{client.academicInfo.university.name}</p>
+                <p className="text-sm text-gray-500">
+                  {client.academicInfo.university.country}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Program</p>
+                <p>{client.academicInfo.program.name}</p>
+                <div className="flex gap-2 text-sm text-gray-500">
+                  <span className="capitalize">{client.academicInfo.program.level}</span>
+                  <span>•</span>
+                  <span>{client.academicInfo.program.major}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {client.academicInfo.enrollmentDate && (
+                  <div>
+                    <p className="text-sm text-gray-500">Enrollment Date</p>
+                    <p>
+                      {format(new Date(client.academicInfo.enrollmentDate), "PPP")}
+                    </p>
+                  </div>
+                )}
+                {client.academicInfo.expectedGraduationDate && (
+                  <div>
+                    <p className="text-sm text-gray-500">Expected Graduation</p>
+                    <p>
+                      {format(
+                        new Date(client.academicInfo.expectedGraduationDate),
+                        "PPP"
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {client.visaInfo && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Visa Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Visa Type</p>
+                    <p>{client.visaInfo.type}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Visa Number</p>
+                    <p>{client.visaInfo.number}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Issue Date</p>
+                    <p>{format(new Date(client.visaInfo.issueDate), "PPP")}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Expiry Date</p>
+                    <p>{format(new Date(client.visaInfo.expiryDate), "PPP")}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Issuing Country</p>
+                    <p>{client.visaInfo.issuingCountry}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Status</p>
+                    <Badge
+                      variant={
+                        client.visaInfo.status === "active" ? "success" : "warning"
+                      }
+                    >
+                      {client.visaInfo.status}
+                    </Badge>
+                  </div>
+                  {client.visaInfo.permitNumber && (
+                    <div>
+                      <p className="text-sm text-gray-500">Permit Number</p>
+                      <p>{client.visaInfo.permitNumber}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {client.documents?.map((doc, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{doc.title}</p>
+                        <p className="text-sm text-gray-500 capitalize">
+                          {doc.type.replace("_", " ")}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          doc.status === "approved"
+                            ? "success"
+                            : doc.status === "rejected"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                      >
+                        {doc.status}
+                      </Badge>
+                    </div>
+                    <ImageView
+                      src={doc.fileUrl}
+                      alt={doc.title}
+                      className="w-full max-w-md rounded-lg shadow-sm"
+                      width={300}
+                      height={200}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Uploaded on {format(new Date(doc.uploadDate), "PPP")}
+                    </p>
+                  </div>
+                ))}
+                {(!client.documents || client.documents.length === 0) && (
+                  <p className="text-sm text-gray-500">No documents uploaded yet.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  } catch (error) {
+    console.error("Error loading client:", error);
+    return (
+      <div className="container mx-auto py-10">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <h1 className="text-2xl font-bold">Error Loading Client</h1>
+          <p className="text-gray-500">{error.message}</p>
+          <Button asChild>
+            <Link href="/private/dashboard/students">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Students
+            </Link>
           </Button>
         </div>
       </div>
+    );
+  }
+}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Client Overview Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Client Overview</CardTitle>
-            <CardDescription>Basic information about the client</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Client Type</p>
-                <div className="flex items-center space-x-2">
-                  {client.clientType === "study" ? (
-                    <GraduationCap className="h-4 w-4" />
-                  ) : (
-                    <Briefcase className="h-4 w-4" />
-                  )}
-                  <span className="font-medium capitalize">
-                    {client.clientType}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Status</p>
-                <Badge
-                  variant={
-                    client.status === "active"
-                      ? "default"
-                      : client.status === "pending"
-                      ? "secondary"
-                      : "outline"
-                  }
-                >
-                  {client.status}
-                </Badge>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Email</p>
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4" />
-                  <span className="font-medium">{client.email}</span>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4" />
-                  <span className="font-medium">{client.phone}</span>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Destination</p>
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4" />
-                  <span className="font-medium">{client.destination}</span>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Application Date</p>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4" />
-                  <span className="font-medium">
-                    {format(new Date(client.applicationDate), "PPP")}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Financial Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Financial Details</CardTitle>
-            <CardDescription>Commission and payment information</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center space-x-4">
-                  <DollarSign className="h-6 w-6 text-green-500" />
-                  <div>
-                    <p className="text-sm font-medium">Commission Amount</p>
-                    <p className="text-2xl font-bold">${client.commissionAmount}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Details Tabs */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList>
-                <TabsTrigger value="details">
-                  {client.clientType === "study" ? "Study Details" : "Work Details"}
-                </TabsTrigger>
-                <TabsTrigger value="notes">Notes</TabsTrigger>
-                <TabsTrigger value="timeline">Timeline</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="details" className="mt-6">
-                {client.clientType === "study" ? (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">University</p>
-                      <p className="font-medium">{client.studyDetails?.university}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Course</p>
-                      <p className="font-medium">{client.studyDetails?.course}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Program Level</p>
-                      <p className="font-medium capitalize">
-                        {client.studyDetails?.programLevel}
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Start Date</p>
-                      <p className="font-medium">
-                        {client.studyDetails?.startDate
-                          ? format(new Date(client.studyDetails.startDate), "PPP")
-                          : "Not specified"}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Company</p>
-                      <p className="font-medium">{client.workDetails?.company}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Job Title</p>
-                      <p className="font-medium">{client.workDetails?.jobTitle}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Contract Duration</p>
-                      <p className="font-medium">
-                        {client.workDetails?.contractDuration}
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Expected Salary</p>
-                      <p className="font-medium">
-                        ${client.workDetails?.expectedSalary}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="notes" className="mt-6">
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-start space-x-4">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Notes</p>
-                      <p className="mt-1">{client.notes || "No notes available"}</p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="timeline" className="mt-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border">
-                      <Clock className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Application Started</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(client.applicationDate), "PPP")}
-                      </p>
-                    </div>
-                  </div>
-                  {/* Add more timeline items as needed */}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardHeader>
-        </Card>
-      </div>
-    </div>
-  );
-} 
+export default ClientPage; 

@@ -1,72 +1,41 @@
-import { Suspense } from "react";
-import { DataTable } from "./components/data-table";
-import { columns } from "./components/columns";
-import { CardSkeleton } from "@/components/skeletons";
-import { TableError } from "./components/TableError";
 import { getClients } from "@/actions/client";
+import { DataTable } from "./components/DataTable";
+import { OverviewCards } from "./components/OverviewCards";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-export const revalidate = 0;
+export default async function StudentsPage({
+  searchParams: { page = "1", limit = "10", status, search },
+}) {
+  const { clients, pagination } = await getClients({
+    page: parseInt(page),
+    limit: parseInt(limit),
+    status,
+    search,
+  });
 
-export default async function StudentsPage() {
-  try {
-    const { clients, pagination } = await getClients();
-
-    if (!clients || !Array.isArray(clients)) {
-      throw new Error("Invalid data format received");
-    }
-
-    // Format clients data for the table
-    const formattedClients = clients.map(client => ({
-      id: client._id.toString(),
-      name: client.personalInfo?.fullName || "N/A",
-      email: client.personalInfo?.email || "N/A",
-      phone: client.personalInfo?.phone || "N/A",
-      status: client.status || "N/A",
-      type: client.academicInfo?.program?.level || "N/A",
-      university: client.academicInfo?.university?.name || "N/A",
-      program: client.academicInfo?.program?.name || "N/A",
-      enrollmentDate: client.academicInfo?.enrollmentDate || null,
-      advisor: client.assignedAdvisor ? `${client.assignedAdvisor.firstName} ${client.assignedAdvisor.lastName}` : "Not Assigned"
-    }));
-
-    return (
-      <div className="container mx-auto py-10">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Students</h2>
-            <p className="text-muted-foreground">
-              Manage your enrolled students and their progress
-            </p>
-          </div>
-          <Link href="/private/dashboard/students/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Student
-            </Button>
-          </Link>
+  return (
+    <div className="container mx-auto py-10">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Students</h2>
+          <p className="text-muted-foreground">
+            Manage your student clients here
+          </p>
         </div>
+        <Button asChild>
+          <Link href="/private/dashboard/students/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Student
+          </Link>
+        </Button>
+      </div>
 
-        <Suspense fallback={<CardSkeleton />}>
-          <DataTable 
-            data={formattedClients} 
-            columns={columns} 
-            searchKey="name"
-            pagination={pagination}
-          />
-        </Suspense>
+      <div className="space-y-8">
+        <OverviewCards clients={clients} />
+        <DataTable data={clients} />
       </div>
-    );
-  } catch (error) {
-    console.error("Error in StudentsPage:", error);
-    return (
-      <div className="container mx-auto py-10">
-        <TableError error={error} />
-      </div>
-    );
-  }
+    </div>
+  );
 }

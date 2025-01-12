@@ -1,22 +1,17 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-
-// Maximum file size (5MB)
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
-// Allowed image types
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+import { auth } from "@/lib/auth";
+import imagekit from "@/lib/imagekit";
 
 export async function POST(req) {
   try {
     const session = await auth();
-    if (!session?.user) {
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await req.formData();
     const file = formData.get("file");
-
+    
     if (!file) {
       return NextResponse.json(
         { error: "No file provided" },
@@ -24,34 +19,28 @@ export async function POST(req) {
       );
     }
 
-    // Validate file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({
-        error: `Invalid file type. Allowed types: ${ALLOWED_TYPES.join(", ")}`,
-      }, { status: 400 });
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({
-        error: `File size too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-      }, { status: 400 });
-    }
-
     // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64String = `data:${file.type};base64,${buffer.toString('base64')}`;
+    const base64String = buffer.toString('base64');
 
-    return NextResponse.json({
-      url: base64String,
-      type: file.type,
-      size: file.size
+    // Upload to ImageKit
+    const result = await imagekit.upload({
+      file: base64String,
+      fileName: file.name,
+      folder: "/documents", // All documents will be stored in this folder
+      tags: ["document"], // Add any relevant tags
+    });
+
+    return NextResponse.json({ 
+      url: result.url,
+      fileId: result.fileId,
+      success: true 
     });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to upload file" },
+      { error: "Error uploading file" },
       { status: 500 }
     );
   }

@@ -1,221 +1,102 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import { Client } from "@/models/Client";
-import { Application } from "@/models/Application";
-import { auth } from "@/auth";
+import Client from "@/models/Client";
 
-// Helper function to check if an application is completed
-function isApplicationCompleted(application) {
-  return (
-    application.status === "approved" &&
-    application.studyDetails?.university &&
-    application.studyDetails?.program
-  );
+export async function POST(request) {
+  try {
+    await connectDB();
+
+    const data = await request.json();
+    console.log('Received client data:', data);
+
+    // Create new client
+    const client = new Client(data);
+    console.log('Created client instance:', client);
+
+    // Save to database
+    const savedClient = await client.save();
+    console.log('Saved client to database:', savedClient);
+
+    return NextResponse.json(savedClient, { status: 201 });
+  } catch (error) {
+    console.error("Error in POST /api/clients:", error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return NextResponse.json(
+        { message: "Validation failed", errors: validationErrors },
+        { status: 400 }
+      );
+    }
+
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { message: "Duplicate entry found", field: Object.keys(error.keyPattern)[0] },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: error.message || "Failed to create client" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET(request) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const query = {};
+    const query = {
+      page: searchParams.get("page") || 1,
+      limit: searchParams.get("limit") || 10,
+      status: searchParams.get("status"),
+      clientType: searchParams.get("clientType"),
+      search: searchParams.get("search"),
+    };
 
-    // Handle search and filtering
-    const search = searchParams.get("search");
-    if (search) {
-      query["$or"] = [
-        { "personalInfo.fullName": { $regex: search, $options: "i" } },
-        { "personalInfo.email": { $regex: search, $options: "i" } },
-        { "academicInfo.studentId": { $regex: search, $options: "i" } },
+    // Build query
+    const dbQuery = {};
+    if (query.status) dbQuery.status = query.status;
+    if (query.clientType) dbQuery.clientType = query.clientType;
+    if (query.search) {
+      dbQuery.$or = [
+        { "personalInfo.fullName": { $regex: query.search, $options: "i" } },
+        { "personalInfo.email": { $regex: query.search, $options: "i" } },
       ];
     }
 
-    const status = searchParams.get("status");
-    if (status) {
-      query.status = status;
-    }
+    // Calculate pagination
+    const page = parseInt(query.page);
+    const limit = parseInt(query.limit);
+    const skip = (page - 1) * limit;
 
-    const advisor = searchParams.get("advisor");
-    if (advisor) {
-      query.assignedAdvisor = advisor;
-    }
+    // Get total count for pagination
+    const total = await Client.countDocuments(dbQuery);
 
-    await connectDB();
-    const clients = await Client.find(query)
-      .populate("applicationId", "applicationType status")
-      .populate("assignedAdvisor", "name email")
-      .sort({ createdAt: -1 });
-
-    return NextResponse.json(clients);
-  } catch (error) {
-    console.error("Error fetching clients:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch clients" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request) {
-  try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const data = await request.json();
-
-    // Validate required fields
-    if (!data.applicationId) {
-      return NextResponse.json(
-        { error: "Application ID is required" },
-        { status: 400 }
-      );
-    }
-
-    await connectDB();
-
-    // Check if application exists and is completed
-    const application = await Application.findById(data.applicationId);
-    if (!application) {
-      return NextResponse.json(
-        { error: "Application not found" },
-        { status: 404 }
-      );
-    }
-
-    if (!isApplicationCompleted(application)) {
-      return NextResponse.json(
-        { error: "Application is not completed" },
-        { status: 400 }
-      );
-    }
-
-    // Check if client already exists for this application
-    const existingClient = await Client.findOne({
-      applicationId: data.applicationId,
-    });
-    if (existingClient) {
-      return NextResponse.json(
-        { error: "Client already exists for this application" },
-        { status: 400 }
-      );
-    }
-
-    // Create client with application data
-    const clientData = {
-      ...data,
-      personalInfo: {
-        ...application.personalInfo,
-      },
-      academicInfo: {
-        university: {
-          name: application.studyDetails.university,
-          country: application.studyDetails.destinationCountry,
-          city: application.studyDetails.destinationCity,
-        },
-        program: {
-          name: application.studyDetails.program,
-          level: application.studyDetails.programLevel,
-          duration: application.studyDetails.duration,
-        },
-      },
-      status: "active",
-    };
-
-    const client = new Client(clientData);
-    await client.save();
+    // Get clients with pagination
+    const clients = await Client.find(dbQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     return NextResponse.json({
-      message: "Client created successfully",
-      client,
-    });
-  } catch (error) {
-    console.error("Error creating client:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to create client",
-        details: error.message,
+      clients,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
       },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(request) {
-  try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-    if (!id) {
-      return NextResponse.json(
-        { error: "Client ID is required" },
-        { status: 400 }
-      );
-    }
-
-    const data = await request.json();
-    await connectDB();
-
-    const client = await Client.findById(id);
-    if (!client) {
-      return NextResponse.json({ error: "Client not found" }, { status: 404 });
-    }
-
-    // Update client data
-    Object.assign(client, data);
-    await client.save();
-
-    return NextResponse.json({
-      message: "Client updated successfully",
-      client,
     });
   } catch (error) {
-    console.error("Error updating client:", error);
+    console.error("Error in GET /api/clients:", error);
     return NextResponse.json(
-      { error: "Failed to update client" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request) {
-  try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-    if (!id) {
-      return NextResponse.json(
-        { error: "Client ID is required" },
-        { status: 400 }
-      );
-    }
-
-    await connectDB();
-    const client = await Client.findByIdAndDelete(id);
-
-    if (!client) {
-      return NextResponse.json({ error: "Client not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      message: "Client deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting client:", error);
-    return NextResponse.json(
-      { error: "Failed to delete client" },
+      { message: error.message || "Failed to fetch clients" },
       { status: 500 }
     );
   }

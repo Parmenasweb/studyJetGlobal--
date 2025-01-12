@@ -1,26 +1,15 @@
 import { NextResponse } from "next/server";
-import { Client } from "@/models/Client";
-import { auth } from "@/auth";
 import connectDB from "@/lib/db";
+import Client from "@/models/Client";
 
-export async function GET(req, { params }) {
+export async function GET(request, { params }) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const { id } = params;
-
     await connectDB();
 
-    const client = await Client.findById(id);
+    const client = await Client.findById(params.id).lean();
     if (!client) {
       return NextResponse.json(
-        { error: "Client not found" },
+        { message: "Client not found" },
         { status: 404 }
       );
     }
@@ -29,94 +18,79 @@ export async function GET(req, { params }) {
   } catch (error) {
     console.error("Error in GET /api/clients/[id]:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { message: error.message || "Failed to fetch client" },
       { status: 500 }
     );
   }
 }
 
-export async function PATCH(req, { params }) {
+export async function PATCH(request, { params }) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const { id } = params;
-    const data = await req.json();
-
     await connectDB();
 
-    // Check if updating email and if it already exists
-    if (data.email) {
-      const existingClient = await Client.findOne({
-        email: data.email,
-        _id: { $ne: id },
-      });
-      if (existingClient) {
-        return NextResponse.json(
-          { error: "Client with this email already exists" },
-          { status: 400 }
-        );
-      }
-    }
+    const data = await request.json();
+    console.log('Updating client with data:', { id: params.id, data });
 
-    const client = await Client.findByIdAndUpdate(
-      id,
-      { ...data },
-      { new: true, runValidators: true }
-    );
-
+    const client = await Client.findById(params.id);
     if (!client) {
       return NextResponse.json(
-        { error: "Client not found" },
+        { message: "Client not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(client);
+    // Update client fields
+    Object.assign(client, data);
+    
+    // Save the updated client
+    const updatedClient = await client.save();
+    console.log('Updated client:', updatedClient);
+
+    return NextResponse.json(updatedClient);
   } catch (error) {
     console.error("Error in PATCH /api/clients/[id]:", error);
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return NextResponse.json(
+        { message: "Validation failed", errors: validationErrors },
+        { status: 400 }
+      );
+    }
+
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { message: "Duplicate entry found", field: Object.keys(error.keyPattern)[0] },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Internal server error" },
+      { message: error.message || "Failed to update client" },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(req, { params }) {
+export async function DELETE(request, { params }) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const { id } = params;
-
     await connectDB();
 
-    const client = await Client.findByIdAndDelete(id);
+    const client = await Client.findByIdAndDelete(params.id);
     if (!client) {
       return NextResponse.json(
-        { error: "Client not found" },
+        { message: "Client not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(
-      { message: "Client deleted successfully" },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Client deleted successfully" });
   } catch (error) {
     console.error("Error in DELETE /api/clients/[id]:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { message: error.message || "Failed to delete client" },
       { status: 500 }
     );
   }
