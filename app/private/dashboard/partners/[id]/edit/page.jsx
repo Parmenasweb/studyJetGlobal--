@@ -1,14 +1,11 @@
 import { notFound } from "next/navigation";
 import Partner from "@/models/Partner";
-import { PartnerForm } from "../../components/partner-form";
+import { PartnerForm } from "../../components/PartnerForm";
 import connectDB from "@/lib/db";
 
 async function getPartner(id) {
   await connectDB();
-  const partner = await Partner.findById(id)
-    .populate("assignedTo", "name email")
-    .populate("createdBy", "name email")
-    .populate("updatedBy", "name email");
+  const partner = await Partner.findById(id).lean();
 
   if (!partner) {
     notFound();

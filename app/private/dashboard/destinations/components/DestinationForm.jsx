@@ -36,6 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
 import { destinationSchema, commonPrograms, commonAdmissionRequirements, commonVisaRequirements } from "@/lib/validations/destination";
 import { Loader2, ImagePlus, X, AlertCircle, Check } from "lucide-react";
 import Image from "next/image";
@@ -48,10 +49,22 @@ import {
   uploadDestinationImage, 
   deleteDestinationImage 
 } from "@/actions/destination";
+import FileUpload from "@/components/fileUpload";
+import dynamic from "next/dynamic";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_GALLERY_IMAGES = 10;
+
+// Dynamically import ImageView with SSR disabled
+const ImageView = dynamic(() => import("@/components/ImageView"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center w-full h-full bg-muted">
+      <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+    </div>
+  ),
+});
 
 export default function DestinationForm({ initialData }) {
   const router = useRouter();
@@ -915,183 +928,134 @@ export default function DestinationForm({ initialData }) {
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Media</h3>
           <div className="grid gap-4 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="media.mainImage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Main Image (Banner)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        {(initialData?.media?.mainImage?.url || imageUploads.mainImage) && (
-                          <div className="relative h-20 w-20">
-                            <Image
-                              src={imageUploads.mainImage 
-                                ? URL.createObjectURL(imageUploads.mainImage)
-                                : initialData.media.mainImage.url
-                              }
-                              alt={initialData?.media?.mainImage?.alt || "Main image"}
-                              fill
-                              className="object-cover rounded-md"
-                            />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6"
-                              onClick={() => handleImageDelete("mainImage")}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                      </div>
-                        )}
-                        <FormControl>
-                          <Input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={e => handleImageChange(e, "mainImage")}
-                            disabled={isLoading}
-                          />
-                        </FormControl>
-                        </div>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Recommended size: 1920x1080px. Max size: 5MB.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
+            <div className="space-y-2">
+              <Label>Main Image</Label>
+              <FileUpload
+                folder="/destinations/main"
+                onSuccess={(response) => {
+                  form.setValue("media.mainImage", { url: response.url });
+                }}
+                onError={(error) => {
+                  toast.error(error.message || "Failed to upload main image");
+                }}
+                existingUrl={form.watch("media.mainImage")?.url}
+                onRemove={() => {
+                  form.setValue("media.mainImage", { url: "" });
+                }}
+              />
+              {form.watch("media.mainImage")?.url && (
+                <div className="mt-2">
+                  <ImageView
+                    src={form.watch("media.mainImage")?.url}
+                    alt="Main image preview"
+                    className="w-full rounded-lg shadow-sm"
+                    width={300}
+                    height={200}
+                    quality={100}
+                    loading="lazy"
+                    lo="true"
+                  />
+                </div>
               )}
-            />
-
-            <FormField
-              control={form.control}
-              name="media.flagImage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Flag Image (Thumbnail)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        {(initialData?.media?.flagImage?.url || imageUploads.flagImage) && (
-                          <div className="relative h-20 w-20">
-                            <Image
-                              src={imageUploads.flagImage 
-                                ? URL.createObjectURL(imageUploads.flagImage)
-                                : initialData.media.flagImage.url
-                              }
-                              alt={initialData?.media?.flagImage?.alt || "Flag image"}
-                              fill
-                              className="object-cover rounded-md"
-                            />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6"
-                              onClick={() => handleImageDelete("flagImage")}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                      </div>
-                        )}
-                        <FormControl>
-                          <Input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={e => handleImageChange(e, "flagImage")}
-                            disabled={isLoading}
-                          />
-                        </FormControl>
-                        </div>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Recommended size: 256x256px. Max size: 5MB.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
+            </div>
+            <div className="space-y-2">
+              <Label>Flag Image</Label>
+              <FileUpload
+                folder="/destinations/flags"
+                onSuccess={(response) => {
+                  form.setValue("media.flagImage", { url: response.url });
+                }}
+                onError={(error) => {
+                  toast.error(error.message || "Failed to upload flag image");
+                }}
+                existingUrl={form.watch("media.flagImage")?.url}
+                onRemove={() => {
+                  form.setValue("media.flagImage", { url: "" });
+                }}
+              />
+              {form.watch("media.flagImage")?.url && (
+                <div className="mt-2">
+                  <ImageView
+                    src={form.watch("media.flagImage")?.url}
+                    alt="Flag image preview"
+                    className="w-full rounded-lg shadow-sm"
+                    width={150}
+                    height={100}
+                    quality={100}
+                    loading="lazy"
+                    lo="true"
+                  />
+                </div>
               )}
-            />
-
-            <FormField
-              control={form.control}
-              name="media.galleryImages"
-              render={({ field }) => (
-                <FormItem className="col-span-2">
-                  <FormLabel>Gallery Images</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        <FormControl>
-                        <Input
-                          type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                          multiple
-                            onChange={e => handleImageChange(e, "gallery")}
-                            disabled={isLoading}
-                          />
-                        </FormControl>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => document.querySelector('input[name="media.galleryImages"]').click()}
-                        >
-                          <ImagePlus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {field.value && field.value.length > 0 && (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {field.value.map((image, index) => (
-                            <div key={index} className="relative h-40 w-full overflow-hidden rounded-lg group">
-                              <Image
-                                src={image.url}
-                                alt={image.alt || `Gallery image ${index + 1}`}
-                                fill
-                                className="object-cover"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleImageDelete("gallery", index)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Add multiple images to the destination gallery. Each image should be max 5MB.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="media.videoUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Video URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., https://youtube.com/watch?v=..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            </div>
           </div>
+
+          <div className="space-y-2">
+            <Label>Gallery Images</Label>
+            <FileUpload
+              folder="/destinations/gallery"
+              onSuccess={(response) => {
+                const currentGallery = form.watch("media.galleryImages") || [];
+                form.setValue("media.galleryImages", [...currentGallery, { url: response.url }]);
+              }}
+              onError={(error) => {
+                toast.error(error.message || "Failed to upload gallery image");
+              }}
+              onRemove={() => {
+                form.setValue("media.galleryImages", []);
+              }}
+            />
+            {form.watch("media.galleryImages")?.length > 0 && (
+              <div className="mt-2 grid grid-cols-3 gap-4">
+                {form.watch("media.galleryImages").map((image, index) => (
+                  <div key={index} className="relative group">
+                    <ImageView
+                      src={image.url}
+                      alt={`Gallery image ${index + 1}`}
+                      className="w-full rounded-lg shadow-sm"
+                      width={200}
+                      height={150}
+                      quality={100}
+                      loading="lazy"
+                      lo="true"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => {
+                        const currentGallery = form.watch("media.galleryImages");
+                        form.setValue(
+                          "media.galleryImages",
+                          currentGallery.filter((_, i) => i !== index)
+                        );
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <FormField
+            control={form.control}
+            name="media.videoUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Video URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="e.g., https://youtube.com/watch?v=..."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="space-y-4">

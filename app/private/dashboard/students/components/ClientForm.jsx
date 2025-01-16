@@ -214,7 +214,7 @@ export function ClientForm({ client }) {
         const errorMessages = Object.values(error.errors).map(err => err.message);
         errorMessages.forEach(message => toast.error(message));
       } else {
-        toast.error(error.message || "Failed to save client");
+      toast.error(error.message || "Failed to save client");
       }
     } finally {
       setIsLoading(false);
@@ -263,40 +263,40 @@ export function ClientForm({ client }) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Tabs defaultValue="personal" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="personal">Personal</TabsTrigger>
               <TabsTrigger value="academic">Academic</TabsTrigger>
               <TabsTrigger value="visa">Visa</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-            </TabsList>
+        <TabsTrigger value="documents">Documents</TabsTrigger>
+      </TabsList>
 
             <TabsContent value="personal" className="space-y-4">
               <div className="grid gap-4 grid-cols-2">
-                <FormField
-                  control={form.control}
+          <FormField
+            control={form.control}
                   name="status"
-                  render={({ field }) => (
-                    <FormItem>
+            render={({ field }) => (
+              <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
                             <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
                           <SelectItem value="lead">Lead</SelectItem>
                           <SelectItem value="active">Active</SelectItem>
                           <SelectItem value="inactive">Inactive</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
                 <FormField
                   control={form.control}
@@ -321,41 +321,41 @@ export function ClientForm({ client }) {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="personalInfo.fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
+          <FormField
+            control={form.control}
+                    name="personalInfo.fullName"
+            render={({ field }) => (
+              <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                <FormControl>
                         <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="personalInfo.email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
+                  <FormField
+                    control={form.control}
+                    name="personalInfo.email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
                         <Input type="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                <FormField
-                  control={form.control}
-                  name="personalInfo.phone"
-                  render={({ field }) => (
-                    <FormItem>
+          <FormField
+            control={form.control}
+                    name="personalInfo.phone"
+            render={({ field }) => (
+              <FormItem>
                       <FormLabel>Phone</FormLabel>
-                      <FormControl>
+                  <FormControl>
                         <PhoneInput
                           country="us"
                           value={field.value}
@@ -374,53 +374,53 @@ export function ClientForm({ client }) {
                           )}
                           dropdownClass={theme === "dark" ? "dark-dropdown" : ""}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                <FormField
-                  control={form.control}
-                  name="personalInfo.dateOfBirth"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Date of Birth</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
+          <FormField
+            control={form.control}
+                    name="personalInfo.dateOfBirth"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                        <FormLabel>Date of Birth</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
                               variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
                             disabled={(date) =>
                               date > new Date() || date < new Date("1900-01-01")
                             }
                             defaultMonth={field.value || subYears(new Date(), 18)}
-                            initialFocus
+                      initialFocus
                             captionLayout="dropdown-buttons"
                             fromYear={1900}
                             toYear={new Date().getFullYear()}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    />
+                  </PopoverContent>
+                </Popover>
                       <FormDescription>
                         Your date of birth is used to verify your age and eligibility.
                       </FormDescription>
@@ -455,93 +455,93 @@ export function ClientForm({ client }) {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                <FormField
-                  control={form.control}
-                  name="personalInfo.nationality"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nationality</FormLabel>
-                      <FormControl>
+                  <FormField
+                    control={form.control}
+                    name="personalInfo.nationality"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nationality</FormLabel>
+                        <FormControl>
                         <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="personalInfo.passportNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Passport Number</FormLabel>
-                      <FormControl>
+                  <FormField
+                    control={form.control}
+                    name="personalInfo.passportNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Passport Number</FormLabel>
+                        <FormControl>
                         <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                        </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
               {/* Current Residence */}
-              <div className="space-y-4">
+                <div className="space-y-4">
                 <h3 className="text-lg font-medium">Current Residence</h3>
                 <div className="grid gap-4 grid-cols-2">
-                  <FormField
-                    control={form.control}
+            <FormField
+              control={form.control}
                     name="personalInfo.currentResidence.country"
-                    render={({ field }) => (
-                      <FormItem>
+                      render={({ field }) => (
+                        <FormItem>
                         <FormLabel>Country</FormLabel>
-                        <FormControl>
+                          <FormControl>
                           <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
+                    <FormField
+                      control={form.control}
                     name="personalInfo.currentResidence.state"
-                    render={({ field }) => (
-                      <FormItem>
+              render={({ field }) => (
+                <FormItem>
                         <FormLabel>State/Province</FormLabel>
-                        <FormControl>
+                  <FormControl>
                           <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
+                    <FormField
+                      control={form.control}
                     name="personalInfo.currentResidence.city"
-                    render={({ field }) => (
-                      <FormItem>
+                      render={({ field }) => (
+                        <FormItem>
                         <FormLabel>City</FormLabel>
-                        <FormControl>
+                          <FormControl>
                           <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                  <FormField
-                    control={form.control}
+            <FormField
+              control={form.control}
                     name="personalInfo.currentResidence.postalCode"
-                    render={({ field }) => (
-                      <FormItem>
+              render={({ field }) => (
+                <FormItem>
                         <FormLabel>Postal Code</FormLabel>
-                        <FormControl>
+                  <FormControl>
                           <Input {...field} />
                         </FormControl>
                         <FormMessage />
@@ -557,13 +557,13 @@ export function ClientForm({ client }) {
                         <FormLabel>Address</FormLabel>
                         <FormControl>
                           <Textarea {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-              </div>
 
               {/* Emergency Contact */}
               <div className="space-y-4">
@@ -633,25 +633,25 @@ export function ClientForm({ client }) {
                         <FormLabel>Contact Email</FormLabel>
                         <FormControl>
                           <Input type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                  <FormField
-                    control={form.control}
+            <FormField
+              control={form.control}
                     name="personalInfo.emergencyContact.address"
-                    render={({ field }) => (
+              render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>Contact Address</FormLabel>
-                        <FormControl>
+                    <FormControl>
                           <Textarea {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
                 </div>
               </div>
             </TabsContent>
@@ -661,8 +661,8 @@ export function ClientForm({ client }) {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">University Information</h3>
                 <div className="grid gap-4 grid-cols-2">
-                  <FormField
-                    control={form.control}
+            <FormField
+              control={form.control}
                     name="academicInfo.university.name"
                     render={({ field }) => (
                       <FormItem>
@@ -692,12 +692,12 @@ export function ClientForm({ client }) {
                   <FormField
                     control={form.control}
                     name="academicInfo.university.city"
-                    render={({ field }) => (
+              render={({ field }) => (
                       <FormItem>
                         <FormLabel>City</FormLabel>
-                        <FormControl>
+                      <FormControl>
                           <Input {...field} />
-                        </FormControl>
+                            </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -709,39 +709,39 @@ export function ClientForm({ client }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Campus</FormLabel>
-                        <FormControl>
+                            <FormControl>
                           <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                      </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
               </div>
 
               {/* Program Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Program Information</h3>
                 <div className="grid gap-4 grid-cols-2">
-                  <FormField
-                    control={form.control}
+            <FormField
+              control={form.control}
                     name="academicInfo.program.name"
-                    render={({ field }) => (
-                      <FormItem>
+              render={({ field }) => (
+                <FormItem>
                         <FormLabel>Program Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
+                    <FormField
+                      control={form.control}
                     name="academicInfo.program.level"
-                    render={({ field }) => (
-                      <FormItem>
+                      render={({ field }) => (
+                        <FormItem>
                         <FormLabel>Program Level</FormLabel>
                         <Select
                           value={field.value}
@@ -765,16 +765,16 @@ export function ClientForm({ client }) {
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                  <FormField
-                    control={form.control}
+            <FormField
+              control={form.control}
                     name="academicInfo.program.major"
-                    render={({ field }) => (
-                      <FormItem>
+              render={({ field }) => (
+                <FormItem>
                         <FormLabel>Major</FormLabel>
                         <Select
                           value={field.value}
@@ -791,16 +791,16 @@ export function ClientForm({ client }) {
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
+                    <FormField
+                      control={form.control}
                     name="academicInfo.program.specialization"
-                    render={({ field }) => (
-                      <FormItem>
+                      render={({ field }) => (
+                        <FormItem>
                         <FormLabel>Specialization</FormLabel>
                         <Select
                           value={field.value}
@@ -818,29 +818,29 @@ export function ClientForm({ client }) {
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                  <FormField
-                    control={form.control}
+            <FormField
+              control={form.control}
                     name="academicInfo.program.duration"
-                    render={({ field }) => (
-                      <FormItem>
+              render={({ field }) => (
+                <FormItem>
                         <FormLabel>Duration</FormLabel>
-                        <FormControl>
+                          <FormControl>
                           <Input {...field} placeholder="e.g., 4 years" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
+                    <FormField
+                      control={form.control}
                     name="academicInfo.program.studyMode"
-                    render={({ field }) => (
+                      render={({ field }) => (
                       <FormItem>
                         <FormLabel>Study Mode</FormLabel>
                         <Select
@@ -863,10 +863,10 @@ export function ClientForm({ client }) {
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </div>
               </div>
 
@@ -874,27 +874,27 @@ export function ClientForm({ client }) {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Enrollment Information</h3>
                 <div className="grid gap-4 grid-cols-2">
-                  <FormField
-                    control={form.control}
+                    <FormField
+                      control={form.control}
                     name="academicInfo.studentId"
-                    render={({ field }) => (
-                      <FormItem>
+                      render={({ field }) => (
+                        <FormItem>
                         <FormLabel>Student ID</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormControl>
+                            <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                  <FormField
-                    control={form.control}
+            <FormField
+              control={form.control}
                     name="academicInfo.enrollmentDate"
-                    render={({ field }) => (
-                      <FormItem>
+              render={({ field }) => (
+                <FormItem>
                         <FormLabel>Enrollment Date</FormLabel>
-                        <FormControl>
+                  <FormControl>
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button
@@ -917,30 +917,30 @@ export function ClientForm({ client }) {
                               />
                             </PopoverContent>
                           </Popover>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
+                    <FormField
+                      control={form.control}
                     name="academicInfo.expectedGraduationDate"
-                    render={({ field }) => (
-                      <FormItem>
+                      render={({ field }) => (
+                        <FormItem>
                         <FormLabel>Expected Graduation Date</FormLabel>
-                        <FormControl>
+                          <FormControl>
                           <FutureDatePicker
                             value={field.value}
                             onChange={field.onChange}
                             yearsInFuture={6}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
               </div>
             </TabsContent>
 
@@ -948,11 +948,11 @@ export function ClientForm({ client }) {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Visa Information</h3>
                 <div className="grid gap-4 grid-cols-2">
-                  <FormField
-                    control={form.control}
+        <FormField
+          control={form.control}
                     name="visaInfo.type"
-                    render={({ field }) => (
-                      <FormItem>
+          render={({ field }) => (
+            <FormItem>
                         <FormLabel>Visa Type</FormLabel>
                         <Select
                           value={field.value}
@@ -969,24 +969,24 @@ export function ClientForm({ client }) {
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-                  <FormField
-                    control={form.control}
+        <FormField
+          control={form.control}
                     name="visaInfo.number"
-                    render={({ field }) => (
-                      <FormItem>
+          render={({ field }) => (
+            <FormItem>
                         <FormLabel>Visa Number</FormLabel>
-                        <FormControl>
+              <FormControl>
                           <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
                   <FormField
                     control={form.control}
@@ -995,8 +995,8 @@ export function ClientForm({ client }) {
                       <FormItem>
                         <FormLabel>Issue Date</FormLabel>
                         <FormControl>
-                          <Popover>
-                            <PopoverTrigger asChild>
+                        <Popover>
+                          <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
                                 className={cn(
@@ -1007,16 +1007,16 @@ export function ClientForm({ client }) {
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {field.value ? format(field.value, "PPP") : "Pick a date"}
                               </Button>
-                            </PopoverTrigger>
+                          </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1029,13 +1029,13 @@ export function ClientForm({ client }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Expiry Date</FormLabel>
-                        <FormControl>
+                            <FormControl>
                           <FutureDatePicker
                             value={field.value}
                             onChange={field.onChange}
                             yearsInFuture={5}
                           />
-                        </FormControl>
+                            </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1065,9 +1065,9 @@ export function ClientForm({ client }) {
                           value={field.value}
                           onValueChange={field.onChange}
                         >
-                          <SelectTrigger>
+                            <SelectTrigger>
                             <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
+                            </SelectTrigger>
                           <SelectContent>
                             {[
                               { value: "active", label: "Active" },
@@ -1107,37 +1107,37 @@ export function ClientForm({ client }) {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
-                </div>
-              </div>
+                      />
+                    </div>
+                  </div>
             </TabsContent>
 
             <TabsContent value="documents" className="space-y-4">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Documents</h3>
                 <div className="grid gap-4">
-                  {form.watch("documents")?.map((doc, index) => (
+                    {form.watch("documents")?.map((doc, index) => (
                     <Card key={index}>
                       <CardHeader className="pb-4">
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium">
                             Document {index + 1}
                           </h4>
-                          <Button
+                        <Button
                             type="button"
                             variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              const currentDocs = form.getValues("documents");
-                              form.setValue(
-                                "documents",
-                                currentDocs.filter((_, i) => i !== index)
-                              );
-                            }}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
+                          size="icon"
+                          onClick={() => {
+                            const currentDocs = form.getValues("documents");
+                            form.setValue(
+                              "documents",
+                              currentDocs.filter((_, i) => i !== index)
+                            );
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                       </CardHeader>
                       <CardContent className="grid gap-4">
                         <FormField
@@ -1224,11 +1224,11 @@ export function ClientForm({ client }) {
                                 loading="lazy"
                                 lo="true"
                               />
-                            </div>
+                  </div>
                           )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                </div>
+              </CardContent>
+            </Card>
                   ))}
                   <Button
                     type="button"
@@ -1251,24 +1251,24 @@ export function ClientForm({ client }) {
                   </Button>
                 </div>
               </div>
-            </TabsContent>
+          </TabsContent>
           </Tabs>
 
           <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
+          <Button
+            type="button"
+            variant="outline"
               onClick={() => router.push("/private/dashboard/students")}
-            >
-              Cancel
-            </Button>
+          >
+            Cancel
+          </Button>
             <Button type="submit" disabled={!isFormValid || !isDirty || isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {client ? "Update Client" : "Create Client"}
-            </Button>
-          </div>
-        </form>
-      </Form>
+          </Button>
+        </div>
+      </form>
+    </Form>
     </div>
   );
 } 

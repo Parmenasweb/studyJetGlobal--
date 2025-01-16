@@ -5,10 +5,10 @@ import Destination from "@/models/Destination";
 
 export async function PATCH(req, { params }) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const session = await auth();
+    // if (!session?.user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
 
     const data = await req.json();
 
@@ -23,7 +23,7 @@ export async function PATCH(req, { params }) {
           "universities.$": {
             ...data,
             _id: params.universityId,
-            updatedBy: session.user.id,
+            
             updatedAt: new Date(),
           }
         }
@@ -51,10 +51,7 @@ export async function PATCH(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+   
 
     await connectDB();
     const destination = await Destination.findByIdAndUpdate(
@@ -76,6 +73,35 @@ export async function DELETE(req, { params }) {
     console.error("Error deleting university:", error);
     return NextResponse.json(
       { error: "Failed to delete university" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(req, { params }) {
+  try {
+    // const session = await auth();
+    // if (!session?.user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+
+    await connectDB();
+    const destination = await Destination.findById(params.destinationId);
+
+    if (!destination) {
+      return NextResponse.json({ error: "Destination not found" }, { status: 404 });
+    }
+
+    const university = destination.universities.id(params.universityId);
+    if (!university) {
+      return NextResponse.json({ error: "University not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(university);
+  } catch (error) {
+    console.error("Error fetching university:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch university" },
       { status: 500 }
     );
   }

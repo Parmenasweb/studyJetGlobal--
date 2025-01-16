@@ -1,190 +1,264 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { getPartner } from "@/actions/partner";
+import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { format } from "date-fns";
+import { Edit, ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import {
-  Building2,
-  Users,
-  FileText,
-  Home,
-  DollarSign,
-  ChartBar,
-  ArrowLeft,
-} from "lucide-react";
-import { ContactInfo } from "./components/contact-info";
-import { Documents } from "./components/documents";
-import { Programs } from "./components/programs";
-import { Accommodation } from "./components/accommodation";
-import { Commission } from "./components/commission";
-import { PerformanceMetrics } from "./components/performance-metrics";
+import { DocumentsSection } from "./components/DocumentsSection";
+import { ReferredStudents } from "./components/ReferredStudents";
+import { PartnerMetrics } from "./components/PartnerMetrics";
 
-async function getPartner(id) {
-  const res = await fetch(`/api/partners?id=${id}`);
-
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || "Failed to fetch partner");
-  }
-
-  return res.json();
-}
-
-export default function PartnerPage({ params }) {
-  const router = useRouter();
-  const [partner, setPartner] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useState(() => {
-    getPartner(params.id)
-      .then((data) => {
-        setPartner(data);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setIsLoading(false);
-        toast.error(err.message);
-      });
-  }, [params.id]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
-        <p className="text-destructive">{error}</p>
-        <Button onClick={() => router.back()}>Go Back</Button>
-      </div>
-    );
-  }
+export default async function PartnerPage({ params }) {
+  const partner = await getPartner(params.id);
 
   if (!partner) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
-        <p className="text-muted-foreground">Partner not found</p>
-        <Button onClick={() => router.back()}>Go Back</Button>
-      </div>
-    );
+    notFound();
   }
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "active":
+        return "bg-emerald-500/10 text-emerald-500";
+      case "inactive":
+        return "bg-gray-500/10 text-gray-500";
+      case "pending":
+        return "bg-yellow-500/10 text-yellow-500";
+      default:
+        return "bg-gray-500/10 text-gray-500";
+    }
+  };
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
+    <div className="container mx-auto py-6 px-4 md:px-6 lg:px-8 max-w-7xl">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild className="shrink-0">
+            <Link href="/private/dashboard/partners">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
           </Button>
-          <h1 className="text-3xl font-bold">{partner.name}</h1>
-          <Badge variant="outline">{partner.type}</Badge>
-          <Badge
-            variant={partner.status === "active" ? "success" : "secondary"}
-          >
-            {partner.status}
-          </Badge>
+          <div>
+            <h1 className="text-2xl font-bold">{partner.name}</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge className={cn("capitalize", getStatusColor(partner.status))}>
+                {partner.status}
+              </Badge>
+              <span className="text-sm text-muted-foreground capitalize">
+                {partner.type}
+              </span>
+            </div>
+          </div>
         </div>
+        <Button asChild className="shrink-0">
+          <Link href={`/private/dashboard/partners/${partner._id}/edit`}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit Partner
+          </Link>
+        </Button>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="overview" className="space-x-2">
-            <ChartBar className="h-4 w-4" />
-            <span>Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="contacts" className="space-x-2">
-            <Users className="h-4 w-4" />
-            <span>Contacts</span>
-          </TabsTrigger>
-          <TabsTrigger value="documents" className="space-x-2">
-            <FileText className="h-4 w-4" />
-            <span>Documents</span>
-          </TabsTrigger>
-          <TabsTrigger value="programs" className="space-x-2">
-            <Building2 className="h-4 w-4" />
-            <span>Programs</span>
-          </TabsTrigger>
-          <TabsTrigger value="accommodation" className="space-x-2">
-            <Home className="h-4 w-4" />
-            <span>Accommodation</span>
-          </TabsTrigger>
-          <TabsTrigger value="commission" className="space-x-2">
-            <DollarSign className="h-4 w-4" />
-            <span>Commission</span>
-          </TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="metrics">Metrics</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <TabsContent value="overview" className="space-y-6">
+          {/* Partner Information Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Partner Information</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <div>
+                <div className="font-medium">Email</div>
+                <div className="text-sm text-muted-foreground">{partner.email}</div>
+              </div>
+              <div>
+                <div className="font-medium">Phone</div>
+                <div className="text-sm text-muted-foreground">{partner.phone}</div>
+              </div>
+              <div>
+                <div className="font-medium">Website</div>
+                <div className="text-sm text-muted-foreground">
+                  {partner.website || "Not provided"}
+                </div>
+              </div>
+              <div>
+                <div className="font-medium">Partnership Date</div>
+                <div className="text-sm text-muted-foreground">
+                  {format(new Date(partner.partnershipDate), "PPP")}
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <div className="font-medium">Address</div>
+                <div className="text-sm text-muted-foreground">
+                  {partner.address.street && (
+                    <div>{partner.address.street}</div>
+                  )}
+                  <div>
+                    {partner.address.city}, {partner.address.state || ""}{" "}
+                    {partner.address.postalCode || ""}
+                  </div>
+                  <div>{partner.address.country}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact Persons Card */}
+          {partner.contactPersons && partner.contactPersons.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Building2 className="h-4 w-4" />
-                  <span>Basic Information</span>
-                </CardTitle>
+                <CardTitle>Contact Persons</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div>
-                    <span className="font-medium">Name:</span> {partner.name}
-                  </div>
-                  <div>
-                    <span className="font-medium">Type:</span> {partner.type}
-                  </div>
-                  <div>
-                    <span className="font-medium">Status:</span>{" "}
-                    {partner.status}
-                  </div>
-                  {partner.website && (
-                    <div>
-                      <span className="font-medium">Website:</span>{" "}
-                      <a
-                        href={partner.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        {partner.website}
-                      </a>
+                <div className="grid gap-6 md:grid-cols-2">
+                  {partner.contactPersons.map((contact, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="font-medium">{contact.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        <div>{contact.position}</div>
+                        <div>{contact.email}</div>
+                        <div>{contact.phone}</div>
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
               </CardContent>
             </Card>
+          )}
 
-            <PerformanceMetrics partner={partner} />
-          </div>
+          {/* University Details Card */}
+          {partner.type === "university" && partner.universityDetails && (
+            <Card>
+              <CardHeader>
+                <CardTitle>University Details</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <div className="font-medium">Ranking</div>
+                  <div className="text-sm text-muted-foreground">
+                    {partner.universityDetails.ranking || "Not provided"}
+                  </div>
+                </div>
+                {partner.universityDetails.accreditation && (
+                  <div>
+                    <div className="font-medium">Accreditation</div>
+                    <div className="text-sm text-muted-foreground">
+                      {partner.universityDetails.accreditation.join(", ")}
+                    </div>
+                  </div>
+                )}
+                {partner.universityDetails.facilities && (
+                  <div>
+                    <div className="font-medium">Facilities</div>
+                    <div className="text-sm text-muted-foreground">
+                      {partner.universityDetails.facilities.join(", ")}
+                    </div>
+                  </div>
+                )}
+                {partner.universityDetails.studentServices && (
+                  <div>
+                    <div className="font-medium">Student Services</div>
+                    <div className="text-sm text-muted-foreground">
+                      {partner.universityDetails.studentServices.join(", ")}
+                    </div>
+                  </div>
+                )}
+                {partner.universityDetails.academicCalendar && (
+                  <div>
+                    <div className="font-medium">Academic Calendar</div>
+                    <div className="text-sm text-muted-foreground">
+                      {partner.universityDetails.academicCalendar}
+                    </div>
+                  </div>
+                )}
+                {partner.universityDetails.accommodationDetails && (
+                  <div>
+                    <div className="font-medium">Accommodation Details</div>
+                    <div className="text-sm text-muted-foreground">
+                      {partner.universityDetails.accommodationDetails}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Agency Details Card */}
+          {partner.type === "agency" && partner.agencyDetails && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Agency Details</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-2">
+                {partner.agencyDetails.services && (
+                  <div>
+                    <div className="font-medium">Services</div>
+                    <div className="text-sm text-muted-foreground">
+                      {partner.agencyDetails.services.join(", ")}
+                    </div>
+                  </div>
+                )}
+                {partner.agencyDetails.specialization && (
+                  <div>
+                    <div className="font-medium">Specialization</div>
+                    <div className="text-sm text-muted-foreground">
+                      {partner.agencyDetails.specialization.join(", ")}
+                    </div>
+                  </div>
+                )}
+                {partner.agencyDetails.commission && (
+                  <div>
+                    <div className="font-medium">Commission Range</div>
+                    <div className="text-sm text-muted-foreground">
+                      ${partner.agencyDetails.commission.minimum} - ${partner.agencyDetails.commission.maximum} USD
+                    </div>
+                  </div>
+                )}
+                {partner.agencyDetails.coverage && (
+                  <div>
+                    <div className="font-medium">Coverage</div>
+                    <div className="text-sm text-muted-foreground">
+                      {partner.agencyDetails.coverage.join(", ")}
+                    </div>
+                  </div>
+                )}
+                {partner.agencyDetails.license && (
+                  <div>
+                    <div className="font-medium">License</div>
+                    <div className="text-sm text-muted-foreground">
+                      <div>Number: {partner.agencyDetails.license.number}</div>
+                      {partner.agencyDetails.license.expiryDate && (
+                        <div>
+                          Expiry: {format(new Date(partner.agencyDetails.license.expiryDate), "PPP")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
-        <TabsContent value="contacts">
-          <ContactInfo partner={partner} />
+        <TabsContent value="students">
+          <ReferredStudents partnerId={partner._id} />
         </TabsContent>
 
         <TabsContent value="documents">
-          <Documents partner={partner} />
+          <DocumentsSection partnerId={partner._id} documents={partner.documents} />
         </TabsContent>
 
-        <TabsContent value="programs">
-          <Programs partner={partner} />
-        </TabsContent>
-
-        <TabsContent value="accommodation">
-          <Accommodation partner={partner} />
-        </TabsContent>
-
-        <TabsContent value="commission">
-          <Commission partner={partner} />
+        <TabsContent value="metrics">
+          <PartnerMetrics partnerId={partner._id} />
         </TabsContent>
       </Tabs>
     </div>

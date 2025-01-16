@@ -2,43 +2,92 @@ import mongoose from "mongoose";
 
 const scholarshipSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  amount: { type: Number, required: true },
+  type: { 
+    type: String, 
+    required: true,
+    enum: [
+      'Merit-based', 'Need-based', 'Athletic', 'Research', 'Cultural',
+      'Diversity', 'First Generation', 'International Student', 'Government',
+      'Private', 'Full Funding', 'Partial Funding'
+    ]
+  },
+  coverage: [String],
+  amount: {
+    type: { 
+      type: String, 
+      required: true,
+      enum: ['fixed', 'percentage']
+    },
+    value: { type: Number, required: true, min: 0 },
+    currency: { type: String, required: function() { return this.amount.type === 'fixed'; } },
+    period: { 
+      type: String, 
+      required: true,
+      enum: ['per_year', 'per_semester', 'total']
+    }
+  },
   description: String,
-  criteria: String,
-  deadline: Date,
-  type: {
-    type: String,
-    enum: ['merit', 'need-based', 'research', 'sports', 'cultural', 'other'],
-    default: 'merit'
-  },
-  coverage: {
-    type: String,
-    enum: ['full', 'partial', 'specific'],
-    default: 'partial'
-  },
+  eligibility: [String],
+  deadline: { type: String, required: true },
+  applicationProcess: [String],
   status: {
     type: String,
-    enum: ['active', 'inactive', 'upcoming'],
+    enum: ['active', 'inactive'],
     default: 'active'
   },
-  applicationProcess: String,
-  requiredDocuments: [String],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
 
 const programSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  field: { type: String, required: true },
   level: { type: String, required: true },
-  duration: { type: String, required: true },
-  tuitionFee: { type: Number, required: true },
+  duration: {
+    value: { type: Number, required: true, min: 1 },
+    unit: { 
+      type: String, 
+      required: true,
+      enum: ["years", "months", "semesters"]
+    }
+  },
+  tuitionFee: {
+    amount: { type: Number, required: true, min: 0 },
+    currency: { type: String, required: true },
+    period: { 
+      type: String, 
+      required: true,
+      enum: ["per_year", "per_semester", "total"]
+    }
+  },
   description: String,
   intakes: [String],
-  requirements: [String],
+  requirements: {
+    type: [{
+      type: String,
+      required: true,
+      trim: true
+    }],
+    validate: {
+      validator: function(requirements) {
+        return requirements.length > 0;
+      },
+      message: 'At least one requirement must be specified'
+    },
+    default: []
+  },
+  language: {
+    name: { type: String, required: true },
+    level: { 
+      type: String, 
+      required: true,
+      enum: ["A1", "A2", "B1", "B2", "C1", "C2"]
+    }
+  },
   status: {
     type: String,
-    enum: ['active', 'inactive'],
-    default: 'active'
+    enum: ["active", "inactive"],
+    default: "active"
   }
 });
 
@@ -50,7 +99,7 @@ const universitySchema = new mongoose.Schema({
     enum: ['public', 'private'],
     required: true
   },
-  ranking: Number,
+  ranking: { type: Number, required: false },
   description: String,
   website: String,
   contactEmail: String,
@@ -58,22 +107,29 @@ const universitySchema = new mongoose.Schema({
   programs: [programSchema],
   scholarships: [scholarshipSchema],
   facilities: [String],
-  images: [{
-    url: String,
-    caption: String
-  }],
+  media: {
+    mainImage: {
+      url: { type: String },
+      alt: { type: String, default: "" },
+      width: { type: Number, required: false },
+      height: { type: Number, required: false },
+      size: { type: Number, required: false },
+      caption: { type: String, required: false },
+    },
+    galleryImages: [{
+      url: { type: String },
+      alt: { type: String, default: "" },
+      width: { type: Number, required: false },
+      height: { type: Number, required: false },
+      size: { type: Number, required: false },
+      caption: { type: String, required: false },
+    }],
+  },
   status: {
     type: String,
     enum: ['active', 'inactive'],
     default: 'active'
   },
-  partnershipDetails: {
-    startDate: Date,
-    endDate: Date,
-    agreementFile: String,
-    commissionRate: Number,
-    notes: String
-  }
 });
 
 const destinationSchema = new mongoose.Schema(

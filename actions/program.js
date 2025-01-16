@@ -1,15 +1,22 @@
 "use server";
 
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+
+const BASE_URL = process.env.BASE_URL;
 
 export async function getPrograms(destinationId, universityId) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/destinations/${destinationId}/universities/${universityId}/programs`,
+      `${BASE_URL}/api/destinations/${destinationId}/universities/${universityId}/programs`,
       {
-        method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.user.id}`,
         },
         cache: "no-store",
       }
@@ -20,20 +27,25 @@ export async function getPrograms(destinationId, universityId) {
       throw new Error(error.error || "Failed to fetch programs");
     }
 
-    return await response.json();
+    return response.json();
   } catch (error) {
-    throw new Error(error.message || "Failed to fetch programs");
+    console.error("Error fetching programs:", error);
+    throw error;
   }
 }
 
 export async function getProgram(destinationId, universityId, programId) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/destinations/${destinationId}/universities/${universityId}/programs/${programId}`,
+      `${BASE_URL}/api/destinations/${destinationId}/universities/${universityId}/programs/${programId}`,
       {
-        method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.user.id}`,
         },
         cache: "no-store",
       }
@@ -44,20 +56,27 @@ export async function getProgram(destinationId, universityId, programId) {
       throw new Error(error.error || "Failed to fetch program");
     }
 
-    return await response.json();
+    return response.json();
   } catch (error) {
-    throw new Error(error.message || "Failed to fetch program");
+    console.error("Error fetching program:", error);
+    throw error;
   }
 }
 
 export async function addProgram(destinationId, universityId, data) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/destinations/${destinationId}/universities/${universityId}/programs`,
+      `${BASE_URL}/api/destinations/${destinationId}/universities/${universityId}/programs`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.user.id}`,
         },
         body: JSON.stringify(data),
       }
@@ -65,24 +84,31 @@ export async function addProgram(destinationId, universityId, data) {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to add program");
+      throw new Error(error.error || "Failed to create program");
     }
 
     revalidatePath(`/private/dashboard/destinations/${destinationId}/universities/${universityId}/programs`);
-    return await response.json();
+    return response.json();
   } catch (error) {
-    throw new Error(error.message || "Failed to add program");
+    console.error("Error creating program:", error);
+    throw error;
   }
 }
 
 export async function updateProgram(destinationId, universityId, programId, data) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/destinations/${destinationId}/universities/${universityId}/programs/${programId}`,
+      `${BASE_URL}/api/destinations/${destinationId}/universities/${universityId}/programs/${programId}`,
       {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.user.id}`,
         },
         body: JSON.stringify(data),
       }
@@ -94,21 +120,26 @@ export async function updateProgram(destinationId, universityId, programId, data
     }
 
     revalidatePath(`/private/dashboard/destinations/${destinationId}/universities/${universityId}/programs`);
-    revalidatePath(`/private/dashboard/destinations/${destinationId}/universities/${universityId}/programs/${programId}`);
-    return await response.json();
+    return response.json();
   } catch (error) {
-    throw new Error(error.message || "Failed to update program");
+    console.error("Error updating program:", error);
+    throw error;
   }
 }
 
 export async function deleteProgram(destinationId, universityId, programId) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/destinations/${destinationId}/universities/${universityId}/programs/${programId}`,
+      `${BASE_URL}/api/destinations/${destinationId}/universities/${universityId}/programs/${programId}`,
       {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.user.id}`,
         },
       }
     );
@@ -119,8 +150,9 @@ export async function deleteProgram(destinationId, universityId, programId) {
     }
 
     revalidatePath(`/private/dashboard/destinations/${destinationId}/universities/${universityId}/programs`);
-    return await response.json();
+    return response.json();
   } catch (error) {
-    throw new Error(error.message || "Failed to delete program");
+    console.error("Error deleting program:", error);
+    throw error;
   }
 } 

@@ -18,7 +18,8 @@ import {
   Coins,
   Thermometer,
   Clock,
-  FileTextIcon
+  FileTextIcon,
+  Flag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDestination } from "@/actions/destination";
@@ -34,6 +35,7 @@ import {
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import ImageView from "@/components/ImageView";
 
 export default function DestinationDetailsPage() {
   const router = useRouter();
@@ -112,7 +114,7 @@ export default function DestinationDetailsPage() {
       {/* Hero Section with Main Image */}
       <div className="relative h-[400px] lg:h-[500px]">
         {destination.media?.mainImage?.url ? (
-          <Image
+          <ImageView
             src={destination.media.mainImage.url}
             alt={destination.media.mainImage.alt || destination.name}
             fill
@@ -347,11 +349,11 @@ export default function DestinationDetailsPage() {
               <CardHeader>
                 <CardTitle>Gallery</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 {/* Flag Image */}
                 {destination.media?.flagImage?.url && (
                   <div className="relative h-40 w-full overflow-hidden rounded-lg bg-muted">
-                    <Image
+                    <ImageView
                       src={destination.media.flagImage.url}
                       alt={destination.media.flagImage.alt || `${destination.name} flag`}
                       fill
@@ -369,7 +371,7 @@ export default function DestinationDetailsPage() {
                         key={index}
                         className="group relative aspect-square overflow-hidden rounded-lg bg-muted"
                       >
-                        <Image
+                        <ImageView
                           src={image.url}
                           alt={image.alt || `${destination.name} gallery image ${index + 1}`}
                           fill

@@ -77,13 +77,11 @@ export async function POST(request, { params }) {
       _id: uuidv4(),
       title,
       type,
-      fileName,
-      originalName: file.name,
-      mimeType: file.type,
-      size: file.size,
-      url: `/uploads/partners/${fileName}`,
-      uploadedBy: session.user.id,
-      uploadedAt: new Date(),
+      fileUrl: `/uploads/partners/${fileName}`,
+      status: "pending",
+      uploadDate: new Date(),
+      updatedBy: session.user.id,
+      updatedAt: new Date(),
     };
 
     if (expiryDate) {
@@ -168,6 +166,63 @@ export async function DELETE(request, { params }) {
     );
   } catch (error) {
     console.error("DELETE /api/partners/[id]/documents error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request, { params }) {
+  try {
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const { documentId, status } = await request.json();
+
+    if (!documentId) {
+      return NextResponse.json(
+        { error: "Document ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!status || !["pending", "approved", "rejected"].includes(status)) {
+      return NextResponse.json(
+        { error: "Invalid status" },
+        { status: 400 }
+      );
+    }
+
+    const partner = await Partner.findById(params.id);
+    if (!partner) {
+      return NextResponse.json({ error: "Partner not found" }, { status: 404 });
+    }
+
+    const documentIndex = partner.documents.findIndex(
+      (doc) => doc._id.toString() === documentId
+    );
+
+    if (documentIndex === -1) {
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 }
+      );
+    }
+
+    partner.documents[documentIndex].status = status;
+    partner.documents[documentIndex].updatedBy = session.user.id;
+    partner.documents[documentIndex].updatedAt = new Date();
+
+    await partner.save();
+
+    return NextResponse.json(partner.documents[documentIndex]);
+  } catch (error) {
+    console.error("PATCH /api/partners/[id]/documents error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

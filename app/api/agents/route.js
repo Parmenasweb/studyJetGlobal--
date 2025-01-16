@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import Agent from "@/models/Agent";
 import { auth } from "@/auth";
+import Agent from "@/models/Agent";
 import connectDB from "@/lib/db";
 
 export async function GET(request) {
@@ -10,33 +10,39 @@ export async function GET(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
     await connectDB();
+    const agents = await Agent.find().lean();
 
-    if (id) {
-      const agent = await Agent.findById(id)
-        .populate("createdBy", "name email")
-        .populate("updatedBy", "name email");
+    // Serialize the MongoDB documents
+    const serializedAgents = agents.map((agent) => ({
+      ...agent,
+      _id: agent._id.toString(),
+      createdAt: agent.createdAt?.toISOString(),
+      updatedAt: agent.updatedAt?.toISOString(),
+      createdBy: agent.createdBy?.toString(),
+      updatedBy: agent.updatedBy?.toString(),
+      leads: agent.leads?.map((lead) => ({
+        ...lead,
+        _id: lead._id.toString(),
+        clientId: lead.clientId?.toString(),
+        createdAt: lead.createdAt?.toISOString(),
+        updatedAt: lead.updatedAt?.toISOString(),
+      })),
+      commissions: agent.commissions?.map((commission) => ({
+        ...commission,
+        _id: commission._id.toString(),
+        leadId: commission.leadId?.toString(),
+        createdAt: commission.createdAt?.toISOString(),
+        updatedAt: commission.updatedAt?.toISOString(),
+        paymentDate: commission.paymentDate?.toISOString(),
+      })),
+    }));
 
-      if (!agent) {
-        return NextResponse.json({ error: "Agent not found" }, { status: 404 });
-      }
-
-      return NextResponse.json(agent);
-    }
-
-    const agents = await Agent.find({})
-      .populate("createdBy", "name email")
-      .populate("updatedBy", "name email")
-      .sort({ createdAt: -1 });
-
-    return NextResponse.json(agents);
+    return NextResponse.json(serializedAgents);
   } catch (error) {
-    console.error("Error in GET /api/agents:", error);
+    console.error("Error fetching agents:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch agents" },
       { status: 500 }
     );
   }
@@ -50,29 +56,31 @@ export async function POST(request) {
     }
 
     const data = await request.json();
-
     await connectDB();
 
-    // Check if agent with same email already exists
-    const existingAgent = await Agent.findOne({ email: data.email });
-    if (existingAgent) {
-      return NextResponse.json(
-        { error: "Agent with this email already exists" },
-        { status: 400 }
-      );
-    }
-
-    const agent = await Agent.create({
+    const agent = new Agent({
       ...data,
       createdBy: session.user.id,
       updatedBy: session.user.id,
     });
 
-    return NextResponse.json(agent);
+    await agent.save();
+
+    // Serialize the MongoDB document
+    const serializedAgent = {
+      ...agent.toObject(),
+      _id: agent._id.toString(),
+      createdAt: agent.createdAt?.toISOString(),
+      updatedAt: agent.updatedAt?.toISOString(),
+      createdBy: agent.createdBy?.toString(),
+      updatedBy: agent.updatedBy?.toString(),
+    };
+
+    return NextResponse.json(serializedAgent);
   } catch (error) {
-    console.error("Error in POST /api/agents:", error);
+    console.error("Error creating agent:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error.message || "Failed to create agent" },
       { status: 500 }
     );
   }
@@ -87,31 +95,12 @@ export async function PUT(request) {
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-
     if (!id) {
-      return NextResponse.json(
-        { error: "Agent ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Agent ID is required" }, { status: 400 });
     }
 
     const data = await request.json();
-
     await connectDB();
-
-    // Check if updating email and if it already exists
-    if (data.email) {
-      const existingAgent = await Agent.findOne({
-        email: data.email,
-        _id: { $ne: id },
-      });
-      if (existingAgent) {
-        return NextResponse.json(
-          { error: "Agent with this email already exists" },
-          { status: 400 }
-        );
-      }
-    }
 
     const agent = await Agent.findByIdAndUpdate(
       id,
@@ -121,19 +110,42 @@ export async function PUT(request) {
         updatedAt: new Date(),
       },
       { new: true }
-    )
-      .populate("createdBy", "name email")
-      .populate("updatedBy", "name email");
+    ).lean();
 
     if (!agent) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
-    return NextResponse.json(agent);
+    // Serialize the MongoDB document
+    const serializedAgent = {
+      ...agent,
+      _id: agent._id.toString(),
+      createdAt: agent.createdAt?.toISOString(),
+      updatedAt: agent.updatedAt?.toISOString(),
+      createdBy: agent.createdBy?.toString(),
+      updatedBy: agent.updatedBy?.toString(),
+      leads: agent.leads?.map((lead) => ({
+        ...lead,
+        _id: lead._id.toString(),
+        clientId: lead.clientId?.toString(),
+        createdAt: lead.createdAt?.toISOString(),
+        updatedAt: lead.updatedAt?.toISOString(),
+      })),
+      commissions: agent.commissions?.map((commission) => ({
+        ...commission,
+        _id: commission._id.toString(),
+        leadId: commission.leadId?.toString(),
+        createdAt: commission.createdAt?.toISOString(),
+        updatedAt: commission.updatedAt?.toISOString(),
+        paymentDate: commission.paymentDate?.toISOString(),
+      })),
+    };
+
+    return NextResponse.json(serializedAgent);
   } catch (error) {
-    console.error("Error in PUT /api/agents:", error);
+    console.error("Error updating agent:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error.message || "Failed to update agent" },
       { status: 500 }
     );
   }
@@ -148,27 +160,22 @@ export async function DELETE(request) {
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-
     if (!id) {
-      return NextResponse.json(
-        { error: "Agent ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Agent ID is required" }, { status: 400 });
     }
 
     await connectDB();
-
     const agent = await Agent.findByIdAndDelete(id);
 
     if (!agent) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ message: "Agent deleted successfully" });
   } catch (error) {
-    console.error("Error in DELETE /api/agents:", error);
+    console.error("Error deleting agent:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error.message || "Failed to delete agent" },
       { status: 500 }
     );
   }

@@ -16,12 +16,12 @@ export default async function StudentsPage({
   });
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="w-full mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Students</h2>
+          <h2 className="text-2xl font-bold tracking-tight">StudyjetGlobal Students</h2>
           <p className="text-muted-foreground">
-            Manage your student clients here
+            Manage studyjetglobal student clients here
           </p>
         </div>
         <Button asChild>

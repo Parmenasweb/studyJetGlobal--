@@ -145,12 +145,15 @@ export const createColumns = (onDelete) => [
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status");
+      const statusColors = {
+        active: "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20",
+        draft: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20",
+        inactive: "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+      };
+
       return (
-        <Badge variant={
-          status === "active" ? "success" :
-          status === "draft" ? "secondary" : "destructive"
-        }>
-          {status}
+        <Badge className={statusColors[status] || "bg-secondary"}>
+          {status?.charAt(0).toUpperCase() + status?.slice(1)}
         </Badge>
       );
     },

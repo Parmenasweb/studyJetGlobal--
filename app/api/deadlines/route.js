@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import { Deadline } from "@/models/deadline";
 import { auth } from "@/auth";
+import connectDB from "@/lib/db";
+import Deadline from "@/models/deadline";
 
+// GET /api/deadlines - Get all deadlines with filtering and pagination
 export async function GET(request) {
   try {
     const session = await auth();
@@ -10,75 +11,93 @@ export async function GET(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const query = {};
-
-    // Handle search and filtering
-    const search = searchParams.get("search");
-    if (search) {
-      query.title = { $regex: search, $options: "i" };
-    }
-
-    const status = searchParams.get("status");
-    if (status) {
-      query.status = status;
-    }
-
-    const type = searchParams.get("type");
-    if (type) {
-      query.type = type;
-    }
-
-    const priority = searchParams.get("priority");
-    if (priority) {
-      query.priority = priority;
-    }
-
-    const assignedTo = searchParams.get("assignedTo");
-    if (assignedTo) {
-      query.assignedTo = assignedTo;
-    }
-
-    const client = searchParams.get("client");
-    if (client) {
-      query.client = client;
-    }
-
-    const application = searchParams.get("application");
-    if (application) {
-      query.application = application;
-    }
-
-    // Date range filtering
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
-    if (startDate || endDate) {
-      query.dueDate = {};
-      if (startDate) {
-        query.dueDate.$gte = new Date(startDate);
-      }
-      if (endDate) {
-        query.dueDate.$lte = new Date(endDate);
-      }
-    }
-
     await connectDB();
-    const deadlines = await Deadline.find(query)
-      .populate("assignedTo", "name email")
-      .populate("client", "personalInfo.fullName")
-      .populate("application", "applicationType")
-      .sort({ dueDate: 1 });
 
-    return NextResponse.json(deadlines);
+    const { searchParams } = new URL(request.url);
+    
+    // Build query
+    const query = {};
+    
+    // Filters
+    if (searchParams.get("status")) {
+      query.status = searchParams.get("status");
+    }
+    if (searchParams.get("priority")) {
+      query.priority = searchParams.get("priority");
+    }
+    if (searchParams.get("type")) {
+      query.type = searchParams.get("type");
+    }
+    if (searchParams.get("assignedTo")) {
+      query.assignedTo = searchParams.get("assignedTo");
+    }
+    if (searchParams.get("relatedType")) {
+      query["relatedTo.type"] = searchParams.get("relatedType");
+    }
+    if (searchParams.get("relatedId")) {
+      query["relatedTo.id"] = searchParams.get("relatedId");
+    }
+    
+    // Date range
+    if (searchParams.get("startDate") || searchParams.get("endDate")) {
+      query.dueDate = {};
+      if (searchParams.get("startDate")) {
+        query.dueDate.$gte = new Date(searchParams.get("startDate"));
+      }
+      if (searchParams.get("endDate")) {
+        query.dueDate.$lte = new Date(searchParams.get("endDate"));
+      }
+    }
+
+    // Search
+    if (searchParams.get("search")) {
+      const search = searchParams.get("search");
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { tags: { $in: [new RegExp(search, "i")] } },
+      ];
+    }
+
+    // Pagination
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const total = await Deadline.countDocuments(query);
+
+    // Get deadlines with populated fields
+    const deadlines = await Deadline.find(query)
+      .populate("assignedTo", "name email image")
+      .populate("createdBy", "name email image")
+      .populate("updatedBy", "name email image")
+      .populate({
+        path: "comments.user",
+        select: "name email image",
+      })
+      .sort({ dueDate: 1, priority: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return NextResponse.json({
+      deadlines,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
-    console.error("Error fetching deadlines:", error);
+    console.error("Error in GET /api/deadlines:", error);
     return NextResponse.json(
-      { error: "Failed to fetch deadlines" },
+      { error: error.message || "Failed to fetch deadlines" },
       { status: 500 }
     );
   }
 }
 
+// POST /api/deadlines - Create a new deadline
 export async function POST(request) {
   try {
     const session = await auth();
@@ -86,58 +105,40 @@ export async function POST(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await request.json();
-
-    // Validate required fields
-    if (!data.title || !data.type || !data.dueDate) {
-      return NextResponse.json(
-        { error: "Title, type, and due date are required" },
-        { status: 400 }
-      );
-    }
-
     await connectDB();
 
-    // Create deadline
-    const deadline = new Deadline({
-      ...data,
-      status: "pending",
-      createdBy: session.user.id,
-    });
+    const data = await request.json();
+    
+    // Add creator info
+    data.createdBy = session.user.id;
+    
+    const deadline = await Deadline.create(data);
+    
+    // Populate references
+    await deadline.populate([
+      { path: "assignedTo", select: "name email image" },
+      { path: "createdBy", select: "name email image" },
+    ]);
 
-    // Validate the deadline
-    const validationError = deadline.validateSync();
-    if (validationError) {
-      return NextResponse.json(
-        { error: validationError.message },
-        { status: 400 }
-      );
-    }
-
-    await deadline.save();
-
-    return NextResponse.json({
-      message: "Deadline created successfully",
-      deadline,
-    });
+    return NextResponse.json(deadline, { status: 201 });
   } catch (error) {
-    console.error("Error creating deadline:", error);
+    console.error("Error in POST /api/deadlines:", error);
     return NextResponse.json(
-      {
-        error: "Failed to create deadline",
-        details: error.message,
-      },
-      { status: 500 }
+      { error: error.message || "Failed to create deadline" },
+      { status: 400 }
     );
   }
 }
 
-export async function PUT(request) {
+// PATCH /api/deadlines - Update a deadline
+export async function PATCH(request) {
   try {
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    await connectDB();
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -149,9 +150,21 @@ export async function PUT(request) {
     }
 
     const data = await request.json();
-    await connectDB();
+    
+    // Add updater info
+    data.updatedBy = session.user.id;
+    
+    const deadline = await Deadline.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { new: true, runValidators: true }
+    ).populate([
+      { path: "assignedTo", select: "name email image" },
+      { path: "createdBy", select: "name email image" },
+      { path: "updatedBy", select: "name email image" },
+      { path: "comments.user", select: "name email image" },
+    ]);
 
-    const deadline = await Deadline.findById(id);
     if (!deadline) {
       return NextResponse.json(
         { error: "Deadline not found" },
@@ -159,39 +172,17 @@ export async function PUT(request) {
       );
     }
 
-    // Handle completion
-    if (data.status === "completed" && deadline.status !== "completed") {
-      data.completedAt = new Date();
-      data.completedBy = session.user.id;
-    }
-
-    // Update deadline data
-    Object.assign(deadline, data);
-
-    // Validate the updated deadline
-    const validationError = deadline.validateSync();
-    if (validationError) {
-      return NextResponse.json(
-        { error: validationError.message },
-        { status: 400 }
-      );
-    }
-
-    await deadline.save();
-
-    return NextResponse.json({
-      message: "Deadline updated successfully",
-      deadline,
-    });
+    return NextResponse.json(deadline);
   } catch (error) {
-    console.error("Error updating deadline:", error);
+    console.error("Error in PATCH /api/deadlines:", error);
     return NextResponse.json(
-      { error: "Failed to update deadline" },
-      { status: 500 }
+      { error: error.message || "Failed to update deadline" },
+      { status: 400 }
     );
   }
 }
 
+// DELETE /api/deadlines - Delete a deadline
 export async function DELETE(request) {
   try {
     const session = await auth();
@@ -199,6 +190,8 @@ export async function DELETE(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    await connectDB();
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     if (!id) {
@@ -208,9 +201,7 @@ export async function DELETE(request) {
       );
     }
 
-    await connectDB();
     const deadline = await Deadline.findByIdAndDelete(id);
-
     if (!deadline) {
       return NextResponse.json(
         { error: "Deadline not found" },
@@ -218,14 +209,12 @@ export async function DELETE(request) {
       );
     }
 
-    return NextResponse.json({
-      message: "Deadline deleted successfully",
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting deadline:", error);
+    console.error("Error in DELETE /api/deadlines:", error);
     return NextResponse.json(
-      { error: "Failed to delete deadline" },
-      { status: 500 }
+      { error: error.message || "Failed to delete deadline" },
+      { status: 400 }
     );
   }
 }

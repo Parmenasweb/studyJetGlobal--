@@ -53,7 +53,19 @@ export default function DestinationsPage() {
   }, []);
 
   const handleDelete = async () => {
-    await fetchDestinations({ page: data.pagination.page });
+    try {
+      setLoading(true);
+      await fetchDestinations({ page: data.pagination.page });
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refresh destinations",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -72,8 +84,10 @@ export default function DestinationsPage() {
     capital: destination.capital,
     status: destination.status,
     universities: destination.universities?.length || 0,
-    programs: destination.programs?.length || 0,
-    scholarships: destination.scholarships?.length || 0,
+    programs: destination.universities?.reduce((total, uni) => 
+      total + (uni.programs?.length || 0), 0) || 0,
+    scholarships: destination.universities?.reduce((total, uni) => 
+      total + (uni.scholarships?.length || 0), 0) || 0,
     studyInfo: {
       averageTuitionFee: destination.studyInfo?.averageTuitionFee,
       academicYear: destination.studyInfo?.academicYear,
@@ -96,11 +110,11 @@ export default function DestinationsPage() {
   const columns = createColumns(handleDelete);
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-8 space-y-4">
+    <div className="w-full mx-auto py-6">
+      <div className="mb-8 space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Destinations</h2>
+            <h2 className="text-2xl font-bold tracking-tight"> Studyjet Destinations</h2>
             <p className="text-muted-foreground">
               Manage study destinations and their details
             </p>

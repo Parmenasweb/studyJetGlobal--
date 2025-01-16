@@ -52,16 +52,35 @@ export async function getClients(query = {}) {
 }
 
 export async function getClient(id) {
-  try {
-    await connectDB();
-    const client = await Client.findById(id).lean();
-    if (!client) {
-      throw new Error("Client not found");
+  const MAX_RETRIES = 3;
+  let retries = 0;
+
+  while (retries < MAX_RETRIES) {
+    try {
+      await connectDB();
+      const client = await Client.findById(id).lean();
+      
+      if (!client) {
+        throw new Error("Client not found");
+      }
+      
+      return client;
+    } catch (error) {
+      console.error(`Error fetching client (attempt ${retries + 1}/${MAX_RETRIES}):`, error);
+      
+      // If it's a connection error, retry
+      if (error.name === 'MongooseError' || error.name === 'MongoError' || error.message.includes('ECONNRESET')) {
+        retries++;
+        if (retries < MAX_RETRIES) {
+          // Wait for a short time before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+          continue;
+        }
+      }
+      
+      // For other errors or if max retries reached, throw the error
+      throw new Error(error.message || "Failed to fetch client");
     }
-    return client;
-  } catch (error) {
-    console.error("Error fetching client:", error);
-    throw new Error(error.message || "Failed to fetch client");
   }
 }
 

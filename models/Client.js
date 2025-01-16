@@ -55,7 +55,7 @@ const clientSchema = new mongoose.Schema(
     clientId: {
       type: String,
       required: false,
-      unique: true,
+      index: true,
       sparse: true,
     },
     status: {
@@ -69,14 +69,17 @@ const clientSchema = new mongoose.Schema(
       default: 0,
     },
     personalInfo: {
+      email: { 
+        type: String, 
+        required: [true, 'Email is required'],
+        trim: true,
+        lowercase: true,
+        match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email address'],
+        index: true
+      },
       fullName: {
         type: String,
         required: true,
-      },
-      email: {
-        type: String,
-        required: true,
-        unique: true,
       },
       phone: {
         type: String,
@@ -164,14 +167,67 @@ const clientSchema = new mongoose.Schema(
   }
 );
 
-// Generate clientId after validation but before saving
+// Drop all indexes before creating new ones
+clientSchema.pre('save', async function(next) {
+  try {
+    if (!this.isNew) {
+      return next();
+    }
+    
+    const collections = await mongoose.connection.db.listCollections({ name: 'clients' }).toArray();
+    if (collections.length > 0) {
+      await mongoose.connection.db.collection('clients').dropIndexes();
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Updated clientId generation logic
 clientSchema.pre("save", async function (next) {
   if (!this.clientId) {
     try {
-      const count = await mongoose.models.Client.countDocuments();
-      this.clientId = `CLT${String(count + 1).padStart(5, "0")}`;
+      // Get the current highest clientId number
+      const highestClient = await mongoose.models.Client.findOne(
+        { clientId: { $regex: /^CLT\d{5}$/ } },
+        { clientId: 1 },
+        { sort: { clientId: -1 } }
+      );
+
+      let nextNumber = 1;
+      if (highestClient && highestClient.clientId) {
+        const currentNumber = parseInt(highestClient.clientId.replace('CLT', ''));
+        nextNumber = currentNumber + 1;
+      }
+
+      this.clientId = `CLT${String(nextNumber).padStart(5, '0')}`;
+
+      // Verify the generated ID is unique
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 5;
+
+      while (!isUnique && attempts < maxAttempts) {
+        const existing = await mongoose.models.Client.findOne({ clientId: this.clientId });
+        if (!existing) {
+          isUnique = true;
+        } else {
+          nextNumber++;
+          this.clientId = `CLT${String(nextNumber).padStart(5, '0')}`;
+          attempts++;
+        }
+      }
+
+      if (!isUnique) {
+        console.error('Could not generate unique clientId after multiple attempts');
+        next(new Error('Failed to generate unique clientId'));
+        return;
+      }
     } catch (error) {
       console.error("Error generating clientId:", error);
+      next(error);
+      return;
     }
   }
   next();

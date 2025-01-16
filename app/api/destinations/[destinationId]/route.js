@@ -6,10 +6,10 @@ import { Application } from "@/models/Application";
 
 export async function GET(req, { params }) {
   try {
-    const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const session = await auth();
+    // if (!session || !session.user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
 
     await connectDB();
     const destination = await Destination.findById(params.destinationId).lean();

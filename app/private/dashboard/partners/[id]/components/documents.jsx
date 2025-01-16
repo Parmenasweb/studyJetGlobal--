@@ -33,7 +33,7 @@ import {
   FileText,
   Upload,
   Download,
-  Trash2,
+  Trash,
   Plus,
   AlertTriangle,
   CheckCircle,
@@ -54,7 +54,9 @@ import { Progress } from "@/components/ui/progress";
 
 const documentSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  type: z.string().min(1, "Document type is required"),
+  type: z.enum(["MOU", "Fee Structure", "Agreement", "License", "Certificate", "Other"], {
+    required_error: "Document type is required",
+  }),
   expiryDate: z.string().optional(),
   file: z.any(),
 });
@@ -262,9 +264,9 @@ export function Documents({ partner }) {
                           >
                             <option value="">Select type</option>
                             <option value="MOU">MOU</option>
-                            <option value="Agreement">Agreement</option>
                             <option value="Fee Structure">Fee Structure</option>
-                            <option value="Accommodation">Accommodation</option>
+                            <option value="Agreement">Agreement</option>
+                            <option value="License">License</option>
                             <option value="Certificate">Certificate</option>
                             <option value="Other">Other</option>
                           </select>
@@ -356,7 +358,7 @@ export function Documents({ partner }) {
                       <div className="flex items-center space-x-2">
                         <Button variant="outline" size="icon" asChild>
                           <a
-                            href={document.url}
+                            href={document.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             download
@@ -366,31 +368,21 @@ export function Documents({ partner }) {
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
+                            <Button variant="outline" size="icon">
+                              <Trash className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Delete Document
-                              </AlertDialogTitle>
+                              <AlertDialogTitle>Delete Document</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete this document?
-                                This action cannot be undone.
+                                Are you sure you want to delete this document? This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() =>
-                                  deleteMutation.mutate(document._id)
-                                }
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                onClick={() => deleteMutation.mutate(document._id)}
                               >
                                 Delete
                               </AlertDialogAction>
@@ -402,7 +394,7 @@ export function Documents({ partner }) {
                     <CardContent>
                       <div className="text-sm text-muted-foreground">
                         Uploaded on{" "}
-                        {format(new Date(document.createdAt), "PPP")}
+                        {format(new Date(document.uploadDate), "PPP")}
                         {document.expiryDate &&
                           ` · Expires on ${format(
                             new Date(document.expiryDate),

@@ -31,7 +31,8 @@ async function getDeadlines() {
   if (!res.ok) {
     throw new Error("Failed to fetch deadlines");
   }
-  return res.json();
+  const data = await res.json();
+  return data.deadlines || [];
 }
 
 async function deleteDeadline(id) {
@@ -113,17 +114,17 @@ export default function DeadlinesPage() {
     );
   }
 
-  const filteredDeadlines = deadlines.filter((deadline) => {
+  const filteredDeadlines = deadlines?.filter((deadline) => {
     if (selectedTab === "all") return true;
     return deadline.status === selectedTab;
-  });
+  }) || [];
 
   const stats = {
-    total: deadlines.length,
-    pending: deadlines.filter((d) => d.status === "pending").length,
-    inProgress: deadlines.filter((d) => d.status === "in_progress").length,
-    completed: deadlines.filter((d) => d.status === "completed").length,
-    overdue: deadlines.filter((d) => d.status === "overdue").length,
+    total: deadlines?.length || 0,
+    pending: deadlines?.filter((d) => d.status === "pending")?.length || 0,
+    inProgress: deadlines?.filter((d) => d.status === "in_progress")?.length || 0,
+    completed: deadlines?.filter((d) => d.status === "completed")?.length || 0,
+    overdue: deadlines?.filter((d) => d.status === "overdue")?.length || 0,
   };
 
   return (
@@ -140,7 +141,7 @@ export default function DeadlinesPage() {
             <Calendar className="mr-2 h-4 w-4" />
             {viewMode === "list" ? "Calendar View" : "List View"}
           </Button>
-          {selectedDeadlines.length > 0 && (
+          {selectedDeadlines?.length > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">

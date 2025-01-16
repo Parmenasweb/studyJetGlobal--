@@ -199,10 +199,17 @@ export async function getUniversities(destinationId) {
 
 export async function getUniversity(destinationId, universityId) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
     const url = new URL(`/api/destinations/${destinationId}/universities/${universityId}`, BASE_URL);
     const response = await fetch(url.toString(), {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+      },
       cache: "no-store",
     });
 
@@ -245,17 +252,25 @@ export async function addUniversity(destinationId, data) {
 
 export async function updateUniversity(destinationId, universityId, data) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
     const url = new URL(`/api/destinations/${destinationId}/universities/${universityId}`, BASE_URL);
     const response = await fetch(url.toString(), {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.user.id}`,
+      },
       body: JSON.stringify(data),
       cache: "no-store",
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || "Failed to update university");
+      throw new Error(error.error || "Failed to update university");
     }
 
     const updatedUniversity = await response.json();
@@ -263,29 +278,37 @@ export async function updateUniversity(destinationId, universityId, data) {
     return updatedUniversity;
   } catch (error) {
     console.error("Error updating university:", error);
-    throw new Error(error.message || "Failed to update university");
+    throw error;
   }
 }
 
 export async function deleteUniversity(destinationId, universityId) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
     const url = new URL(`/api/destinations/${destinationId}/universities/${universityId}`, BASE_URL);
     const response = await fetch(url.toString(), {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.user.id}`,
+      },
       cache: "no-store",
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || "Failed to delete university");
+      throw new Error(error.error || "Failed to delete university");
     }
 
     revalidatePath(`/private/dashboard/destinations/${destinationId}`);
-    return { success: true };
+    return await response.json();
   } catch (error) {
-    console.error("Error deleting university:", error);
-    throw new Error(error.message || "Failed to delete university");
+    console.error("Error in deleteUniversity:", error);
+    throw error;
   }
 }
 

@@ -44,6 +44,20 @@ import { useTheme } from "next-themes";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
+import FileUpload from "@/components/fileUpload";
+import dynamic from "next/dynamic";
+import { addUniversity, updateUniversity } from "@/actions/destination";
+
+// Dynamically import ImageView with SSR disabled
+const ImageView = dynamic(() => import("@/components/ImageView"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center w-full h-full bg-muted">
+      <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+    </div>
+  ),
+});
 
 // Common university facilities
 const COMMON_FACILITIES = [
@@ -75,8 +89,6 @@ export default function UniversityForm({ destinationId, initialData }) {
   const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [mainImage, setMainImage] = useState(null);
-  const [galleryImages, setGalleryImages] = useState([]);
   const [openFacilities, setOpenFacilities] = useState(false);
 
   const form = useForm({
@@ -104,97 +116,19 @@ export default function UniversityForm({ destinationId, initialData }) {
       setIsLoading(true);
       setError(null);
 
-      // Handle main image upload
-      if (mainImage) {
-        const formData = new FormData();
-        formData.append("file", mainImage);
-        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET);
-
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to upload main image");
-        }
-
-        const imageData = await response.json();
-        data.media = {
-          ...data.media,
-          mainImage: {
-            url: imageData.secure_url,
-            alt: data.name,
-          },
-        };
-      } else if (initialData?.media?.mainImage) {
-        // Keep the existing main image if no new one is uploaded
-        data.media = {
-          ...data.media,
-          mainImage: initialData.media.mainImage,
-        };
-      }
-
-      // Handle gallery images upload
-      if (galleryImages.length > 0) {
-        const uploadPromises = galleryImages.map(async (file) => {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET);
-
-          const response = await fetch(
-            `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error("Failed to upload gallery image");
-          }
-
-          const imageData = await response.json();
-          return {
-            url: imageData.secure_url,
-            alt: `${data.name} gallery image`,
-          };
+      if (initialData) {
+        await updateUniversity(destinationId, initialData._id, data);
+        toast({
+          title: "Success",
+          description: "University updated successfully",
         });
-
-        const uploadedImages = await Promise.all(uploadPromises);
-        data.media.galleryImages = [
-          ...(initialData?.media?.galleryImages || []),
-          ...uploadedImages,
-        ];
-      } else if (initialData?.media?.galleryImages) {
-        // Keep existing gallery images if no new ones are uploaded
-        data.media.galleryImages = initialData.media.galleryImages;
+      } else {
+        await addUniversity(destinationId, data);
+        toast({
+          title: "Success",
+          description: "University created successfully",
+        });
       }
-
-      // Create or update university
-      const response = await fetch(
-        `/api/destinations/${destinationId}/universities${
-          initialData ? `/${initialData._id}` : ""
-        }`,
-        {
-          method: initialData ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to save university");
-      }
-
-      toast({
-        title: "Success",
-        description: `University ${initialData ? "updated" : "created"} successfully`,
-      });
 
       router.push(`/private/dashboard/destinations/${destinationId}/universities`);
       router.refresh();
@@ -210,22 +144,6 @@ export default function UniversityForm({ destinationId, initialData }) {
       setIsLoading(false);
     }
   }
-
-  const handleMainImageUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setMainImage(file);
-    }
-  };
-
-  const handleGalleryImageUpload = (e) => {
-    const files = Array.from(e.target.files || []);
-    setGalleryImages((prev) => [...prev, ...files]);
-  };
-
-  const removeGalleryImage = (index) => {
-    setGalleryImages((prev) => prev.filter((_, i) => i !== index));
-  };
 
   return (
     <Form {...form}>
@@ -506,119 +424,161 @@ export default function UniversityForm({ destinationId, initialData }) {
         />
 
         <div className="space-y-4">
-          <div>
-            <FormLabel>Main Image</FormLabel>
-            <div className="mt-2 flex items-center gap-4">
-              {(mainImage || initialData?.media?.mainImage) && (
-                <div className="relative h-40 w-40 overflow-hidden rounded-lg">
-                  <Image
-                    src={
-                      mainImage
-                        ? URL.createObjectURL(mainImage)
-                        : initialData.media.mainImage.url
-                    }
-                    alt="Main university image"
-                    fill
-                    className="object-cover"
+          <h3 className="text-lg font-medium">Media</h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Main Image</Label>
+              <FileUpload
+                folder={`/universities/${destinationId}/main`}
+                onSuccess={(response) => {
+                  form.setValue("media.mainImage", { 
+                    url: response.url,
+                    alt: "",
+                    caption: "",
+                    width: response.width,
+                    height: response.height,
+                    size: response.size
+                  });
+                }}
+                onError={(error) => {
+                  toast.error(error.message || "Failed to upload main image");
+                }}
+                existingUrl={form.watch("media.mainImage")?.url}
+                onRemove={() => {
+                  form.setValue("media.mainImage", null);
+                }}
+              />
+              {form.watch("media.mainImage")?.url && (
+                <div className="space-y-2">
+                  <div className="mt-2">
+                    <ImageView
+                      src={form.watch("media.mainImage")?.url}
+                      alt="Main image preview"
+                      className="w-full rounded-lg shadow-sm"
+                      width={300}
+                      height={200}
+                      quality={100}
+                      loading="lazy"
+                      lo="true"
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="media.mainImage.caption"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Caption</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter image caption" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setMainImage(null)}
-                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white"
-                    disabled={isLoading}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <FormField
+                    control={form.control}
+                    name="media.mainImage.alt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Alt Text</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter alt text for accessibility" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               )}
-              <label className="cursor-pointer">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isLoading}
-                >
-                  <ImagePlus className="h-4 w-4 mr-2" />
-                  Upload Main Image
-                </Button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleMainImageUpload}
-                  disabled={isLoading}
-                />
-              </label>
             </div>
           </div>
 
-          <div>
-            <FormLabel>Gallery Images</FormLabel>
+          <div className="space-y-2">
+            <Label>Gallery Images</Label>
+            <FileUpload
+              folder={`/universities/${destinationId}/gallery`}
+              onSuccess={(response) => {
+                const currentGallery = form.watch("media.galleryImages") || [];
+                form.setValue("media.galleryImages", [
+                  ...currentGallery, 
+                  { 
+                    url: response.url,
+                    alt: "",
+                    caption: "",
+                    width: response.width,
+                    height: response.height,
+                    size: response.size
+                  }
+                ]);
+              }}
+              onError={(error) => {
+                toast.error(error.message || "Failed to upload gallery image");
+              }}
+              onRemove={() => {
+                form.setValue("media.galleryImages", []);
+              }}
+            />
+            {form.watch("media.galleryImages")?.length > 0 && (
             <div className="mt-2 grid grid-cols-3 gap-4">
-              {initialData?.media?.galleryImages?.map((image, index) => (
-                <div
-                  key={index}
-                  className="relative aspect-video rounded-lg overflow-hidden bg-muted"
-                >
-                  <Image
+                {form.watch("media.galleryImages").map((image, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="relative group">
+                      <ImageView
                     src={image.url}
                     alt={image.alt || `Gallery image ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                  <button
+                        className="w-full rounded-lg shadow-sm"
+                        width={200}
+                        height={150}
+                        quality={100}
+                        loading="lazy"
+                        lo="true"
+                      />
+                      <Button
                     type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => {
-                      const images = form.getValues("media.galleryImages");
-                      images.splice(index, 1);
-                      form.setValue("media.galleryImages", images);
-                    }}
-                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white"
-                    disabled={isLoading}
+                          const currentGallery = form.watch("media.galleryImages");
+                          form.setValue(
+                            "media.galleryImages",
+                            currentGallery.filter((_, i) => i !== index)
+                          );
+                        }}
                   >
                     <X className="h-4 w-4" />
-                  </button>
+                      </Button>
                 </div>
-              ))}
-              {galleryImages.map((file, index) => (
-                <div
-                  key={`new-${index}`}
-                  className="relative aspect-video rounded-lg overflow-hidden bg-muted"
-                >
-                  <Image
-                    src={URL.createObjectURL(file)}
-                    alt={`New gallery image ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeGalleryImage(index)}
-                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white"
-                    disabled={isLoading}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-              <label className="cursor-pointer">
-                <div className="flex items-center justify-center aspect-video rounded-lg border-2 border-dashed hover:border-primary transition-colors">
-                  <div className="flex flex-col items-center gap-2">
-                    <ImagePlus className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      Add Image
-                    </span>
+                    <FormField
+                      control={form.control}
+                      name={`media.galleryImages.${index}.caption`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Caption</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter image caption" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`media.galleryImages.${index}.alt`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Alt Text</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter alt text for accessibility" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={handleGalleryImageUpload}
-                    disabled={isLoading}
-                  />
+                ))}
                 </div>
-              </label>
-            </div>
+            )}
           </div>
         </div>
 

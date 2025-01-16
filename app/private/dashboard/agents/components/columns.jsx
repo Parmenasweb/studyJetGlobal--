@@ -41,20 +41,70 @@ export function getColumns({ onDeleteAgent }) {
     },
     {
       accessorKey: "name",
-      header: "Name",
+      header: "Agent Details",
       cell: ({ row }) => {
         const agent = row.original;
         return (
           <div className="flex flex-col">
             <span className="font-medium">{agent.name}</span>
             <span className="text-sm text-muted-foreground">{agent.email}</span>
+            <span className="text-xs text-muted-foreground">{agent.company || "Independent"}</span>
           </div>
         );
       },
     },
     {
       accessorKey: "country",
-      header: "Country",
+      header: "Location",
+      cell: ({ row }) => {
+        const agent = row.original;
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">{agent.country}</span>
+            <span className="text-xs text-muted-foreground">{agent.phone || "No phone"}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "baseCommission",
+      header: "Commission",
+      cell: ({ row }) => {
+        const commission = row.original.baseCommission;
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">
+              {commission.type === "percentage"
+                ? `${commission.value}%`
+                : commission.value.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: commission.currency || "USD",
+                  })}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {commission.type.charAt(0).toUpperCase() + commission.type.slice(1)}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "performance",
+      header: "Performance",
+      cell: ({ row }) => {
+        const performance = row.original.performance;
+        const successRate = performance.totalLeads
+          ? ((performance.successfulApplications / performance.totalLeads) * 100).toFixed(1)
+          : 0;
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">{successRate}% Success Rate</span>
+            <span className="text-xs text-muted-foreground">
+              {performance.successfulApplications} of {performance.totalLeads} leads
+            </span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "status",
@@ -62,44 +112,52 @@ export function getColumns({ onDeleteAgent }) {
       cell: ({ row }) => {
         const status = row.getValue("status");
         return (
-          <Badge
-            variant={
-              status === "active"
-                ? "success"
-                : status === "inactive"
-                ? "secondary"
-                : "destructive"
-            }
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </Badge>
+          <div className="flex flex-col gap-1">
+            <Badge
+              variant={
+                status === "active"
+                  ? "success"
+                  : status === "inactive"
+                  ? "secondary"
+                  : "destructive"
+              }
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              Since {format(new Date(row.original.createdAt), "MMM d, yyyy")}
+            </span>
+          </div>
         );
       },
     },
     {
-      accessorKey: "performance.totalLeads",
-      header: "Total Leads",
-    },
-    {
-      accessorKey: "performance.successfulApplications",
-      header: "Successful",
-    },
-    {
       accessorKey: "performance.totalCommissionEarned",
-      header: "Commission Earned",
+      header: "Earnings",
       cell: ({ row }) => {
         const amount = row.getValue("performance.totalCommissionEarned");
-        return amount?.toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-        });
-      },
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Joined",
-      cell: ({ row }) => {
-        return format(new Date(row.getValue("createdAt")), "MMM d, yyyy");
+        const totalLeads = row.original.performance.totalLeads;
+        const avgPerLead = totalLeads
+          ? amount / totalLeads
+          : 0;
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">
+              {amount?.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+              })}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Avg {avgPerLead.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })} per lead
+            </span>
+          </div>
+        );
       },
     },
     {

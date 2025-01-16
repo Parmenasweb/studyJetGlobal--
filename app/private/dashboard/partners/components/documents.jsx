@@ -10,7 +10,7 @@ import {
   FileText,
   Upload,
   Download,
-  Trash,
+  Trash2,
   Calendar,
   AlertTriangle,
   CheckCircle,
@@ -347,7 +347,7 @@ export function Documents({ partner }) {
                     size="icon"
                     onClick={() => handleDelete(document._id)}
                   >
-                    <Trash className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardHeader>

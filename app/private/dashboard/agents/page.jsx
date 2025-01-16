@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "@/components/ui/data-table";
 import { getColumns } from "./components/columns";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, DollarSign, UserCheck, Globe } from "lucide-react";
+import { Plus, Users, DollarSign, UserCheck, Globe, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -129,6 +129,7 @@ export default function AgentsPage() {
         currency: "USD",
       }),
     countries: new Set(agents.map((a) => a.country)).size,
+    successfulApplications: 0,
   };
 
   return (
@@ -178,15 +179,9 @@ export default function AgentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Agents</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.active}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.active} active • {stats.total - stats.active} inactive
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -196,17 +191,38 @@ export default function AgentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalLeads}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.successfulApplications} successful applications
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Commission
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Commission</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalCommission}</div>
+            <p className="text-xs text-muted-foreground">
+              Average {(stats.totalCommissionEarned / stats.active).toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+              })} per active agent
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {((stats.successfulApplications / stats.totalLeads) * 100).toFixed(1)}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {stats.successfulApplications} out of {stats.totalLeads} leads
+            </p>
           </CardContent>
         </Card>
       </div>

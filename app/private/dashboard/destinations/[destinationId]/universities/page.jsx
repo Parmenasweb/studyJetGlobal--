@@ -9,10 +9,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
 import Link from "next/link";
 import { LoadingPage } from "@/components/loading";
 import { ErrorPage } from "@/components/error";
+import ImageView from "@/components/ImageView";
+import { cn } from "@/lib/utils";
 
 export default function UniversitiesPage() {
   const router = useRouter();
@@ -96,32 +97,49 @@ export default function UniversitiesPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {destination.universities?.map((university) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {destination.universities.map((university) => (
               <Link
                 key={university._id}
                 href={`/private/dashboard/destinations/${params.destinationId}/universities/${university._id}`}
+                className="block"
               >
                 <Card className="hover:bg-accent transition-colors cursor-pointer">
                   <CardContent className="p-6">
                     <div className="aspect-video relative mb-4 rounded-lg overflow-hidden bg-muted">
-                      {university.media?.mainImage ? (
-                        <Image
-                          src={university.media.mainImage.url}
-                          alt={university.media.mainImage.alt || university.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <School className="h-12 w-12 text-muted-foreground" />
-                        </div>
-                      )}
+                    {university.media?.mainImage?.url ? (
+                      <ImageView
+                        src={university.media.mainImage.url}
+                        alt={university.media.mainImage.alt || university.name}
+                        className="object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        quality={100}
+                        loading="lazy"
+                        lo="true"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <School className="h-12 w-12 text-gray-400 text-muted-foreground" />
+                      </div>
+                    )}
                       <Badge
-                        variant={university.status === "active" ? "success" : "secondary"}
-                        className="absolute top-2 right-2"
+                        className={cn(
+                          "absolute top-2 right-2",
+                          university.status === "active"
+                            ? "bg-emerald-500 hover:bg-emerald-600"
+                            : "bg-zinc-500 hover:bg-zinc-600"
+                        )}
                       >
-                        {university.status}
+                        <div className="flex items-center gap-1.5">
+                          <div className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            university.status === "active"
+                              ? "bg-emerald-200"
+                              : "bg-zinc-200"
+                          )} />
+                          {university.status === "active" ? "Active" : "Inactive"}
+                        </div>
                       </Badge>
                     </div>
 

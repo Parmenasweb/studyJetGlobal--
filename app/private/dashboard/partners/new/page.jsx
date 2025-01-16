@@ -1,6 +1,6 @@
 "use client";
 
-import { PartnerForm } from "../components/partner-form";
+import { PartnerForm } from "../components/PartnerForm";
 
 export default function NewPartnerPage() {
   return (

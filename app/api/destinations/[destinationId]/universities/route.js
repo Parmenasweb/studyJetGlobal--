@@ -31,10 +31,10 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const session = await auth();
+    // if (!session?.user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
 
     const data = await req.json();
 
@@ -47,7 +47,7 @@ export async function POST(req, { params }) {
 
     destination.universities.push({
       ...data,
-      createdBy: session.user.id,
+      
       createdAt: new Date(),
     });
 

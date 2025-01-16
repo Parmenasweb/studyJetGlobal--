@@ -72,6 +72,11 @@ const navItems = [
     icon: Handshake,
   },
   {
+    title: "Agents",
+    href: "/private/dashboard/agents",
+    icon: Users,
+  },
+  {
     title: "Finances",
     href: "/private/dashboard/finances",
     icon: DollarSign,

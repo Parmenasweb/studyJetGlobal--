@@ -1,140 +1,144 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import Agent from "@/models/Agent";
 import connectDB from "@/lib/db";
-import { auth } from "@/auth";
 
-export async function GET(req, { params }) {
+export async function POST(request, { params }) {
   try {
     const session = await auth();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const { agentId } = params;
+    const data = await request.json();
 
     await connectDB();
 
-    const agent = await Agent.findById(params.agentId).select("leads");
+    const agent = await Agent.findById(agentId);
     if (!agent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+      return new NextResponse("Agent not found", { status: 404 });
     }
 
-    return NextResponse.json(agent.leads);
-  } catch (error) {
-    console.error("Error fetching leads:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+    // Create new lead
+    agent.leads.push({
+      clientId: data.clientId || null,
+      studentName: data.studentName,
+      email: data.email,
+      phone: data.phone,
+      country: data.country,
+      program: data.program,
+      university: data.university,
+      status: data.status,
+      notes: data.notes,
+    });
 
-export async function POST(req, { params }) {
-  try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const data = await req.json();
-
-    await connectDB();
-
-    const agent = await Agent.findById(params.agentId);
-    if (!agent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
-    }
-
-    // Add metadata
-    data.createdAt = new Date();
-    data.createdBy = session.user.id;
-
-    agent.leads.push(data);
     await agent.save();
 
-    return NextResponse.json(agent.leads[agent.leads.length - 1], {
-      status: 201,
-    });
+    return NextResponse.json(agent.leads[agent.leads.length - 1]);
   } catch (error) {
-    console.error("Error creating lead:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("[LEADS_POST]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
 }
 
-export async function PUT(req, { params }) {
+export async function PUT(request, { params }) {
   try {
     const session = await auth();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { leadId } = params;
-    const data = await req.json();
+    const { agentId } = params;
+    const { searchParams } = new URL(request.url);
+    const leadId = searchParams.get("id");
+    const data = await request.json();
 
     await connectDB();
 
-    const agent = await Agent.findById(params.agentId);
+    const agent = await Agent.findById(agentId);
     if (!agent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+      return new NextResponse("Agent not found", { status: 404 });
     }
 
     const lead = agent.leads.id(leadId);
     if (!lead) {
-      return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+      return new NextResponse("Lead not found", { status: 404 });
     }
 
-    // Update metadata
-    data.updatedAt = new Date();
-    data.updatedBy = session.user.id;
+    // Update lead
+    lead.clientId = data.clientId || lead.clientId;
+    lead.studentName = data.studentName;
+    lead.email = data.email;
+    lead.phone = data.phone;
+    lead.country = data.country;
+    lead.program = data.program;
+    lead.university = data.university;
+    lead.status = data.status;
+    lead.notes = data.notes;
+    lead.updatedAt = new Date();
 
-    // Update lead fields
-    Object.assign(lead, data);
     await agent.save();
 
     return NextResponse.json(lead);
   } catch (error) {
-    console.error("Error updating lead:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("[LEADS_PUT]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
 }
 
-export async function DELETE(req, { params }) {
+export async function DELETE(request, { params }) {
   try {
     const session = await auth();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { leadId } = params;
+    const { agentId } = params;
+    const { searchParams } = new URL(request.url);
+    const leadId = searchParams.get("id");
 
     await connectDB();
 
-    const agent = await Agent.findById(params.agentId);
+    const agent = await Agent.findById(agentId);
     if (!agent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+      return new NextResponse("Agent not found", { status: 404 });
     }
 
     const lead = agent.leads.id(leadId);
     if (!lead) {
-      return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+      return new NextResponse("Lead not found", { status: 404 });
     }
 
-    lead.deleteOne();
+    lead.remove();
     await agent.save();
 
-    return NextResponse.json(
-      { message: "Lead deleted successfully" },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Lead deleted successfully" });
   } catch (error) {
-    console.error("Error deleting lead:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("[LEADS_DELETE]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+export async function GET(request, { params }) {
+  try {
+    const session = await auth();
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { agentId } = params;
+
+    await connectDB();
+
+    const agent = await Agent.findById(agentId).populate("leads.clientId");
+    if (!agent) {
+      return new NextResponse("Agent not found", { status: 404 });
+    }
+
+    return NextResponse.json(agent.leads);
+  } catch (error) {
+    console.error("[LEADS_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
 }

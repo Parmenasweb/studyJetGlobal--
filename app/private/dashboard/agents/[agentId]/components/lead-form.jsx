@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 const leadFormSchema = z.object({
+  clientId: z.string().optional(),
   studentName: z.string().min(1, "Student name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(1, "Phone number is required"),
@@ -33,15 +34,26 @@ const leadFormSchema = z.object({
   program: z.string().min(1, "Program is required"),
   university: z.string().min(1, "University is required"),
   status: z.enum([
-    "active",
-    "pending",
+    "new",
+    "contacted",
+    "application_started",
+    "application_submitted",
+    "visa_applied",
+    "visa_approved",
     "enrolled",
-    "cancelled",
-    "deferred",
     "rejected",
+    "cancelled",
   ]),
   notes: z.string().optional(),
 });
+
+async function getClients() {
+  const res = await fetch("/api/clients");
+  if (!res.ok) {
+    throw new Error("Failed to fetch clients");
+  }
+  return res.json();
+}
 
 async function createLead(agentId, data) {
   const res = await fetch(`/api/agents/${agentId}/leads`, {
@@ -78,16 +90,22 @@ async function updateLead(agentId, leadId, data) {
 }
 
 export function LeadForm({ agent, lead, onSuccess }) {
+  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
+    queryKey: ["clients"],
+    queryFn: getClients,
+  });
+
   const form = useForm({
     resolver: zodResolver(leadFormSchema),
     defaultValues: {
+      clientId: lead?.clientId || "",
       studentName: lead?.studentName || "",
       email: lead?.email || "",
       phone: lead?.phone || "",
       country: lead?.country || "",
       program: lead?.program || "",
       university: lead?.university || "",
-      status: lead?.status || "pending",
+      status: lead?.status || "new",
       notes: lead?.notes || "",
     },
   });
@@ -108,6 +126,33 @@ export function LeadForm({ agent, lead, onSuccess }) {
     },
   });
 
+  const handleClientChange = (clientId) => {
+    if (!clientId) {
+      // Clear form fields if no client is selected
+      form.setValue("clientId", "");
+      form.setValue("studentName", "");
+      form.setValue("email", "");
+      form.setValue("phone", "");
+      form.setValue("country", "");
+      form.setValue("program", "");
+      form.setValue("university", "");
+      return;
+    }
+    
+    const selectedClient = clients.find((c) => c._id === clientId);
+    if (selectedClient) {
+      form.setValue("clientId", clientId);
+      form.setValue("studentName", selectedClient.personalInfo.fullName);
+      form.setValue("email", selectedClient.personalInfo.email);
+      form.setValue("phone", selectedClient.personalInfo.phone);
+      form.setValue("country", selectedClient.personalInfo.currentResidence.country);
+      if (selectedClient.academicInfo) {
+        form.setValue("program", selectedClient.academicInfo.program.name);
+        form.setValue("university", selectedClient.academicInfo.university.name);
+      }
+    }
+  };
+
   const onSubmit = (data) => {
     mutation.mutate(data);
   };
@@ -115,6 +160,43 @@ export function LeadForm({ agent, lead, onSuccess }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {!lead && (
+          <FormField
+            control={form.control}
+            name="clientId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Select Client (Optional)</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    if (value === "none") {
+                      handleClientChange(null);
+                    } else {
+                      handleClientChange(value);
+                    }
+                  }}
+                  value={field.value || "none"}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a client" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Select a client</SelectItem>
+                    {!isLoadingClients && clients.map((client) => (
+                      <SelectItem key={client._id} value={client._id}>
+                        {client.personalInfo.fullName} ({client.personalInfo.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
@@ -123,7 +205,7 @@ export function LeadForm({ agent, lead, onSuccess }) {
               <FormItem>
                 <FormLabel>Student Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter student name" {...field} />
+                  <Input placeholder="Enter student name" {...field} readOnly={!!form.watch("clientId")} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -140,6 +222,7 @@ export function LeadForm({ agent, lead, onSuccess }) {
                     type="email"
                     placeholder="Enter email address"
                     {...field}
+                    readOnly={!!form.watch("clientId")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -156,7 +239,7 @@ export function LeadForm({ agent, lead, onSuccess }) {
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter phone number" {...field} />
+                  <Input placeholder="Enter phone number" {...field} readOnly={!!form.watch("clientId")} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -169,7 +252,7 @@ export function LeadForm({ agent, lead, onSuccess }) {
               <FormItem>
                 <FormLabel>Country</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter country" {...field} />
+                  <Input placeholder="Enter country" {...field} readOnly={!!form.watch("clientId")} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -185,7 +268,7 @@ export function LeadForm({ agent, lead, onSuccess }) {
               <FormItem>
                 <FormLabel>Program</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter program" {...field} />
+                  <Input placeholder="Enter program" {...field} readOnly={!!form.watch("clientId")} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -198,7 +281,7 @@ export function LeadForm({ agent, lead, onSuccess }) {
               <FormItem>
                 <FormLabel>University</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter university" {...field} />
+                  <Input placeholder="Enter university" {...field} readOnly={!!form.watch("clientId")} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -219,12 +302,15 @@ export function LeadForm({ agent, lead, onSuccess }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="application_started">Application Started</SelectItem>
+                  <SelectItem value="application_submitted">Application Submitted</SelectItem>
+                  <SelectItem value="visa_applied">Visa Applied</SelectItem>
+                  <SelectItem value="visa_approved">Visa Approved</SelectItem>
                   <SelectItem value="enrolled">Enrolled</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="deferred">Deferred</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

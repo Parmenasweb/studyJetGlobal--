@@ -7,11 +7,34 @@ export async function POST(request) {
     await connectDB();
 
     const data = await request.json();
-    console.log('Received client data:', data);
+    console.log("Creating client with data:", data);
+    
+    // Validate email
+    if (!data.personalInfo?.email) {
+      return NextResponse.json(
+        { message: "Email is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check for existing email - case insensitive
+    const existingClient = await Client.findOne({
+      "personalInfo.email": { $regex: new RegExp(`^${data.personalInfo.email}$`, 'i') }
+    });
+
+    if (existingClient) {
+      return NextResponse.json(
+        { 
+          message: `A client with email "${data.personalInfo.email}" already exists`,
+          field: "personalInfo.email",
+          value: data.personalInfo.email
+        },
+        { status: 409 }
+      );
+    }
 
     // Create new client
     const client = new Client(data);
-    console.log('Created client instance:', client);
 
     // Save to database
     const savedClient = await client.save();
@@ -30,14 +53,6 @@ export async function POST(request) {
       );
     }
 
-    // Handle duplicate key errors
-    if (error.code === 11000) {
-      return NextResponse.json(
-        { message: "Duplicate entry found", field: Object.keys(error.keyPattern)[0] },
-        { status: 409 }
-      );
-    }
-
     return NextResponse.json(
       { message: error.message || "Failed to create client" },
       { status: 500 }
@@ -45,59 +60,30 @@ export async function POST(request) {
   }
 }
 
-export async function GET(request) {
+export async function GET() {
   try {
-    await connectDB();
-
-    const { searchParams } = new URL(request.url);
-    const query = {
-      page: searchParams.get("page") || 1,
-      limit: searchParams.get("limit") || 10,
-      status: searchParams.get("status"),
-      clientType: searchParams.get("clientType"),
-      search: searchParams.get("search"),
-    };
-
-    // Build query
-    const dbQuery = {};
-    if (query.status) dbQuery.status = query.status;
-    if (query.clientType) dbQuery.clientType = query.clientType;
-    if (query.search) {
-      dbQuery.$or = [
-        { "personalInfo.fullName": { $regex: query.search, $options: "i" } },
-        { "personalInfo.email": { $regex: query.search, $options: "i" } },
-      ];
+    const session = await auth();
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Calculate pagination
-    const page = parseInt(query.page);
-    const limit = parseInt(query.limit);
-    const skip = (page - 1) * limit;
+    await connectDB();
 
-    // Get total count for pagination
-    const total = await Client.countDocuments(dbQuery);
+    const clients = await Client.find(
+      {},
+      {
+        "personalInfo.fullName": 1,
+        "personalInfo.email": 1,
+        "personalInfo.phone": 1,
+        "personalInfo.currentResidence.country": 1,
+        "academicInfo.program.name": 1,
+        "academicInfo.university.name": 1,
+      }
+    ).lean();
 
-    // Get clients with pagination
-    const clients = await Client.find(dbQuery)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    return NextResponse.json({
-      clients,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      },
-    });
+    return NextResponse.json(clients);
   } catch (error) {
-    console.error("Error in GET /api/clients:", error);
-    return NextResponse.json(
-      { message: error.message || "Failed to fetch clients" },
-      { status: 500 }
-    );
+    console.error("[CLIENTS_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
 }

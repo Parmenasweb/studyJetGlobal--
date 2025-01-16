@@ -5,11 +5,14 @@ const deadlineSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      trim: true,
     },
-    description: String,
-    type: {
+    description: {
       type: String,
       required: true,
+    },
+    type: {
+      type: String,
       enum: [
         "application",
         "document_submission",
@@ -17,131 +20,127 @@ const deadlineSchema = new mongoose.Schema(
         "visa",
         "enrollment",
         "accommodation",
-        "other",
+        "other"
       ],
+      required: true,
     },
     priority: {
       type: String,
       enum: ["low", "medium", "high", "urgent"],
-      default: "medium",
+      required: true,
     },
     status: {
       type: String,
       enum: ["pending", "in_progress", "completed", "overdue"],
       default: "pending",
     },
+    progress: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
     dueDate: {
       type: Date,
       required: true,
     },
-    reminderDates: [
-      {
-        type: Date,
-      },
-    ],
+    reminderDate: {
+      type: Date,
+    },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    client: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Client",
-    },
-    application: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Application",
-    },
-    relatedDocuments: [
-      {
-        title: String,
-        fileUrl: String,
-        uploadDate: {
-          type: Date,
-          default: Date.now,
-        },
+    relatedTo: {
+      type: {
+        type: String,
+        enum: ["student", "partner", "university", "program"],
+        required: true,
       },
-    ],
-    notes: [
-      {
-        content: String,
-        createdBy: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refPath: "relatedTo.type",
       },
-    ],
-    completedAt: Date,
-    completedBy: {
+    },
+    attachments: [{
+      name: String,
+      url: String,
+      type: String,
+      size: Number,
+      uploadedAt: Date,
+    }],
+    subtasks: [{
+      title: String,
+      completed: {
+        type: Boolean,
+        default: false,
+      },
+      dueDate: Date,
+    }],
+    comments: [{
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      content: {
+        type: String,
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+    }],
+    tags: [String],
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    notificationsSent: [
-      {
-        type: {
-          type: String,
-          enum: ["email", "sms", "in_app"],
-        },
-        sentAt: {
-          type: Date,
-          default: Date.now,
-        },
-        status: {
-          type: String,
-          enum: ["success", "failed"],
-        },
-      },
-    ],
   },
   {
     timestamps: true,
   }
 );
 
-// Indexes for better query performance
-deadlineSchema.index({ dueDate: 1 });
-deadlineSchema.index({ status: 1 });
-deadlineSchema.index({ type: 1 });
-deadlineSchema.index({ assignedTo: 1 });
-deadlineSchema.index({ client: 1 });
-deadlineSchema.index({ application: 1 });
-
-// Virtual field for days remaining
-deadlineSchema.virtual("daysRemaining").get(function () {
+// Virtual for days remaining
+deadlineSchema.virtual("daysRemaining").get(function() {
   if (!this.dueDate) return null;
-  const today = new Date();
+  const now = new Date();
   const dueDate = new Date(this.dueDate);
-  const diffTime = dueDate - today;
+  const diffTime = dueDate - now;
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
 });
 
-// Method to check if deadline is overdue
-deadlineSchema.methods.isOverdue = function () {
-  if (!this.dueDate) return false;
-  return new Date() > this.dueDate && this.status !== "completed";
-};
+// Pre-save middleware to update status based on due date and progress
+deadlineSchema.pre("save", function(next) {
+  const now = new Date();
+  const dueDate = new Date(this.dueDate);
 
-// Method to update status based on due date and completion
-deadlineSchema.methods.updateStatus = function () {
-  if (this.status === "completed") return;
-
-  const today = new Date();
-  if (today > this.dueDate) {
+  if (this.progress >= 100) {
+    this.status = "completed";
+  } else if (dueDate < now && this.status !== "completed") {
     this.status = "overdue";
-  } else if (this.status === "pending" && this.daysRemaining <= 7) {
+  } else if (this.progress > 0 && this.status === "pending") {
     this.status = "in_progress";
   }
-};
 
-// Pre-save middleware to update status
-deadlineSchema.pre("save", function (next) {
-  this.updateStatus();
   next();
 });
 
-export const Deadline =
-  mongoose.models.Deadline || mongoose.model("Deadline", deadlineSchema);
+// Index for efficient queries
+deadlineSchema.index({ dueDate: 1, status: 1 });
+deadlineSchema.index({ "relatedTo.type": 1, "relatedTo.id": 1 });
+deadlineSchema.index({ createdBy: 1 });
+deadlineSchema.index({ assignedTo: 1 });
+
+const Deadline = mongoose.models.Deadline || mongoose.model("Deadline", deadlineSchema);
+
+export default Deadline;

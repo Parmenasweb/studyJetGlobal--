@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const leadSchema = new mongoose.Schema({
+  clientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Client",
+  },
   studentName: {
     type: String,
     required: [true, "Student name is required"],
