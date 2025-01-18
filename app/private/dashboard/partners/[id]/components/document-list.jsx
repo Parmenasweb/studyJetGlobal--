@@ -46,6 +46,7 @@ import {
   CheckCircle2,
   Clock,
 } from "lucide-react";
+import Link from "next/link";
 
 const documentSchema = z.object({
   type: z.enum(["mou", "agreement", "license", "certificate", "other"]),
@@ -346,7 +347,7 @@ export function DocumentList({ partner }) {
                     asChild
                     className="w-full"
                   >
-                    <a
+                    <Link
                       href={document.file.url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -354,7 +355,7 @@ export function DocumentList({ partner }) {
                     >
                       <Download className="mr-2 h-4 w-4" />
                       Download
-                    </a>
+                    </Link>
                   </Button>
                   <Button
                     variant="outline"

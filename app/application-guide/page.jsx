@@ -188,7 +188,7 @@ export default function ApplicationGuidePage() {
   const progress = ((currentStepIndex + 1) / applicationSteps.length) * 100;
 
   return (
-    <div className="container mx-auto px-4 py-16 md:py-24">
+    <div className="w-[95%] mx-auto px-4 py-16 md:py-24">
       <div className="max-w-3xl mx-auto text-center mb-12">
         <h1 className="text-4xl font-bold tracking-tight mb-4">
           Your Study Abroad Journey Starts Here
@@ -312,7 +312,7 @@ export default function ApplicationGuidePage() {
             your application journey.
           </p>
           <Button size="lg" asChild>
-            <a href="/consultation">Book a Free Consultation</a>
+            <a href="/onBoarding/consultationForm">Book a Free Consultation</a>
           </Button>
         </Card>
       </div>

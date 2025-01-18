@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
+import Link from "next/link";
 
 export function DocumentUpload({ onSuccess, onError, existingUrl, onRemove }) {
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -46,14 +47,14 @@ export function DocumentUpload({ onSuccess, onError, existingUrl, onRemove }) {
   if (existingUrl) {
     return (
       <div className="flex items-center gap-2">
-        <a
+        <Link
           href={existingUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 text-sm text-blue-500 hover:underline truncate"
         >
           View Document
-        </a>
+        </Link>
         <Button
           type="button"
           variant="ghost"

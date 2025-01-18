@@ -1,107 +1,71 @@
+"use client";
+
 import { destinations } from "@/lib/data/destinations";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 import { 
   Globe, 
   MapPin, 
   Users, 
-  GraduationCap, 
-  School, 
-  DollarSign, 
   Clock, 
   Briefcase, 
   Building 
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { SearchDestinations } from "./components/SearchDestinations";
-import { DestinationImage } from "./components/DestinationImage";
+import { DestinationImage } from "@/app/(public)/destinations/components/DestinationImage";
 
-export default function DestinationsPage() {
+export default function PopularDestinations() {
+  // Only show first 6 popular destinations
+  const popularDestinations = destinations.slice(0, 6);
+
   return (
-    <div className="w-full bg-background">
-      {/* Hero Section */}
-      <section className="relative w-full h-[70vh] min-h-[600px]">
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1562774053-701939374585"
-            alt="Modern university architecture"
-            fill
-            className="object-cover opacity-[0.5] dark:opacity-[0.2]"
-            priority
-          />
-        </div>
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 animate-fade-in">
-                Your Global Education Journey Starts Here
-              </h1>
-              <p className="text-lg md:text-xl text-white/90 mb-8 animate-fade-in-up">
-                Explore top study destinations and find your perfect fit for higher education
-              </p>
-              <div className="animate-fade-in-up">
-                <SearchDestinations />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+    <section className="py-12 px-4 md:px-12 md:py-20">
+      <div className="w-full mx-auto px-4">
+        {/* Animated Header Section */}
+        <motion.div 
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+            studyjet&apos;s Popular Study Destinations
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Explore top educational destinations worldwide, offering world-class universities 
+            and diverse cultural experiences for international students
+          </p>
+        </motion.div>
 
-      {/* Stats Section */}
-      <section className="py-12 md:py-16 bg-muted/50">
-        <div className="w-full mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
-            {[
-              { 
-                icon: Globe, 
-                label: "Countries", 
-                value: destinations.length 
-              },
-              { 
-                icon: School, 
-                label: "Universities", 
-                value: destinations.reduce((acc, dest) => 
-                  acc + parseInt(dest.overview?.totalUniversities || '0'), 0) + "+"
-              },
-              { 
-                icon: GraduationCap, 
-                label: "Programs", 
-                value: destinations.reduce((acc, dest) => 
-                  acc + (dest.popularPrograms?.length || 0), 0) + "+"
-              },
-              { 
-                icon: Users, 
-                label: "International Students", 
-                value: destinations.reduce((acc, dest) => 
-                  acc + parseInt(dest.overview?.internationalStudents?.replace(/[^0-9]/g, '') || '0'), 0)
-                  .toLocaleString() + "+"
-              },
-            ].map((stat, index) => (
-              <Card 
-                key={index} 
-                className="p-4 md:p-6 text-center bg-background hover:shadow-lg transition-all duration-300"
-              >
-                <stat.icon className="h-8 w-8 mx-auto mb-4 text-primary" />
-                <p className="text-xl md:text-2xl font-bold mb-1">{stat.value}</p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Destinations Grid */}
-      <section className="py-16">
-        <div className="w-full mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {destinations.map((destination) => (
-              <Card 
-                key={destination.id} 
-                className="group overflow-hidden transition-all duration-300 hover:shadow-lg"
-              >
+        {/* Destinations Grid with Staggered Animation */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={{
+            hidden: {},
+            visible: {
+              transition: {
+                staggerChildren: 0.2
+              }
+            }
+          }}
+        >
+          {popularDestinations.map((destination) => (
+            <motion.div
+              key={destination.id}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 }
+              }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
                 <div className="relative w-full aspect-[4/3]">
                   {destination.media?.mainImage?.url ? (
                     <DestinationImage
@@ -199,31 +163,37 @@ export default function DestinationsPage() {
                   </Link>
                 </div>
               </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+            </motion.div>
+          ))}
+        </motion.div>
 
-      {/* CTA Section */}
-      <section className="py-16 bg-muted/50">
-        <div className="w-full mx-auto px-4">
-          <Card className="max-w-3xl mx-auto p-6 md:p-8 text-center bg-background">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4">Ready to Start Your Journey?</h3>
+        {/* View All Destinations CTA */}
+        <motion.div 
+          className="mt-16 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          viewport={{ once: true }}
+        >
+          <Card className="max-w-2xl mx-auto p-6 bg-primary/5 dark:bg-primary/10">
+            <h3 className="text-xl font-semibold mb-3">
+              Discover More Study Destinations
+            </h3>
             <p className="text-muted-foreground mb-6">
-              Get personalized guidance on choosing the perfect study destination for
-              your academic goals.
+              Explore all our study destinations and find the perfect location for your educational journey
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button variant="outline" asChild className="w-full sm:w-auto">
-                <Link href="/onBoarding/applicationForm">Apply Now!</Link>
+            <Link href="/destinations">
+              <Button 
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                size="lg"
+              >
+                View All Destinations
+                <Globe className="ml-2 h-4 w-4" />
               </Button>
-              <Button asChild className="w-full sm:w-auto">
-                <Link href="/onBoarding/consultationForm">Book a Consultation</Link>
-              </Button>
-            </div>
+            </Link>
           </Card>
-        </div>
-      </section>
-    </div>
+        </motion.div>
+      </div>
+    </section>
   );
-} 
+}

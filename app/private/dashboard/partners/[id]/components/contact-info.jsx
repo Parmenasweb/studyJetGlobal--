@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import Link from "next/link";
 
 const contactSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -359,21 +360,21 @@ export function ContactInfo({ partner }) {
                     <div className="space-y-2">
                       <div className="flex items-center text-sm">
                         <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                        <a
+                        <Link
                           href={`mailto:${contact.email}`}
                           className="hover:underline"
                         >
                           {contact.email}
-                        </a>
+                        </Link>
                       </div>
                       <div className="flex items-center text-sm">
                         <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
-                        <a
+                        <Link
                           href={`tel:${contact.phone}`}
                           className="hover:underline"
                         >
                           {contact.phone}
-                        </a>
+                        </Link>
                       </div>
                       <div className="flex items-center text-sm">
                         <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -382,14 +383,14 @@ export function ContactInfo({ partner }) {
                       {contact.website && (
                         <div className="flex items-center text-sm">
                           <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <a
+                          <Link
                             href={contact.website}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:underline"
                           >
                             {contact.website}
-                          </a>
+                          </Link>
                         </div>
                       )}
                     </div>

@@ -72,7 +72,7 @@ const faqs = [
 export default function FAQS() {
   return (
     <section className="py-10 px-6">
-      <div className="container mx-auto max-w-4xl space-y-8">
+      <div className="w-[95%] mx-auto space-y-8">
         <h2 className="text-3xl font-bold">Frequently Asked Questions</h2>
         <div className="space-y-4">
           <Accordion type="single" collapsible>

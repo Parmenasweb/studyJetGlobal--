@@ -65,7 +65,147 @@ const countries = [
     cost: "£348 for Student Visa",
     interviewRequired: false,
   },
-  // Add more countries as needed
+  {
+    name: "Ireland",
+    visaTypes: ["Stamp 2 Student Visa", "Short Stay Study Visa"],
+    requirements: [
+      "Acceptance letter from an Irish institution",
+      "Proof of tuition fee payment",
+      "Proof of funds (€7,000 minimum)",
+      "Valid passport",
+      "Health insurance",
+      "English proficiency proof",
+      "Medical check (if required)",
+    ],
+    timeline: "4-8 weeks",
+    cost: "€60 for Student Visa + €300 registration fee",
+    interviewRequired: false,
+  },
+  {
+    name: "Singapore",
+    visaTypes: ["Student Pass", "Student's Pass (Short Course)"],
+    requirements: [
+      "Acceptance letter from institution",
+      "Proof of financial means",
+      "Health insurance",
+      "Medical examination report",
+      "Passport validity",
+      "Academic transcripts",
+    ],
+    timeline: "2-4 weeks",
+    cost: "SGD 30 application fee + SGD 60 issuance fee",
+    interviewRequired: false,
+  },
+  {
+    name: "France",
+    visaTypes: ["Long-stay Student Visa (VLS-TS)", "Short-stay Student Visa"],
+    requirements: [
+      "Acceptance letter from French institution",
+      "Proof of financial means",
+      "Health insurance",
+      "Accommodation proof",
+      "Valid passport",
+      "Campus France approval",
+    ],
+    timeline: "2-3 weeks",
+    cost: "€50 for Student Visa + €60 for Campus France",
+    interviewRequired: true,
+  },
+  {
+    name: "Dubai",
+    visaTypes: ["Student Residence Visa", "Short-term Student Visa"],
+    requirements: [
+      "Acceptance letter from UAE institution",
+      "Passport copy",
+      "Passport photos",
+      "Bank statements",
+      "Health insurance",
+      "Medical fitness test",
+    ],
+    timeline: "2-3 weeks",
+    cost: "AED 3,000 for Student Visa",
+    interviewRequired: false,
+  },
+  {
+    name: "Australia",
+    visaTypes: ["Student Visa (Subclass 500)", "Student Guardian Visa"],
+    requirements: [
+      "Confirmation of Enrolment (CoE)",
+      "Genuine Temporary Entrant (GTE) statement",
+      "Financial evidence",
+      "English proficiency results",
+      "Health insurance (OSHC)",
+      "Health check",
+      "Character requirements",
+    ],
+    timeline: "4-6 weeks",
+    cost: "AUD 630 for Student Visa",
+    interviewRequired: false,
+  },
+  {
+    name: "Canada",
+    visaTypes: ["Study Permit", "Temporary Resident Visa"],
+    requirements: [
+      "Letter of Acceptance from DLI",
+      "Proof of financial support",
+      "Valid passport",
+      "Quebec Acceptance Certificate (if applicable)",
+      "Statement of purpose",
+      "Biometrics",
+      "Medical exam (if required)",
+    ],
+    timeline: "4-8 weeks",
+    cost: "CAD 150 for Study Permit + CAD 85 for Biometrics",
+    interviewRequired: false,
+  },
+  {
+    name: "Germany",
+    visaTypes: ["Student Visa", "Language Course Visa"],
+    requirements: [
+      "University admission letter",
+      "Proof of financial means (blocked account)",
+      "Health insurance",
+      "German language proficiency",
+      "Valid passport",
+      "Biometric photos",
+    ],
+    timeline: "4-6 weeks",
+    cost: "€75 for Student Visa",
+    interviewRequired: true,
+  },
+  {
+    name: "New Zealand",
+    visaTypes: ["Student Visa", "Pathway Student Visa"],
+    requirements: [
+      "Offer of place from an approved institution",
+      "Proof of sufficient funds",
+      "Return air ticket or proof of funds to buy one",
+      "Health insurance",
+      "Police clearance certificate",
+      "Medical certificate",
+      "English proficiency proof",
+    ],
+    timeline: "20-25 working days",
+    cost: "NZD 330 for Student Visa",
+    interviewRequired: false,
+  },
+  {
+    name: "India",
+    visaTypes: ["Student Visa (S-1)", "Research Visa (S-4)"],
+    requirements: [
+      "Admission letter from Indian institution",
+      "Valid passport with 6 months validity",
+      "Financial proof of sufficient funds",
+      "Health insurance coverage",
+      "Police clearance certificate",
+      "HIV test results (for courses > 1 year)",
+      "Proof of residence in home country",
+      "Academic transcripts and certificates"
+    ],
+    timeline: "3-4 weeks",
+    cost: "USD 100 for Student Visa",
+    interviewRequired: false,
+  }
 ];
 
 const faqs = [
@@ -108,9 +248,10 @@ export default function VisaGuidePage() {
 
       {/* Country Selection */}
       <div className="max-w-xs mx-auto mb-12">
+        <span className=" text-lg mb-1 text-primary flex items-center justify-center">choose desired country</span>
         <Select value={selectedCountry} onValueChange={setSelectedCountry}>
           <SelectTrigger>
-            <SelectValue placeholder="Select Country" />
+            <SelectValue className="p-5 border" placeholder="Select Country" />
           </SelectTrigger>
           <SelectContent>
             {countries.map((country) => (
@@ -129,10 +270,10 @@ export default function VisaGuidePage() {
           <Card className="p-6">
             <Tabs defaultValue="requirements" className="space-y-6">
               <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <TabsTrigger value="requirements">Requirements</TabsTrigger>
-                <TabsTrigger value="process">Process</TabsTrigger>
-                <TabsTrigger value="timeline">Timeline</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger className="p-3 md:p-2" value="requirements">Requirements</TabsTrigger>
+                <TabsTrigger className="p-3 md:p-2" value="process">Process</TabsTrigger>
+                <TabsTrigger className="p-3 md:p-2" value="timeline">Timeline</TabsTrigger>
+                <TabsTrigger className="p-3 md:p-2" value="documents">Documents</TabsTrigger>
               </TabsList>
 
               <TabsContent value="requirements" className="space-y-4">
@@ -311,7 +452,7 @@ export default function VisaGuidePage() {
               className="w-full"
               asChild
             >
-              <a href="/consultation">Book a Consultation</a>
+              <a href="/onBoarding/consultationForm">Book a Consultation</a>
             </Button>
           </Card>
         </div>

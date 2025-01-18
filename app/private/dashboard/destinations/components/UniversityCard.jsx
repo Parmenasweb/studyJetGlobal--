@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Globe, Mail, Phone, Trophy } from "lucide-react";
+import Link from "next/link";
 
 export default function UniversityCard({ university }) {
   return (
@@ -32,25 +33,25 @@ export default function UniversityCard({ university }) {
           {university.website && (
             <div className="flex items-center text-sm">
               <Globe className="mr-2 h-4 w-4" />
-              <a
+              <Link
                 href={university.website}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-500 hover:underline"
               >
                 Visit Website
-              </a>
+              </Link>
             </div>
           )}
           {university.contactEmail && (
             <div className="flex items-center text-sm">
               <Mail className="mr-2 h-4 w-4" />
-              <a
+              <Link
                 href={`mailto:${university.contactEmail}`}
                 className="text-blue-500 hover:underline"
               >
                 {university.contactEmail}
-              </a>
+              </Link>
             </div>
           )}
           {university.contactPhone && (

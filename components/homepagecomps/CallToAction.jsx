@@ -8,7 +8,7 @@ import Link from "next/link";
 export default function CallToAction() {
   return (
     <section className="py-20 bg-primary/90 text-primary-foreground">
-      <div className="container mx-auto px-4">
+      <div className="w-[95%] mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, x: -20 }}

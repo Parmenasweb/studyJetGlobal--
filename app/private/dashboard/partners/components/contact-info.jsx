@@ -38,6 +38,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import Link from "next/link";
 
 const contactFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -292,22 +293,22 @@ export function ContactInfo({ partner }) {
               )}
               <div className="flex items-center space-x-2 text-sm">
                 <Mail className="h-4 w-4" />
-                <a
+                <Link
                   href={`mailto:${contact.email}`}
                   className="text-primary hover:underline"
                 >
                   {contact.email}
-                </a>
+                </Link>
               </div>
               {contact.phone && (
                 <div className="flex items-center space-x-2 text-sm">
                   <Phone className="h-4 w-4" />
-                  <a
+                  <Link
                     href={`tel:${contact.phone}`}
                     className="text-primary hover:underline"
                   >
                     {contact.phone}
-                  </a>
+                  </Link>
                 </div>
               )}
             </CardContent>

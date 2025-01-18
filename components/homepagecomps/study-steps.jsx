@@ -9,7 +9,7 @@ import { PiAirplaneTakeoffBold } from "react-icons/pi";
 function StudySteps() {
   return (
     <main className=" p-2 mb-4 h-auto">
-      <h2 className="font-semibold mb-4 text-2xl w-[80%] mx-auto flex items-center justify-center ">
+      <h2 className="font-semibold mb-4 text-2xl w-[90%] mx-auto flex items-center justify-center ">
         Steps to : Study Abroad With studyJetGlobal
       </h2>
       <p className="font-semibold text-center text-md lg:text-lg w-[70%] my-3 mx-auto ">
@@ -21,9 +21,9 @@ function StudySteps() {
           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-yellow-600">
             <HiDocumentSearch className="text-3xl " />
           </div>
-          <div className="p-1 w-[90%] ml-2  ">
-            <h3 className="w-[80%] font-semibold text-xl">Step 1</h3>
-            <p className="w-[95%] ">
+          <div className="p-1 w-[100%] ml-2  ">
+            <h3 className="w-[100%] font-semibold text-xl">Step 1</h3>
+            <p className="w-[100%] ">
               Speak to any of our qualified consultant to pick your course and desired destination with the required documents
             </p>
           </div>
@@ -32,9 +32,9 @@ function StudySteps() {
           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-orange-600 ">
             <SlEnvolopeLetter className="text-3xl" />
           </div>
-          <div className="p-1 w-[90%] ml-2  ">
+          <div className="p-1 w-[100%] ml-2  ">
             <h3 className="w-[70%] font-semibold text-xl">Step 2</h3>
-            <p className="w-[90%] ">
+            <p className="w-[100%] ">
               Receive provisional offer letter of Admission
             </p>
           </div>
@@ -43,9 +43,9 @@ function StudySteps() {
           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-indigo-600">
             <FaCreditCard className="text-3xl  " />
           </div>
-          <div className="p-1 w-[90%] ml-2  ">
+          <div className="p-1 w-[100%] ml-2  ">
             <h3 className="w-[70%] font-semibold text-xl">Step 3</h3>
-            <p className="w-[90%] ">
+            <p className="w-[100%] ">
               Pay One-time Registration Fees & fill undertakings
             </p>
           </div>
@@ -54,27 +54,27 @@ function StudySteps() {
           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-indigo-600">
             <MdOutlineSupportAgent className="text-3xl " />
           </div>
-          <div className="p-1 w-[90%] ml-2  ">
+          <div className="p-1 w-[100%] ml-2  ">
             <h3 className="w-[70%] font-semibold text-xl">Step 4</h3>
-            <p className="w-[90%] ">Receive final acceptance/Visa letter</p>
+            <p className="w-[100%] ">Receive final acceptance/Visa letter</p>
           </div>
         </div>
         <div className="flex flex-row mr-2 items-center justify-between p-4 rounded-xl sm:w-[80%] lg:w-[25%]">
           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-orange-600 ">
             <FaCcVisa className="text-3xl" />
           </div>
-          <div className="p-1 w-[90%] ml-2  ">
+          <div className="p-1 w-[100%] ml-2  ">
             <h3 className="w-[70%] font-semibold text-xl">Step 5</h3>
-            <p className="w-[90%] ">Apply for Visa</p>
+            <p className="w-[100%] ">Apply for Visa</p>
           </div>
         </div>
         <div className="flex flex-row items-center justify-between p-4 rounded-xl sm:w-[80%] lg:w-[25%]">
           <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-yellow-600">
             <PiAirplaneTakeoffBold className="text-3xl  " />
           </div>
-          <div className="p-1 w-[90%] ml-2  ">
+              <div className="p-1 w-[100%] ml-2  ">
             <h3 className="w-[70%] font-semibold text-xl">Step 6</h3>
-            <p className="w-[90%] ">Prepare to travel</p>
+            <p className="w-[100%] ">Prepare to travel</p>
           </div>
         </div>
       </div>

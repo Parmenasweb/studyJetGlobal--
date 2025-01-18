@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import ImageView from "@/components/ImageView";
+import Link from "next/link";
 
 const publicKey = process.env.NEXT_PUBLIC_PUBLIC_KEY;
 const urlEndpoint = process.env.NEXT_PUBLIC_URL_ENDPOINT;
@@ -86,14 +87,14 @@ export default function FileUpload({ onSuccess, onError, existingUrl, onRemove, 
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <a
+            <Link
               href={existingUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 text-sm text-blue-500 hover:underline truncate"
             >
               View Document
-            </a>
+            </Link>
             <Button
               type="button"
               variant="ghost"

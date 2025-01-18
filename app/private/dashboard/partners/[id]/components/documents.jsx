@@ -51,6 +51,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
+import Link from "next/link";
 
 const documentSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -357,14 +358,14 @@ export function Documents({ partner }) {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Button variant="outline" size="icon" asChild>
-                          <a
+                          <Link
                             href={document.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             download
                           >
                             <Download className="h-4 w-4" />
-                          </a>
+                          </Link>
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>

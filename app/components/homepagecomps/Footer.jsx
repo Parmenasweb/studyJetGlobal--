@@ -18,7 +18,7 @@ const footerLinks = {
     links: [
       { label: "Destinations", href: "/destinations" },
       { label: "Programs", href: "/programs" },
-      { label: "Scholarship", href: "/scholarship" },
+      { label: "Scholarship", href: "/scholarships" },
       { label: "Application Guide", href: "/application-guide" },
     ],
   },

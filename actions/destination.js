@@ -6,7 +6,7 @@ import Destination from "@/models/Destination";
 import { serializeMongoose } from "@/lib/utils/serialize";
 import { auth } from "@/auth";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
 // Destinations
 export async function getDestinations(query = {}) {

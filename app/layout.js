@@ -1,4 +1,3 @@
-// "use client";
 import { Space_Grotesk } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
@@ -8,6 +7,7 @@ import { auth } from "@/auth";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ReactQueryClientProvider } from "@/components/ReactQueryClientProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { metadata, viewport, structuredData } from "./metadata.config";
 
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
 const jetBrainsMono = JetBrains_Mono({
@@ -15,10 +15,7 @@ const jetBrainsMono = JetBrains_Mono({
   weight: ["100", "200", "300", "400", "500", "600", "700"],
 });
 
-export const metadata = {
-  title: "StudyJet Global",
-  description: "Your trusted partner for international education",
-};
+export { metadata, viewport };
 
 export default async function RootLayout({ children }) {
   const session = await auth();
@@ -26,6 +23,33 @@ export default async function RootLayout({ children }) {
   return (
     <ReactQueryClientProvider>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          <link rel="icon" href="/images/favicon.ico" sizes="any" />
+          <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="/images/apple-touch-icon.png"
+          />
+          <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="/images/favicon-32x32.png"
+          />
+          <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            href="/images/favicon-16x16.png"
+          />
+          <link rel="manifest" href="/site.webmanifest" />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(structuredData)
+            }}
+          />
+        </head>
         <body className={spaceGrotesk.className}>
           <AuthProvider session={session}>
             <ThemeProvider

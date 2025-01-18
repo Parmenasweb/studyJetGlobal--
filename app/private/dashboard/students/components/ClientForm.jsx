@@ -225,32 +225,32 @@ export function ClientForm({ client }) {
   const isFormValid = form.formState.isValid;
   const isDirty = form.formState.isDirty;
 
-  const handleFileUpload = async (file, index) => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+  // const handleFileUpload = async (file, index) => {
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("file", file);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+  //     const response = await fetch("/api/upload", {
+  //       method: "POST",
+  //       body: formData,
+  //     });
 
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error || "Failed to upload file");
-      }
+  //     const data = await response.json();
+  //     if (!data.success) {
+  //       throw new Error(data.error || "Failed to upload file");
+  //     }
 
-      const currentDocs = form.getValues("documents");
-      currentDocs[index].fileUrl = data.url;
-      form.setValue("documents", currentDocs);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to upload file",
-        variant: "destructive",
-      });
-    }
-  };
+  //     const currentDocs = form.getValues("documents");
+  //     currentDocs[index].fileUrl = data.url;
+  //     form.setValue("documents", currentDocs);
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error",
+  //       description: error.message || "Failed to upload file",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   const handleMajorChange = (major) => {
     form.setValue("academicInfo.program.major", major);

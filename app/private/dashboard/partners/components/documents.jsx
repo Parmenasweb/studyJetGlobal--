@@ -44,6 +44,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
+import Link from "next/link";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_FILE_TYPES = [
@@ -333,14 +334,14 @@ export function Documents({ partner }) {
                 </CardTitle>
                 <div className="flex items-center space-x-2">
                   <Button variant="ghost" size="icon" asChild>
-                    <a
+                    <Link
                       href={document.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       download
                     >
                       <Download className="h-4 w-4" />
-                    </a>
+                    </Link>
                   </Button>
                   <Button
                     variant="ghost"
