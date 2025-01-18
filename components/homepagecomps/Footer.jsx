@@ -191,7 +191,7 @@ export default function Footer() {
             &copy; StudyJetGlobal {new Date().getFullYear()}. All rights reserved
           </p>
           <p className="text-sm text-gray-400">
-            made with love by{" "}
+            made by Par_me_nas{" "}
             <Link
               href="https://x.com/Par_me_nas?t=-p7HZiWOMdK627hKN0cWnw&s=08"
               className="hover:text-primary transition-colors"
@@ -199,7 +199,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              (papiichulzzz)...
+              (devPappy)...
             </Link>
           </p>
           <button
