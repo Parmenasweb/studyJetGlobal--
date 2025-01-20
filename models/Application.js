@@ -91,21 +91,17 @@ const travelHistorySchema = new mongoose.Schema({
 const englishProficiencySchema = new mongoose.Schema({
   testType: {
     type: String,
-    required: true,
     enum: ["ielts", "toefl", "pte", "duolingo", "other"],
   },
   overallScore: {
     type: Number,
-    required: true,
     min: 0,
   },
   testDate: {
     type: Date,
-    required: true,
   },
   expiryDate: {
     type: Date,
-    required: true,
   },
 });
 

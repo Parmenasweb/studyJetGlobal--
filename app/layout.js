@@ -43,6 +43,7 @@ export default async function RootLayout({ children }) {
             href="/images/favicon-16x16.png"
           />
           <link rel="manifest" href="/site.webmanifest" />
+          <meta name="apple-mobile-web-app-title" content="studyjetGlobal" />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
@@ -58,9 +59,9 @@ export default async function RootLayout({ children }) {
               enableSystem
               disableTransitionOnChange
             >
-              <div className="relative min-h-screen">
+              <div className="relative min-h-screen overflow-x-hidden">
                 <Navbar />
-                <main className="w-full mx-auto">{children}</main>
+                <main className="w-full">{children}</main>
                 <Toaster />
               </div>
             </ThemeProvider>

@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "next-auth/react";
+import { useState } from "react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -23,6 +24,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import Image from "next/image";
 
 const navLinks = {
   study: {
@@ -53,16 +55,30 @@ const navLinks = {
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
+    setIsOpen(false);
     await signOut({ callbackUrl: "/" });
   };
 
+  const handleLinkClick = () => {
+    setIsOpen(false);
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <nav className=" flex w-[95%] mx-auto h-16 items-center justify-between">
-        <Link href="/" className="font-bold text-xl">
-          StudyJet Global
+    <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="w-[100%] mx-auto flex h-16 items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/logotrans.jpeg"
+            alt="StudyJet Global Logo"
+            width={150} 
+            height={90}
+            quality={100}
+            priority
+            className="object-contain rounded-sm"
+          />
         </Link>
 
         {/* Desktop Navigation */}
@@ -125,7 +141,7 @@ export default function Navbar() {
           <ThemeToggle />
           
           {/* Mobile Navigation */}
-          <Sheet>
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild className="lg:hidden">
               <Button variant="ghost" size="icon">
                 <Menu className="h-5 w-5" />
@@ -145,6 +161,7 @@ export default function Navbar() {
                             <Link
                               key={item.href}
                               href={item.href}
+                              onClick={handleLinkClick}
                               className={cn(
                                 "text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
                                 pathname === item.href
@@ -164,6 +181,7 @@ export default function Navbar() {
                 <div className="flex flex-col gap-2">
                   <Link
                     href="/about"
+                    onClick={handleLinkClick}
                     className={cn(
                       "text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
                       pathname === "/about"
@@ -174,7 +192,8 @@ export default function Navbar() {
                     About
                   </Link>
                   <Link
-                    href="/contact"
+                    href="/contactUs"
+                    onClick={handleLinkClick}
                     className={cn(
                       "text-sm font-medium transition-colors hover:text-primary p-2 rounded-md",
                       pathname === "/contactUs"
@@ -188,20 +207,27 @@ export default function Navbar() {
 
                 <div className="flex flex-col gap-2 pt-4 border-t">
                   {session ? (
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </Button>
+                    <>
+                      <Button asChild variant="default" className="w-full justify-start">
+                        <Link href="/private/dashboard" onClick={handleLinkClick}>
+                          Dashboard
+                        </Link>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </Button>
+                    </>
                   ) : (
                     <>
                       <Button asChild variant="ghost" className="w-full justify-start">
-                        <Link href="/auth/login">Sign In</Link>
+                        <Link href="/auth/login" onClick={handleLinkClick}>Sign In</Link>
                       </Button>
                       <Button asChild className="w-full justify-start">
-                        <Link href="/onBoarding/consultationForm">Book Free Consultation</Link>
+                        <Link href="/onBoarding/consultationForm" onClick={handleLinkClick}>Book Free Consultation</Link>
                       </Button>
                     </>
                   )}
@@ -210,14 +236,20 @@ export default function Navbar() {
             </SheetContent>
           </Sheet>
 
+          {/* Desktop Buttons */}
           <div className="hidden lg:flex items-center gap-4">
             {session ? (
-              <Button 
-                variant="ghost"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
+              <>
+                <Button asChild variant="default">
+                  <Link href="/private/dashboard">Dashboard</Link>
+                </Button>
+                <Button 
+                  variant="ghost"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
             ) : (
               <>
                 <Button asChild variant="ghost">

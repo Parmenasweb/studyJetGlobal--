@@ -166,7 +166,7 @@ export default function ApplicationsPage() {
   });
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="w-full space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h2 className="text-2xl font-semibold tracking-tight">Applications</h2>
@@ -182,9 +182,7 @@ export default function ApplicationsPage() {
         </Button>
       </div>
 
-      {isLoading ? (
-        <ApplicationsTableSkeleton />
-      ) : (
+      
         <>
           <MetricsCards applications={applications} />
 
@@ -210,7 +208,7 @@ export default function ApplicationsPage() {
             </TabsContent>
           </Tabs>
         </>
-      )}
+      
     </div>
   );
 }

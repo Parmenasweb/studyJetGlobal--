@@ -38,7 +38,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarCheck, CalendarIcon, Loader2 } from "lucide-react";
 import { consultationSchema } from "@/lib/validations/consultation";
 import FormError from "../dynamicComps/form-error";
 import FormSuccess from "../dynamicComps/form-success";
@@ -54,13 +54,11 @@ export default function ConsultationForm() {
   const [showConfetti, setShowConfetti] = useState(false);
   const { theme } = useTheme();
   
-  // Update window dimensions state for confetti
   const [windowDimensions, setWindowDimensions] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 0,
     height: typeof window !== 'undefined' ? window.innerHeight : 0,
   });
 
-  // Update window dimensions on mount and resize
   useEffect(() => {
     const updateWindowDimensions = () => {
       setWindowDimensions({
@@ -69,17 +67,11 @@ export default function ConsultationForm() {
       });
     };
 
-    // Set initial dimensions
     updateWindowDimensions();
-
-    // Add event listener
     window.addEventListener("resize", updateWindowDimensions);
-
-    // Cleanup
     return () => window.removeEventListener("resize", updateWindowDimensions);
   }, []);
 
-  // Scroll to top when showing confetti
   useEffect(() => {
     if (showConfetti) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -129,7 +121,7 @@ export default function ConsultationForm() {
       const result = await res.json();
       form.reset();
       setSuccess("🎉 Your consultation request has been submitted successfully! We'll contact you shortly.");
-      setShowConfetti(true); // Trigger confetti
+      setShowConfetti(true);
     } catch (error) {
       setError(error.message || "Something went wrong. Please try again.");
     } finally {
@@ -138,7 +130,7 @@ export default function ConsultationForm() {
   }
 
   return (
-    <>
+    <main className="w-full mx-auto flex flex-col items-center justify-center">
       {showConfetti && (
         <div className="fixed inset-0 z-50 pointer-events-none">
           <ReactConfetti
@@ -150,20 +142,24 @@ export default function ConsultationForm() {
           />
         </div>
       )}
-      <Card className="w-[90%] mb-7 mx-auto bg-card shadow-lg">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <CardHeader className="space-y-4 text-center pb-6 border-b">
-              <CardTitle className="text-xl md:text-3xl flex items-center justify-center font-bold tracking-tight">
+      <Card className="w-[95%] max-w-[800px] mb-4 mx-auto bg-card shadow-lg">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-w-[800px] mx-auto">
+            <CardHeader className="space-y-2 text-center pb-4 border-b px-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <CalendarCheck className="h-8 w-8 text-primary animate-bounce text-amber-300" />
+              </div>
+              <CardTitle className="text-lg md:text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 Schedule Your Free Consultation with StudyJetGlobal
               </CardTitle>
-              <CardDescription className="text-lg text-muted-foreground">
+              <CardDescription className="text-sm md:text-base text-muted-foreground">
                 Take the first step towards your international journey
               </CardDescription>
             </CardHeader>
+            <FormSuccess message={success} />
 
-            <CardContent className="grid gap-6 p-6">
-              <div className="grid sm:grid-cols-2 gap-4">
+            <CardContent className="grid gap-4 p-4">
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="consulteeName"
@@ -171,7 +167,7 @@ export default function ConsultationForm() {
                     <FormItem>
                       <FormLabel>Full Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your full name" {...field} className="h-11" />
+                        <Input placeholder="Enter your full name" {...field} className="h-10" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -185,7 +181,7 @@ export default function ConsultationForm() {
                     <FormItem>
                       <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="you@example.com" {...field} className="h-11" />
+                        <Input type="email" placeholder="you@example.com" {...field} className="h-10" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -193,7 +189,7 @@ export default function ConsultationForm() {
                 />
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <Label className="required">Contact Number</Label>
                   <PhoneInput
@@ -205,11 +201,11 @@ export default function ConsultationForm() {
                     }}
                     containerClass="phone-input-container"
                     inputClass={cn(
-                      "!w-full !h-11 !text-base !rounded-md",
+                      "!w-full !h-10 !text-base !rounded-md",
                       theme === "dark" && "!bg-background !text-foreground"
                     )}
                     buttonClass={cn(
-                      "!h-11 !rounded-l-md",
+                      "!h-10 !rounded-l-md",
                       theme === "dark" && "!bg-background"
                     )}
                     dropdownClass={theme === "dark" ? "dark-dropdown" : ""}
@@ -222,18 +218,18 @@ export default function ConsultationForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>WhatsApp Number (Optional)</Label>
+                  <Label>WhatsApp Number (for chat and updates)</Label>
                   <PhoneInput
                     country="us"
                     value={form.watch("whatsAppNumber")}
                     onChange={(phone) => form.setValue("whatsAppNumber", phone)}
                     containerClass="phone-input-container"
                     inputClass={cn(
-                      "!w-full !h-11 !text-base !rounded-md",
+                      "!w-full !h-10 !text-base !rounded-md",
                       theme === "dark" && "!bg-background !text-foreground"
                     )}
                     buttonClass={cn(
-                      "!h-11 !rounded-l-md",
+                      "!h-10 !rounded-l-md",
                       theme === "dark" && "!bg-background"
                     )}
                     dropdownClass={theme === "dark" ? "dark-dropdown" : ""}
@@ -241,7 +237,7 @@ export default function ConsultationForm() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="selectedDate"
@@ -254,7 +250,7 @@ export default function ConsultationForm() {
                             <Button
                               variant="outline"
                               className={cn(
-                                "h-11 w-full pl-3 text-left font-normal",
+                                "h-10 w-full pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
@@ -292,19 +288,25 @@ export default function ConsultationForm() {
                       <FormLabel>Preferred Time</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-11">
+                          <SelectTrigger className="h-10">
                             <SelectValue placeholder="Select preferred time" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Array.from({ length: 24 }, (_, i) => {
-                            const hour = i.toString().padStart(2, "0");
+                          {Array.from({ length: 8 }, (_, i) => {
+                            const hour = (i + 9).toString().padStart(2, "0");
                             return (
-                              <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
-                                {`${hour}:00`}
-                              </SelectItem>
+                              <>
+                                <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
+                                  {`${hour}:00`}
+                                </SelectItem>
+                                <SelectItem key={`${hour}:30`} value={`${hour}:30`}>
+                                  {`${hour}:30`}
+                                </SelectItem>
+                              </>
                             );
                           })}
+                          
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -313,7 +315,7 @@ export default function ConsultationForm() {
                 />
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="consultationType"
@@ -322,7 +324,7 @@ export default function ConsultationForm() {
                       <FormLabel>Consultation Type</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-11">
+                          <SelectTrigger className="h-10">
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                         </FormControl>
@@ -345,13 +347,13 @@ export default function ConsultationForm() {
                       <FormLabel>Consultation Mode</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-11">
+                          <SelectTrigger className="h-10">
                             <SelectValue placeholder="Select mode" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="online">Online Meeting</SelectItem>
-                          <SelectItem value="in-person">In-Person</SelectItem>
+                          <SelectItem value="phone">Phone Call</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -365,7 +367,7 @@ export default function ConsultationForm() {
                 name="interestedCountries"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Countries of Interest</FormLabel>
+                    <FormLabel>Countries of Interest(you can select multiple)</FormLabel>
                     <Select
                       onValueChange={(value) => {
                         const currentValues = field.value || [];
@@ -375,16 +377,16 @@ export default function ConsultationForm() {
                       }}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-11">
+                        <SelectTrigger className="h-10">
                           <SelectValue placeholder="Add countries" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="USA">India</SelectItem>
+                        <SelectItem value="India">India</SelectItem>
                         <SelectItem value="USA">United States</SelectItem>
                         <SelectItem value="UK">United Kingdom</SelectItem>
                         <SelectItem value="Canada">Canada</SelectItem>
-                        <SelectItem value="Canada">France</SelectItem>
+                        <SelectItem value="France">France</SelectItem>
                         <SelectItem value="Australia">Australia</SelectItem>
                         <SelectItem value="New Zealand">New Zealand</SelectItem>
                         <SelectItem value="Germany">Germany</SelectItem>
@@ -396,7 +398,7 @@ export default function ConsultationForm() {
                         {field.value.map((country) => (
                           <div
                             key={country}
-                            className="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2"
+                            className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
                           >
                             {country}
                             <button
@@ -427,8 +429,8 @@ export default function ConsultationForm() {
                     <FormLabel>Additional Information</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Tell us about your study abroad goals and any specific questions you have..."
-                        className="min-h-[120px] resize-none"
+                        placeholder="Tell us about your study abroad goals..."
+                        className="min-h-[100px] resize-none"
                         {...field}
                       />
                     </FormControl>
@@ -438,16 +440,16 @@ export default function ConsultationForm() {
               />
             </CardContent>
 
-            <CardFooter className="flex flex-col space-y-4">
+            <CardFooter className="flex flex-col space-y-3 px-4 pb-4">
               <FormError message={error} />
               <FormSuccess message={success} />
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full sm:w-auto min-w-[200px] h-11"
+                className="w-full h-10"
               >
                 {isLoading ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Processing...</span>
                   </div>
@@ -459,6 +461,6 @@ export default function ConsultationForm() {
           </form>
         </Form>
       </Card>
-    </>
+    </main>
   );
 }

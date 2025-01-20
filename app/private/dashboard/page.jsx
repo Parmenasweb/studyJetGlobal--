@@ -17,9 +17,9 @@ import { getDashboardData } from "./actions/dashboard";
 
 // Card icons mapping
 const cardIcons = {
-  students: <Users className="h-4 w-4" />,
-  documents: <FileText className="h-4 w-4" />,
-  revenue: <DollarSign className="h-4 w-4" />,
+  students: <Users className="h-5 w-5 text-blue-500" />,
+  documents: <FileText className="h-5 w-5 text-emerald-500" />,
+  revenue: <DollarSign className="h-5 w-5 text-violet-500" />,
 };
 
 export default async function DashboardPage() {
@@ -29,10 +29,10 @@ export default async function DashboardPage() {
   const { cardData, revenueData, statistics } = await getDashboardData();
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6 ml-[6%]">
+    <div className="w-full space-y-6 p-2 pt-6 ">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight">StudyJet Global Dashboard</h2>
           <p className="text-sm text-muted-foreground">
             Your business performance overview
           </p>

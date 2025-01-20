@@ -12,6 +12,73 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileEdit, ArrowLeft, Clock, User, Mail, Phone, Globe, MapPin, School, BookOpen, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { notFound } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+const typeConfig = {
+  study: {
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+    label: "Study"
+  },
+  work: {
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    label: "Work"
+  }
+};
+
+const statusConfig = {
+  draft: {
+    color: "text-gray-500",
+    bgColor: "bg-gray-500/10",
+    label: "Draft"
+  },
+  submitted: {
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+    label: "Submitted"
+  },
+  under_review: {
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    label: "Under Review"
+  },
+  approved: {
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+    label: "Approved"
+  },
+  rejected: {
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+    label: "Rejected"
+  },
+  pending_documents: {
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+    label: "Pending Documents"
+  }
+};
+
+const priorityConfig = {
+  low: {
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    label: "Low"
+  },
+  medium: {
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+    label: "Medium"
+  },
+  high: {
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+    label: "High"
+  }
+};
+
 async function getApplication(id) {
   const res = await fetch(`/api/applications/${id}`);
   if (!res.ok) throw new Error("Failed to fetch application");
@@ -38,37 +105,16 @@ function formatDate(date) {
   return format(new Date(date), "PPP");
 }
 
-export default function ApplicationDetailsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { data: application, isLoading, error } = useQuery({
-    queryKey: ["application", params.id],
-    queryFn: () => getApplication(params.id),
-  });
+export default async function ApplicationDetailsPage({ params }) {
+  const [application, error] = await getApplication(params.id);
 
-  if (error) {
-    return (
-      <div className="flex h-[200px] w-full flex-col items-center justify-center gap-2">
-        <p className="text-sm text-muted-foreground">
-          {error.message || "Something went wrong"}
-        </p>
-        <Button variant="outline" onClick={() => router.back()}>
-          Go Back
-        </Button>
-      </div>
-    );
+  if (error || !application) {
+    notFound();
   }
 
-  if (isLoading) return <ApplicationSkeleton />;
-
-  const statusVariants = {
-    draft: "secondary",
-    submitted: "warning",
-    under_review: "secondary",
-    approved: "success",
-    rejected: "destructive",
-    pending_documents: "warning",
-  };
+  const type = application.type?.toLowerCase() || "study";
+  const status = application.status?.toLowerCase() || "draft";
+  const priority = application.priority?.toLowerCase() || "low";
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
@@ -78,7 +124,7 @@ export default function ApplicationDetailsPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.back()}
+              onClick={() => params.router.back()}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -89,7 +135,7 @@ export default function ApplicationDetailsPage() {
           </p>
         </div>
         <Button
-          onClick={() => router.push(`/private/dashboard/applications/${params.id}/edit`)}
+          onClick={() => params.router.push(`/private/dashboard/applications/${params.id}/edit`)}
         >
           <FileEdit className="mr-2 h-4 w-4" />
           Edit Application
@@ -131,31 +177,55 @@ export default function ApplicationDetailsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="p-4">
           <CardHeader>
-            <CardTitle className="text-lg font-medium">
-              Application Status
-            </CardTitle>
+            <CardTitle>Application Status</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Status</span>
-              <Badge variant={statusVariants[application.status]}>
-                {application.status?.split("_")
-                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                  .join(" ")}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <span className={cn(
+                  "flex items-center gap-2 text-sm font-medium",
+                  statusConfig[status].color
+                )}>
+                  <span className={cn(
+                    "h-2 w-2 rounded-full",
+                    statusConfig[status].bgColor
+                  )} />
+                  {statusConfig[status].label}
+                </span>
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Type</span>
-              <Badge variant="outline">
-                {application.applicationType?.charAt(0).toUpperCase() + 
-                  application.applicationType?.slice(1)}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <span className={cn(
+                  "flex items-center gap-2 text-sm font-medium",
+                  typeConfig[type].color
+                )}>
+                  <span className={cn(
+                    "h-2 w-2 rounded-full",
+                    typeConfig[type].bgColor
+                  )} />
+                  {typeConfig[type].label}
+                </span>
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Priority</span>
-              <Badge variant="outline">{application.priority}</Badge>
+              <div className="flex items-center gap-2">
+                <span className={cn(
+                  "flex items-center gap-2 text-sm font-medium",
+                  priorityConfig[priority].color
+                )}>
+                  <span className={cn(
+                    "h-2 w-2 rounded-full",
+                    priorityConfig[priority].bgColor
+                  )} />
+                  {priorityConfig[priority].label}
+                </span>
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Submitted</span>

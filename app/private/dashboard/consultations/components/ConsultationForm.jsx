@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,23 +22,60 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { createConsultation, updateConsultation } from "@/actions/consultation";
 import { consultationSchema } from "@/lib/validations/consultation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+
+const statusConfig = {
+  pending: {
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+    label: "Pending"
+  },
+  confirmed: {
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    label: "Confirmed"
+  },
+  completed: {
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+    label: "Completed"
+  },
+  cancelled: {
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+    label: "Cancelled"
+  }
+};
+
 export default function ConsultationForm({ initialData, consultationId }) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+
+ 
+
   // Format the date for the form
   const formattedInitialData = {
     ...initialData,
     selectedDate: initialData?.selectedDate 
-      ? new Date(initialData.selectedDate).toISOString().split('T')[0] 
-      : '',
+      ? new Date(initialData.selectedDate)
+      : undefined,
+    assignedTo: initialData?.assignedTo?.id || "",
   };
 
   const form = useForm({
@@ -49,34 +86,35 @@ export default function ConsultationForm({ initialData, consultationId }) {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // Convert the date string back to a Date object before sending to the server
-      const formattedData = {
-        ...data,
-        selectedDate: data.selectedDate ? new Date(data.selectedDate) : null,
-      };
-
+      // The date is already a Date object, no need to convert
       if (consultationId) {
-        const [result, error] = await updateConsultation(consultationId, formattedData);
-        if (error) throw new Error(error);
+        const [result, error] = await updateConsultation(consultationId, data);
+        if (error) {
+          throw new Error(error);
+        }
         toast({
-          title: "Success",
-          description: "Consultation updated successfully",
+          title: "Success", 
+          description: "Consultation updated successfully"
         });
+        router.refresh();
+        router.push("/private/dashboard/consultations");
       } else {
-        const [result, error] = await createConsultation(formattedData);
-        if (error) throw new Error(error);
+        const [result, error] = await createConsultation(data);
+        if (error) {
+          throw new Error(error);
+        }
         toast({
           title: "Success",
-          description: "Consultation created successfully",
+          description: "Consultation created successfully"
         });
+        router.refresh();
+        router.push("/private/dashboard/consultations");
       }
-      router.push("/private/dashboard/consultations");
-      router.refresh();
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message
       });
     } finally {
       setIsLoading(false);
@@ -162,16 +200,39 @@ export default function ConsultationForm({ initialData, consultationId }) {
               control={form.control}
               name="selectedDate"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Date</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="date" 
-                      {...field} 
-                      value={field.value || ''} 
-                    disabled={isLoading}
-                    />
-                  </FormControl>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date < new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -197,23 +258,23 @@ export default function ConsultationForm({ initialData, consultationId }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Consultation Type</FormLabel>
-              <Select
-                disabled={isLoading}
+                  <Select
+                    disabled={isLoading}
                     onValueChange={field.onChange}
                     value={field.value}
                     defaultValue={field.value}
-              >
+                  >
                     <FormControl>
-                <SelectTrigger>
+                      <SelectTrigger>
                         <SelectValue placeholder="Select consultation type" />
-                </SelectTrigger>
+                      </SelectTrigger>
                     </FormControl>
-                <SelectContent>
-                  <SelectItem value="study">Study</SelectItem>
-                  <SelectItem value="work">Work</SelectItem>
+                    <SelectContent>
+                      <SelectItem value="study">Study</SelectItem>
+                      <SelectItem value="work">Work</SelectItem>
                       <SelectItem value="other">other</SelectItem>
-                </SelectContent>
-              </Select>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -225,22 +286,22 @@ export default function ConsultationForm({ initialData, consultationId }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Preferred Mode</FormLabel>
-              <Select
-                disabled={isLoading}
+                  <Select
+                    disabled={isLoading}
                     onValueChange={field.onChange}
                     value={field.value}
                     defaultValue={field.value}
-              >
+                  >
                     <FormControl>
-                <SelectTrigger>
+                      <SelectTrigger>
                         <SelectValue placeholder="Select preferred mode" />
-                </SelectTrigger>
+                      </SelectTrigger>
                     </FormControl>
-                <SelectContent>
-                  <SelectItem value="online">Online</SelectItem>
+                    <SelectContent>
+                      <SelectItem value="online">Online</SelectItem>
                       <SelectItem value="phone">Phone</SelectItem>
-                </SelectContent>
-              </Select>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -252,28 +313,53 @@ export default function ConsultationForm({ initialData, consultationId }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-              <Select
-                disabled={isLoading}
+                  <Select
+                    disabled={isLoading}
                     onValueChange={field.onChange}
                     value={field.value}
                     defaultValue={field.value}
-              >
+                  >
                     <FormControl>
-                <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                </SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status">
+                          {field.value && (
+                            <span className={`${statusConfig[field.value].color} font-medium`}>
+                              {statusConfig[field.value].label}
+                            </span>
+                          )}
+                        </SelectValue>
+                      </SelectTrigger>
                     </FormControl>
-                <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
+                    <SelectContent>
+                      {Object.entries(statusConfig).map(([value, config]) => (
+                        <SelectItem 
+                          key={value} 
+                          value={value}
+                          className={cn(
+                            "font-medium",
+                            config.color
+                          )}
+                        >
+                          <span className={cn(
+                            "flex items-center gap-2 w-full",
+                            config.color
+                          )}>
+                            <span className={cn(
+                              "h-2 w-2 rounded-full",
+                              config.bgColor
+                            )} />
+                            {config.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+          
 
             <FormField
               control={form.control}
@@ -307,7 +393,7 @@ export default function ConsultationForm({ initialData, consultationId }) {
               )}
             </Button>
           </div>
-    </form>
+        </form>
       </Form>
     </div>
   );

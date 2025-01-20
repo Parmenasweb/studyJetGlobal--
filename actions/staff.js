@@ -11,7 +11,13 @@ export async function getStaffMembers() {
       "firstName lastName email role"
     ).sort({ firstName: 1, lastName: 1 });
 
-    return [staffMembers, null];
+    const serializedStaff = staffMembers.map(member => ({ 
+      id: member._id.toString(),
+      firstName: member.firstName,
+      lastName: member.lastName
+    }));
+
+    return [serializedStaff, null];
   } catch (error) {
     console.error("Error fetching staff members:", error);
     return [null, "Failed to fetch staff members"];

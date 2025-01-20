@@ -88,9 +88,9 @@ const ScholarshipCalculator = dynamic(() => import("@/components/homepagecomps/S
 export default function Home() {
   return (
     <>
-      <ScrollProgress />
       
-      <div className="w-[100%] mx-auto flex-col gap-12 sm:gap-16 md:gap-20 lg:gap-24"> 
+      <ScrollProgress />
+      <div className="flex flex-col gap-12 sm:gap-16 md:gap-20 lg:gap-24"> 
         <HeroSection />
         
         <Suspense fallback={<div className="animate-pulse h-96 bg-muted" />}>

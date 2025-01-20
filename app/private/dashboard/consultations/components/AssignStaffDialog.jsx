@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,43 +17,88 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { assignStaffToConsultation } from "@/actions/consultation";
+import { getStaffMembers } from "@/actions/staff";
 import { useRouter } from "next/navigation";
 
-export default function AssignStaffDialog({
-  open,
-  onOpenChange,
-  consultation,
-  staffMembers,
-}) {
-  const [selectedStaff, setSelectedStaff] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+export default function AssignStaffDialog({ open, onOpenChange, consultation }) {
   const { toast } = useToast();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedStaffId, setSelectedStaffId] = useState("");
+  const [staffMembers, setStaffMembers] = useState([]);
+
+  // Fetch staff members when dialog opens
+  useEffect(() => {
+    async function loadStaffMembers() {
+      if (open) {
+        try {
+          const [staff, error] = await getStaffMembers();
+          if (error) {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Failed to load staff members. Please try again.",
+            });
+          } else if (staff) {
+            setStaffMembers(staff); // Staff is already serialized from the server
+            // If consultation is already assigned, select that staff member
+            if (consultation.assignedTo) {
+              setSelectedStaffId(consultation.assignedTo.id);
+            }
+          }
+        } catch (error) {
+          console.error("Error loading staff members:", error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "An unexpected error occurred while loading staff members.",
+          });
+        }
+      }
+    }
+    loadStaffMembers();
+  }, [open, consultation.assignedTo, toast]);
 
   const handleAssign = async () => {
-    if (!selectedStaff) return;
-
-    setIsLoading(true);
-    const [result, error] = await assignStaffToConsultation(
-      consultation.id,
-      selectedStaff
-    );
-
-    if (error) {
+    if (!selectedStaffId) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error,
+        description: "Please select a staff member to assign.",
       });
-    } else {
-      toast({
-        title: "Success",
-        description: "Staff assigned successfully",
-      });
-      router.refresh();
-      onOpenChange(false);
+      return;
     }
-    setIsLoading(false);
+
+    setIsLoading(true);
+    try {
+      const [success, error] = await assignStaffToConsultation(
+        consultation.id,
+        selectedStaffId
+      );
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Staff member assigned successfully.",
+        });
+        onOpenChange(false);
+        router.refresh();
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred while assigning staff member.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,19 +107,27 @@ export default function AssignStaffDialog({
         <DialogHeader>
           <DialogTitle>Assign Staff Member</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <Select onValueChange={setSelectedStaff} value={selectedStaff}>
+        <div className="space-y-4 py-4">
+          <Select
+            disabled={isLoading}
+            value={selectedStaffId}
+            onValueChange={setSelectedStaffId}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select staff member" />
             </SelectTrigger>
             <SelectContent>
               {staffMembers.map((staff) => (
-                <SelectItem key={staff._id} value={staff._id}>
-                  {`${staff.firstName} ${staff.lastName}`}
+                <SelectItem 
+                  key={staff.id} 
+                  value={staff.id}
+                >
+                  {staff.firstName} {staff.lastName}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
           <div className="flex justify-end space-x-2">
             <Button
               variant="outline"
@@ -83,7 +136,7 @@ export default function AssignStaffDialog({
             >
               Cancel
             </Button>
-            <Button onClick={handleAssign} disabled={!selectedStaff || isLoading}>
+            <Button onClick={handleAssign} disabled={isLoading}>
               {isLoading ? "Assigning..." : "Assign"}
             </Button>
           </div>

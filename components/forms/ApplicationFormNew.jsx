@@ -320,7 +320,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
         throw new Error(data.error || "Something went wrong");
       }
 
-      setSuccess(isEditing ? "Application updated successfully!" : "Application submitted successfully!");
+      setSuccess(isEditing ? "Application updated successfully!" : "Application submitted successfully!... our counsellor will contact you shortly.");
       setShowConfetti(true);
       
       if (!isEditing) {
@@ -347,38 +347,38 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
           />
         </div>
       )}
-    <Card className="sm:w-[90%] lg:w-[70%] bg-primary-foreground p-6 mx-auto">
+    <Card className="w-full md:max-w-[70%] mx-auto bg-primary-foreground p-4 md:p-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-[full] mx-auto">
           <CardHeader className="text-center p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-lg">
-            <CardTitle className="text-2xl font-bold tracking-tight">
-              Study & Work Abroad Application
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <GraduationCap className="h-12 w-12 text-amber-500 animate-bounce" />
+            </div>
+            <CardTitle className="text-xl md:text-2xl font-bold tracking-tight bg-clip-text">
+              Study & Work Abroad Application with StudyJetGlobal.
             </CardTitle>
-            <CardDescription className="text-lg mt-2">
+            <CardDescription className="text-base md:text-lg mt-2">
               Take the first step towards your international journey with
               StudyJetGlobal
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-8">
+          <CardContent className="space-y-6 w-[full] mx-auto">
+            <FormSuccess message={success} />
             {/* Application Type Selection */}
-            <div className="bg-card rounded-lg p-6 shadow-sm">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
+            <div className="bg-card rounded-lg p-4 md:p-6 shadow-sm">
+              <h3 className="text-lg md:text-xl font-semibold mb-4 flex items-center">
                 Choose Your Path
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <Button
                   type="button"
-                  variant={
-                    form.watch("applicationType") === "study"
-                      ? "default"
-                      : "outline"
-                  }
-                  className="h-24 relative"
+                  variant={form.watch("applicationType") === "study" ? "default" : "outline"}
+                  className="h-20 relative w-full"
                   onClick={() => form.setValue("applicationType", "study")}
                 >
                   <div className="flex flex-col items-center">
-                    <BookOpen className="h-8 w-8 mb-2" />
+                    <BookOpen className="h-6 w-6 mb-2" />
                     <div className="text-center">
                       <div className="font-semibold">Study Abroad</div>
                       <div className="text-sm opacity-90">
@@ -389,16 +389,12 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                 </Button>
                 <Button
                   type="button"
-                  variant={
-                    form.watch("applicationType") === "work"
-                      ? "default"
-                      : "outline"
-                  }
-                  className="h-24 relative"
+                  variant={form.watch("applicationType") === "work" ? "default" : "outline"}
+                  className="h-20 relative w-full"
                   onClick={() => form.setValue("applicationType", "work")}
                 >
                   <div className="flex flex-col items-center">
-                    <Briefcase className="h-8 w-8 mb-2" />
+                    <Briefcase className="h-6 w-6 mb-2" />
                     <div className="text-center">
                       <div className="font-semibold">Work Abroad</div>
                       <div className="text-sm opacity-90">
@@ -411,15 +407,16 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
             </div>
 
             {/* Personal Information Section */}
-            <div className="bg-card rounded-lg p-6 shadow-sm">
+            <div className="w-[full] mx-auto bg-card rounded-lg p-6 shadow-sm">
               <h3 className="text-xl font-semibold mb-4 flex items-center">
                 <User className="mr-2 h-5 w-5" />
                 Personal Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-[full] mx-auto">
                 <FormField
                   control={form.control}
                   name="personalInfo.fullName"
+                  
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="required">Full Name</FormLabel>
@@ -735,7 +732,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
               </div>
 
               {/* Languages Section */}
-              <div className="mt-6 space-y-4">
+              <div className="mt-6 space-y-4 w-[full] mx-auto">
                 <div className="flex items-center justify-between">
                   <FormLabel className="text-base required">
                     Languages
@@ -757,7 +754,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                     Add Language
                   </Button>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4 w-[full] mx-auto  ">
                   {form.watch("personalInfo.languages")?.map((_, index) => (
                     <div key={index} className="flex gap-4 items-start">
                       <FormField
@@ -827,13 +824,13 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
 
             {/* Study Details Section */}
             {form.watch("applicationType") === "study" && (
-              <div className="bg-card rounded-lg p-6 shadow-sm">
+              <div className="bg-card rounded-lg p-6 shadow-sm w-[full] mx-auto">
                 <h3 className="text-xl font-semibold mb-4 flex items-center">
                   <GraduationCap className="mr-2 h-5 w-5" />
                   Study Details
                 </h3>
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-[full] mx-auto">
                     <FormField
                       control={form.control}
                       name="studyDetails.destinationCountry"
@@ -1184,8 +1181,8 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
 
                   {/* English Proficiency */}
                   <div className="space-y-4">
-                    <FormLabel className="text-base required">
-                      English Proficiency
+                    <FormLabel className="text-base ">
+                      English Proficiency (Optional)
                     </FormLabel>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
@@ -1193,7 +1190,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                         name="studyDetails.englishProficiency.testType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="required">
+                            <FormLabel className="">
                               Test Type
                             </FormLabel>
                             <Select
@@ -1225,13 +1222,13 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                         name="studyDetails.englishProficiency.overallScore"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="required">
+                            <FormLabel className="">
                               Overall Score
                             </FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
-                                step="0.5"
+                                
                                 placeholder="Enter score"
                                 {...field}
                                 onChange={(e) =>
@@ -1249,7 +1246,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                         name="studyDetails.englishProficiency.testDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="required">
+                            <FormLabel className="">
                               Test Date
                             </FormLabel>
                             <Popover>
@@ -1302,7 +1299,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="required">
-                            Study Goals
+                            Study Goals (required)
                           </FormLabel>
                           <FormControl>
                             <Textarea
@@ -1348,13 +1345,13 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
 
             {/* Work Details Section */}
             {form.watch("applicationType") === "work" && (
-              <div className="bg-card rounded-lg p-6 shadow-sm">
+              <div className="bg-card rounded-lg p-6 shadow-sm w-[full] mx-auto">
                 <h3 className="text-xl font-semibold mb-4 flex items-center">
                   <Briefcase className="mr-2 h-5 w-5" />
                   Work Details
                 </h3>
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-[full] mx-auto">
                     <FormField
                       control={form.control}
                       name="workDetails.destinationCountry"
@@ -1479,7 +1476,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                   </div>
 
                   {/* Work Experience */}
-                  <div className="space-y-4">
+                  <div className="space-y-4 w-[full] mx-auto">
                     <div className="flex items-center justify-between">
                       <FormLabel className="text-base required">
                         Work Experience
@@ -1625,7 +1622,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                   </div>
 
                   {/* Career Goals */}
-                  <div className="space-y-4">
+                  <div className="space-y-4 w-[full] mx-auto">
                     <FormField
                       control={form.control}
                       name="workDetails.careerGoals"
@@ -1652,7 +1649,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                   </div>
 
                   {/* Skills */}
-                  <div className="space-y-4">
+                  <div className="space-y-4 w-[full] mx-auto">
                     <FormField
                       control={form.control}
                       name="workDetails.skills"
@@ -1694,13 +1691,13 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
             )}
 
             {/* Financial Information Section */}
-            <div className="bg-card rounded-lg p-6 shadow-sm">
+            <div className="bg-card rounded-lg p-6 shadow-sm w-[full] mx-auto">
               <h3 className="text-xl font-semibold mb-4 flex items-center">
                 <Wallet className="mr-2 h-5 w-5" />
-                Financial Information
+                Financial Information (required)
               </h3>
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-[full] mx-auto">
                   <FormField
                     control={form.control}
                     name="financialInfo.fundingSource"
@@ -1885,12 +1882,12 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
             </div>
 
             {/* Additional Information Section */}
-            <div className="bg-card rounded-lg p-6 shadow-sm">
+            <div className="bg-card rounded-lg p-6 shadow-sm w-[full] mx-auto">
               <h3 className="text-xl font-semibold mb-4 flex items-center">
                 <Info className="mr-2 h-5 w-5" />
                 Additional Information
               </h3>
-              <div className="space-y-6">
+              <div className="space-y-6 w-[full] mx-auto">
                 <FormField
                   control={form.control}
                   name="additionalInfo.previousVisaRejections"
@@ -2131,7 +2128,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
             </div>
 
             {/* Terms and Conditions */}
-            <div className="mt-8">
+            <div className="mt-8 w-[full] mx-auto">
               <FormField
                 control={form.control}
                 name="acceptedTerms"
@@ -2173,7 +2170,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
             )}
 
             {/* Debug Information */}
-            <div className="mt-4">
+            <div className="mt-4 w-[full] mx-auto">
               <p className="text-sm text-muted-foreground">
                 Form Status: {form.formState.isValid ? "Valid" : "Invalid"}
               </p>
@@ -2186,7 +2183,7 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
 
             <Button
               type="submit"
-              className="w-full h-12 text-lg mt-6"
+              className="w-full h-12 text-base md:text-lg mt-6"
               disabled={isLoading || !form.formState.isValid}
             >
               {isLoading ? (
@@ -2198,7 +2195,6 @@ export default function ApplicationForm({ isEditing = false, initialData = null 
                 "Submit Application"
               )}
             </Button>
-
           </CardContent>
         </form>
       </Form>

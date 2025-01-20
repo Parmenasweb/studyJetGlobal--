@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,21 +33,7 @@ import {
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-const statusVariants = {
-  draft: "secondary",
-  submitted: "warning",
-  under_review: "secondary",
-  approved: "success",
-  rejected: "destructive",
-  pending_documents: "warning",
-};
-
-const priorityVariants = {
-  low: "secondary",
-  medium: "warning",
-  high: "destructive",
-};
+import { typeConfig, statusConfig, priorityConfig } from "../config/colors";
 
 function formatValue(value) {
   if (!value) return "N/A";
@@ -166,25 +152,6 @@ const CellActions = ({ row }) => {
 
 export const columns = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
     accessorKey: "studentName",
     header: ({ column }) => {
       return (
@@ -206,11 +173,21 @@ export const columns = [
     accessorKey: "type",
     header: "Type",
     cell: ({ row }) => {
-      const type = row.getValue("type");
+      const type = row.getValue("type")?.toLowerCase();
+      const config = typeConfig[type] || typeConfig.study;
       return (
-        <Badge variant="outline">
-          {formatValue(type)}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <span className={cn(
+            "flex items-center gap-2 text-sm font-medium",
+            config.color
+          )}>
+            <span className={cn(
+              "h-2 w-2 rounded-full",
+              config.bgColor
+            )} />
+            {config.label}
+          </span>
+        </div>
       );
     },
   },
@@ -226,14 +203,21 @@ export const columns = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const status = row.getValue("status");
+      const status = row.getValue("status")?.toLowerCase();
+      const config = statusConfig[status] || statusConfig.draft;
       return (
-        <Badge variant={statusVariants[status] || "secondary"}>
-          {status ? status
-            .split("_")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ") : "N/A"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <span className={cn(
+            "flex items-center gap-2 text-sm font-medium",
+            config.color
+          )}>
+            <span className={cn(
+              "h-2 w-2 rounded-full",
+              config.bgColor
+            )} />
+            {config.label}
+          </span>
+        </div>
       );
     },
   },
@@ -241,11 +225,21 @@ export const columns = [
     accessorKey: "priority",
     header: "Priority",
     cell: ({ row }) => {
-      const priority = row.getValue("priority");
+      const priority = row.getValue("priority")?.toLowerCase();
+      const config = priorityConfig[priority] || priorityConfig.low;
       return (
-        <Badge variant={priorityVariants[priority] || "secondary"}>
-          {formatValue(priority)}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <span className={cn(
+            "flex items-center gap-2 text-sm font-medium",
+            config.color
+          )}>
+            <span className={cn(
+              "h-2 w-2 rounded-full",
+              config.bgColor
+            )} />
+            {config.label}
+          </span>
+        </div>
       );
     },
   },

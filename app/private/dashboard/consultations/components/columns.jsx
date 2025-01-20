@@ -25,18 +25,73 @@ import { useState } from "react";
 import AssignStaffDialog from "./AssignStaffDialog";
 import DeleteConsultationDialog from "./DeleteConsultationDialog";
 
-const statusVariants = {
-  pending: "warning",
-  confirmed: "secondary",
-  completed: "success",
-  cancelled: "destructive",
+const statusConfig = {
+  pending: {
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+    borderColor: "border-yellow-500/20",
+    label: "Pending"
+  },
+  confirmed: {
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/20",
+    label: "Confirmed"
+  },
+  completed: {
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+    borderColor: "border-green-500/20",
+    label: "Completed"
+  },
+  cancelled: {
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+    borderColor: "border-red-500/20",
+    label: "Cancelled"
+  }
+};
+
+const consultationTypeConfig = {
+  study: {
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/20",
+    label: "Study"
+  },
+  work: {
+    color: "text-indigo-500",
+    bgColor: "bg-indigo-500/10",
+    borderColor: "border-indigo-500/20",
+    label: "Work"
+  },
+  other: {
+    color: "text-gray-500",
+    bgColor: "bg-gray-500/10",
+    borderColor: "border-gray-500/20",
+    label: "Other"
+  }
+};
+
+const preferredModeConfig = {
+  online: {
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/20",
+    label: "Online"
+  },
+  phone: {
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+    borderColor: "border-orange-500/20",
+    label: "Phone"
+  }
 };
 
 // Separate component for the actions cell
 const ConsultationActions = ({ row }) => {
-  const consultation = row.original;
-  const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
 
   return (
     <>
@@ -49,59 +104,43 @@ const ConsultationActions = ({ row }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem asChild>
-            <Link href={`/private/dashboard/consultations/${consultation.id}`}>
+          <Link href={`/private/dashboard/consultations/${row.original.id}`}>
+            <DropdownMenuItem>
               <Eye className="mr-2 h-4 w-4" />
               View Details
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              href={`/private/dashboard/consultations/${consultation.id}/edit`}
-            >
+            </DropdownMenuItem>
+          </Link>
+          <Link href={`/private/dashboard/consultations/${row.original.id}/edit`}>
+            <DropdownMenuItem>
               <FileEdit className="mr-2 h-4 w-4" />
-              Edit Consultation
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
+              Edit
+            </DropdownMenuItem>
+          </Link>
           <DropdownMenuItem onClick={() => setShowAssignDialog(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Assign Staff
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              href={`/private/dashboard/consultations/${consultation.id}/notes`}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              View Notes
-            </Link>
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setShowDeleteDialog(true)}
-            className="text-destructive"
+            className="text-destructive focus:text-destructive"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete Consultation
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AssignStaffDialog
-        open={showAssignDialog}
-        onOpenChange={setShowAssignDialog}
-        consultation={consultation}
-        staffMembers={[
-          // TODO: Replace with actual staff members from API
-          { _id: "1", firstName: "John", lastName: "Doe" },
-          { _id: "2", firstName: "Jane", lastName: "Smith" },
-        ]}
-      />
-
       <DeleteConsultationDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        consultation={consultation}
+        consultation={row.original}
+      />
+
+      <AssignStaffDialog
+        open={showAssignDialog}
+        onOpenChange={setShowAssignDialog}
+        consultation={row.original}
       />
     </>
   );
@@ -131,9 +170,16 @@ export const columns = [
     header: "Type",
     cell: ({ row }) => {
       const type = row.getValue("consultationType");
+      const config = consultationTypeConfig[type];
       return (
-        <Badge variant="outline">
-          {type.charAt(0).toUpperCase() + type.slice(1)}
+        <Badge 
+          className={`${config.bgColor} ${config.color} border ${config.borderColor}`}
+          variant="outline"
+        >
+          <span className="flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${config.bgColor}`} />
+            {config.label}
+          </span>
         </Badge>
       );
     },
@@ -143,9 +189,16 @@ export const columns = [
     header: "Mode",
     cell: ({ row }) => {
       const mode = row.getValue("preferredMode");
+      const config = preferredModeConfig[mode];
       return (
-        <Badge variant="secondary">
-          {mode === "online" ? "Online" : "In-Person"}
+        <Badge 
+          className={`${config.bgColor} ${config.color} border ${config.borderColor}`}
+          variant="outline"
+        >
+          <span className="flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${config.bgColor}`} />
+            {config.label}
+          </span>
         </Badge>
       );
     },
@@ -163,7 +216,9 @@ export const columns = [
         </Button>
       );
     },
-    cell: ({ row }) => format(new Date(row.getValue("selectedDate")), "PPP"),
+    cell: ({ row }) => {
+      return format(new Date(row.getValue("selectedDate")), "PPP");
+    },
   },
   {
     accessorKey: "selectedTime",
@@ -186,9 +241,16 @@ export const columns = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status");
+      const config = statusConfig[status];
       return (
-        <Badge variant={statusVariants[status]}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+        <Badge 
+          className={`${config.bgColor} ${config.color} border ${config.borderColor}`}
+          variant="outline"
+        >
+          <span className="flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${config.bgColor}`} />
+            {config.label}
+          </span>
         </Badge>
       );
     },

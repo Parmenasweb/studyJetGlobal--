@@ -19,7 +19,7 @@ const footerLinks = {
     { name: "About Us", href: "/about" },
     { name: "Our Team", href: "#" },
     { name: "Careers", href: "#" },
-    { name: "Contact Us", href: "/contact" },
+    { name: "Contact Us", href: "/contactUs" },
   ],
   resources: [
     { name: "Blog", href: "/blog" },
@@ -29,18 +29,18 @@ const footerLinks = {
   ],
   connect: [
     { name: "Instagram", href: "https://www.instagram.com/studyjetglobal_official?igsh=MWpuOGh3cG5tZzI2NA==" },
-    { name: "Facebook", href: "https://www.facebook.com/profile.php?id=61562265136097" },
+    { name: "Facebook", href: "https://www.facebook.com/profile.php?id=61572227369508" },
     { name: "Twitter", href: "https://x.com/StudyJetGlobal_?t=Gi5aGQkERmKqKKleahTDew&s=08" },
   ],
   legal: [
     { name: "Privacy Policy", href: "/privacyPolicy" },
-    { name: "Terms of Service", href: "/termsOfService" },
+    { name: "Terms of Service", href: "/terms" },
     { name: "Cookie Policy", href: "/cookie" },
   ],
 };
 
 const contactInfo = [
-  { icon: Mail, value: "info@studyjetglobal.com", label: "Email" },
+  { icon: Mail, value: "info.studyjetglobal@gmail.com", label: "Email" },
   { icon: Phone, value: "+91 6003145149", label: "Phone" },
   { icon: MapPin, value: "New Delhi, (guwahati) India", label: "Address" },
 ];

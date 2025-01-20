@@ -7,12 +7,60 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ConsultationNotes from "../components/ConsultationNotes";
+import { cn } from "@/lib/utils";
 
-const statusVariants = {
-  pending: "warning",
-  confirmed: "secondary",
-  completed: "success",
-  cancelled: "destructive",
+const statusConfig = {
+  pending: {
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+    label: "Pending"
+  },
+  confirmed: {
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    label: "Confirmed"
+  },
+  completed: {
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+    label: "Completed"
+  },
+  cancelled: {
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+    label: "Cancelled"
+  }
+};
+
+const consultationTypeConfig = {
+  study: {
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+    label: "Study"
+  },
+  work: {
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    label: "Work"
+  },
+  other: {
+    color: "text-gray-500",
+    bgColor: "bg-gray-500/10",
+    label: "Other"
+  }
+};
+
+const preferredModeConfig = {
+  online: {
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
+    label: "Online"
+  },
+  phone: {
+    color: "text-indigo-500",
+    bgColor: "bg-indigo-500/10",
+    label: "Phone"
+  }
 };
 
 export default async function ConsultationDetailsPage({ params }) {
@@ -21,6 +69,10 @@ export default async function ConsultationDetailsPage({ params }) {
   if (error || !consultation) {
     notFound();
   }
+
+  const type = consultation.consultationType?.toLowerCase() || "other";
+  const mode = consultation.preferredMode?.toLowerCase() || "online";
+  const status = consultation.status?.toLowerCase() || "pending";
 
   return (
     <div className="flex-1 h-full space-y-4 p-4 md:p-8 pt-6">
@@ -89,11 +141,33 @@ export default async function ConsultationDetailsPage({ params }) {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Type</p>
-                <p className="capitalize">{consultation.consultationType}</p>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "flex items-center gap-2 text-sm font-medium",
+                    consultationTypeConfig[type].color
+                  )}>
+                    <span className={cn(
+                      "h-2 w-2 rounded-full",
+                      consultationTypeConfig[type].bgColor
+                    )} />
+                    {consultationTypeConfig[type].label}
+                  </span>
+                </div>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Mode</p>
-                <p className="capitalize">{consultation.preferredMode}</p>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "flex items-center gap-2 text-sm font-medium",
+                    preferredModeConfig[mode].color
+                  )}>
+                    <span className={cn(
+                      "h-2 w-2 rounded-full",
+                      preferredModeConfig[mode].bgColor
+                    )} />
+                    {preferredModeConfig[mode].label}
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -136,9 +210,18 @@ export default async function ConsultationDetailsPage({ params }) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Status</p>
-                <Badge variant={statusVariants[consultation.status]}>
-                  {consultation.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "flex items-center gap-2 text-sm font-medium",
+                    statusConfig[status].color
+                  )}>
+                    <span className={cn(
+                      "h-2 w-2 rounded-full",
+                      statusConfig[status].bgColor
+                    )} />
+                    {statusConfig[status].label}
+                  </span>
+                </div>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Created At</p>
