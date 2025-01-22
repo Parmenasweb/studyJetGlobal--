@@ -1,94 +1,65 @@
 import mongoose from "mongoose";
 
-const programSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-    level: {
-      type: String,
-      required: true,
-    },
+const programSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    field: { type: String, required: true },
+    level: { type: String, required: true },
     duration: {
-      type: String,
-      required: true,
+      value: { type: Number, required: true, min: 1 },
+      unit: { 
+        type: String, 
+        required: true,
+        enum: ["years", "months", "semesters"]
+      }
     },
     tuitionFee: {
-      type: String,
-      required: true,
+      amount: { type: Number, required: true, min: 0 },
+      currency: { type: String, required: true },
+      period: { 
+        type: String, 
+        required: true,
+        enum: ["per_year", "per_semester", "total"]
+      }
     },
-    description: {
-      type: String,
-      required: true,
-    },
-    intakes: {
-      type: [String],
-      default: [],
-    },
+    description: String,
+    intakes: [String],
     requirements: {
-      type: [String],
-      default: [],
+      type: [{
+        type: String,
+        required: true,
+        trim: true
+      }],
+      validate: {
+        validator: function(requirements) {
+          return requirements.length > 0;
+        },
+        message: 'At least one requirement must be specified'
+      },
+      default: []
+    },
+    language: {
+      name: { type: String, required: true },
+      level: { 
+        type: String, 
+        required: true,
+        enum: ["A1", "A2", "B1", "B2", "C1", "C2"]
+      }
     },
     status: {
       type: String,
       enum: ["active", "inactive"],
-      default: "active",
+      default: "active"
     },
-    language: {
-      type: String,
-      required: true,
-    },
-    credits: {
-      type: String,
-      required: true,
-    },
-    campus: {
-      type: String,
-      required: true,
-    },
-    faculty: {
-      type: String,
-      required: true,
-    },
-    department: {
-      type: String,
-      required: true,
-    },
-    specializations: {
-      type: [String],
-      default: [],
-    },
-    careerOpportunities: {
-      type: [String],
-      default: [],
-    },
-    researchAreas: {
-      type: [String],
-      default: [],
-    },
-    applicationDeadlines: {
-      fall: {
-        type: Date,
-      },
-      spring: {
-        type: Date,
-      },
-      summer: {
-        type: Date,
-      },
-    },
-    university: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "University",
-      required: true,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
+    createdBy: { type: String, required: true },
+    updatedBy: { type: String },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+  }, {
+    timestamps: true // This will automatically manage createdAt and updatedAt
+  });
 
-const Program = mongoose.models.Program || mongoose.model("Program", programSchema);
+  const Program =
+  mongoose.models?.Program ||
+  mongoose.model("Program", programSchema);
 
-export default Program; 
+export default Program;

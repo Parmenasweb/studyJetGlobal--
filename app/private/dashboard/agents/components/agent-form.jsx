@@ -28,12 +28,15 @@ import {
 
 import FileUpload from "@/components/fileUpload";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  phone: z.string().min(1, "Phone number is required"),
-  country: z.string().min(1, "Country is required"),
+  phone: z.string().min(10, "Phone number must be at least 10 characters"),
+  country: z.string().min(2, "Country must be at least 2 characters"),
   address: z.string().optional(),
   company: z.string().optional(),
   status: z.enum(["active", "inactive", "suspended"]),
@@ -60,382 +63,353 @@ const formSchema = z.object({
   notes: z.string().optional(),
 });
 
-export function AgentForm({ agent, onSubmit }) {
+export function AgentForm({ initialData, onSubmit, isLoading }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingForm, setIsLoadingForm] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: agent?.name || "",
-      email: agent?.email || "",
-      phone: agent?.phone || "",
-      country: agent?.country || "",
-      address: agent?.address || "",
-      company: agent?.company || "",
-      status: agent?.status || "active",
+      name: initialData?.name || "",
+      email: initialData?.email || "",
+      phone: initialData?.phone || "",
+      country: initialData?.country || "",
+      address: initialData?.address || "",
+      company: initialData?.company || "",
+      status: initialData?.status || "active",
       baseCommission: {
-        type: agent?.baseCommission?.type || "percentage",
-        value: agent?.baseCommission?.value || 0,
-        currency: agent?.baseCommission?.currency || "USD",
+        type: initialData?.baseCommission?.type || "percentage",
+        value: initialData?.baseCommission?.value || 0,
+        currency: initialData?.baseCommission?.currency || "USD",
       },
       bankDetails: {
-        bankName: agent?.bankDetails?.bankName || "",
-        accountNumber: agent?.bankDetails?.accountNumber || "",
-        accountName: agent?.bankDetails?.accountName || "",
-        swiftCode: agent?.bankDetails?.swiftCode || "",
-        iban: agent?.bankDetails?.iban || "",
+        bankName: initialData?.bankDetails?.bankName || "",
+        accountNumber: initialData?.bankDetails?.accountNumber || "",
+        accountName: initialData?.bankDetails?.accountName || "",
+        swiftCode: initialData?.bankDetails?.swiftCode || "",
+        iban: initialData?.bankDetails?.iban || "",
       },
-      documents: agent?.documents || [],
-      notes: agent?.notes || "",
+      documents: initialData?.documents || [],
+      notes: initialData?.notes || "",
     },
   });
 
+  const commissionType = form.watch("baseCommission.type");
+
   const handleSubmit = async (data) => {
     try {
-      setIsLoading(true);
+      setIsLoadingForm(true);
       await onSubmit(data);
-      toast.success(agent ? "Agent updated successfully" : "Agent created successfully");
+      toast.success(initialData ? "Agent updated successfully" : "Agent created successfully");
       router.refresh();
       router.push("/private/dashboard/agents");
     } catch (error) {
       toast.error(error.message || "Something went wrong");
     } finally {
-      setIsLoading(false);
+      setIsLoadingForm(false);
     }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Agent name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="agent@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <Input placeholder="+1234567890" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Country</FormLabel>
-                <FormControl>
-                  <Input placeholder="Country" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Full address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="company"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Company</FormLabel>
-                <FormControl>
-                  <Input placeholder="Company name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <Separator />
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Commission Details</h3>
-          <div className="grid gap-4 md:grid-cols-3">
-            <FormField
-              control={form.control}
-              name="baseCommission.type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Commission Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="percentage">Percentage</SelectItem>
-                      <SelectItem value="fixed">Fixed Amount</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="baseCommission.value"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Value</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      step={form.watch("baseCommission.type") === "percentage" ? "0.01" : "1"}
-                      placeholder={form.watch("baseCommission.type") === "percentage" ? "10" : "1000"}
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {form.watch("baseCommission.type") === "fixed" && (
+        {/* Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="baseCommission.currency"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Currency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company (Optional)</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      disabled={isLoadingForm}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
+                          <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="suspended">Suspended</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Bank Details</h3>
-          <div className="grid gap-4 md:grid-cols-2">
+            </div>
             <FormField
               control={form.control}
-              name="bankDetails.bankName"
+              name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bank Name</FormLabel>
+                  <FormLabel>Address (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Bank name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="bankDetails.accountNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Account number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="bankDetails.accountName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Account holder name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="bankDetails.swiftCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SWIFT Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="SWIFT code" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="bankDetails.iban"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>IBAN</FormLabel>
-                  <FormControl>
-                    <Input placeholder="IBAN" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Documents</h3>
-          <div className="grid gap-4">
-            <FormField
-              control={form.control}
-              name="documents"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Upload Documents</FormLabel>
-                  <FormControl>
-                    <FileUpload
-                      value={field.value}
-                      onChange={(files) => {
-                        field.onChange([...field.value, ...files]);
-                      }}
-                      onRemove={(index) => {
-                        const newFiles = [...field.value];
-                        newFiles.splice(index, 1);
-                        field.onChange(newFiles);
-                      }}
-                      accept={{
-                        'application/pdf': ['.pdf'],
-                        'image/*': ['.png', '.jpg', '.jpeg'],
-                      }}
+                    <Textarea
+                      {...field}
+                      disabled={isLoadingForm}
+                      rows={3}
                     />
                   </FormControl>
-                  <FormDescription>
-                    Upload agent documents (contract, ID, certificates, etc.)
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Additional notes about the agent"
-                  className="min-h-[100px]"
-                  {...field}
+        {/* Commission Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Commission Details</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="baseCommission.type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Commission Type</FormLabel>
+                    <Select
+                      disabled={isLoadingForm}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="percentage">Percentage</SelectItem>
+                        <SelectItem value="fixed">Fixed Amount</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="baseCommission.value"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {commissionType === "percentage" ? "Percentage" : "Amount"}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        disabled={isLoadingForm}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {commissionType === "fixed" && (
+                <FormField
+                  control={form.control}
+                  name="baseCommission.currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled={isLoadingForm} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? (
-              "Saving..."
-            ) : agent ? (
-              "Update Agent"
-            ) : (
-              "Create Agent"
-            )}
+        {/* Bank Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Bank Details (Optional)</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="bankDetails.bankName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bank Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bankDetails.accountNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Account Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bankDetails.accountName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Account Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bankDetails.swiftCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SWIFT Code</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bankDetails.iban"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>IBAN</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled={isLoadingForm} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Additional Notes (Optional)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      disabled={isLoadingForm}
+                      rows={4}
+                      placeholder="Add any additional notes about the agent..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isLoadingForm}>
+            {isLoadingForm ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>

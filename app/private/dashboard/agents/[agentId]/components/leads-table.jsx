@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -17,288 +10,140 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { LeadDialog } from "./lead-dialog";
-import { formatDate } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { MoreHorizontal, Edit, Trash } from "lucide-react";
+import { toast } from "sonner";
 
-export function LeadsTable({ agent, leads }) {
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [rowSelection, setRowSelection] = useState({});
-  const [globalFilter, setGlobalFilter] = useState("");
+// Status badge variants
+const statusVariants = {
+  new: { variant: "secondary", label: "New" },
+  contacted: { variant: "default", label: "Contacted" },
+  application_started: { variant: "warning", label: "Application Started" },
+  application_submitted: { variant: "info", label: "Application Submitted" },
+  visa_applied: { variant: "warning", label: "Visa Applied" },
+  visa_approved: { variant: "success", label: "Visa Approved" },
+  enrolled: { variant: "success", label: "Enrolled" },
+  rejected: { variant: "destructive", label: "Rejected" },
+  cancelled: { variant: "destructive", label: "Cancelled" },
+};
 
-  const columns = [
-    {
-      accessorKey: "studentName",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Student Name
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const clientId = row.original.clientId;
-        const studentName = row.getValue("studentName");
-        const email = row.original.email;
+export function LeadsTable({ agent }) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
-        return (
-          <div>
-            <div className="font-medium">{studentName}</div>
-            <div className="text-sm text-muted-foreground">{email}</div>
-            {clientId && (
-              <div className="text-xs text-muted-foreground">
-                Linked to client
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "country",
-      header: "Country",
-      cell: ({ row }) => {
-        const country = row.getValue("country");
-        return country || <span className="text-muted-foreground">-</span>;
-      },
-    },
-    {
-      accessorKey: "program",
-      header: "Program",
-      cell: ({ row }) => {
-        const program = row.getValue("program");
-        const university = row.original.university;
-        return (
-          <div>
-            <div>{program || <span className="text-muted-foreground">-</span>}</div>
-            <div className="text-sm text-muted-foreground">{university}</div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => {
-        const status = row.getValue("status");
-        return (
-          <Badge
-            variant={
-              status === "enrolled"
-                ? "success"
-                : status === "new"
-                ? "default"
-                : status === "contacted" || status === "application_started" || status === "application_submitted" || status === "visa_applied" || status === "visa_approved"
-                ? "warning"
-                : status === "rejected" || status === "cancelled"
-                ? "destructive"
-                : "secondary"
-            }
-          >
-            {status.split("_").map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(" ")}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "documents",
-      header: "Documents",
-      cell: ({ row }) => {
-        const documents = row.getValue("documents");
-        return documents?.length ? (
-          <div className="text-sm">{documents.length} document(s)</div>
-        ) : (
-          <span className="text-muted-foreground">No documents</span>
-        );
-      },
-    },
-    {
-      accessorKey: "notes",
-      header: "Notes",
-      cell: ({ row }) => {
-        const notes = row.getValue("notes");
-        return notes ? (
-          <div className="max-w-[200px] truncate">{notes}</div>
-        ) : (
-          <span className="text-muted-foreground">-</span>
-        );
-      },
-    },
-    {
-      accessorKey: "createdAt",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Created At
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const date = row.getValue("createdAt");
-        if (!date) return null;
-        return <div>{formatDate(date)}</div>;
-      },
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const lead = row.original;
+  // If there are no leads, show a message
+  if (!agent?.leads?.length) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[400px] text-center">
+        <p className="text-muted-foreground mb-4">No leads found for this agent.</p>
+        <Button
+          onClick={() => router.push(`/private/dashboard/agents/${agent._id}/leads/new`)}
+        >
+          Add New Lead
+        </Button>
+      </div>
+    );
+  }
 
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <LeadDialog mode="edit" lead={lead} agent={agent}>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  Edit Lead
-                </DropdownMenuItem>
-              </LeadDialog>
-              <LeadDialog mode="delete" lead={lead} agent={agent}>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  Delete Lead
-                </DropdownMenuItem>
-              </LeadDialog>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
-  ];
+  const handleDelete = async (leadId) => {
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`/api/agents/${agent._id}/leads/${leadId}`, {
+        method: "DELETE"
+      });
 
-  const table = useReactTable({
-    data: leads,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      rowSelection,
-      globalFilter,
-    },
-  });
+      if (!response.ok) {
+        throw new Error("Failed to delete lead");
+      }
+
+      toast.success("Lead deleted successfully");
+      window.location.reload();
+    } catch (error) {
+      toast.error(error.message || "Something went wrong");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Input
-          placeholder="Filter leads..."
-          value={globalFilter ?? ""}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-sm"
-        />
-        <LeadDialog mode="create" agent={agent}>
-          <Button>Add Lead</Button>
-        </LeadDialog>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No leads found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Student Name</TableHead>
+            <TableHead>Program</TableHead>
+            <TableHead>University</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead className="w-[70px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {agent.leads.map((lead) => (
+            <TableRow key={lead._id}>
+              <TableCell>
+                <div>
+                  <p className="font-medium">{lead.studentName}</p>
+                  <p className="text-sm text-muted-foreground">{lead.email}</p>
+                </div>
+              </TableCell>
+              <TableCell>{lead.program}</TableCell>
+              <TableCell>{lead.university}</TableCell>
+              <TableCell>
+                <Badge variant={statusVariants[lead.status]?.variant || "default"}>
+                  {statusVariants[lead.status]?.label || lead.status}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {lead.createdAt ? format(new Date(lead.createdAt), "MMM d, yyyy") : "N/A"}
+              </TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      disabled={isDeleting}
+                    >
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        router.push(
+                          `/private/dashboard/agents/${agent._id}/leads/${lead._id}/edit`
+                        )
+                      }
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Lead
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => handleDelete(lead._id)}
+                    >
+                      <Trash className="mr-2 h-4 w-4" />
+                      Delete Lead
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

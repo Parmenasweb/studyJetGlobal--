@@ -1,13 +1,7 @@
 "use client";
 
-import * as z from "zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Trash } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -18,8 +12,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -27,253 +19,178 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { programSchema } from "@/lib/validations/program";
+import { commonPrograms } from "@/lib/validations/destination";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
-const formSchema = z.object({
-  name: z.string().min(2),
-  level: z.string().min(2),
-  duration: z.string().min(2),
-  tuitionFee: z.coerce.number().min(0),
-  description: z.string().min(10),
-  intakes: z.string(),
-  requirements: z.string(),
-  university: z.object({
-    id: z.string(),
-    name: z.string(),
-    location: z.string()
-  }),
-  status: z.enum(["active", "inactive"])
-});
-
-export function ProgramForm({ initialData = null }) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const title = initialData ? "Edit program" : "Create program";
-  const description = initialData ? "Edit a program." : "Add a new program";
-  const toastMessage = initialData ? "Program updated." : "Program created.";
-  const action = initialData ? "Save changes" : "Create";
-
+export default function ProgramForm({
+  initialData,
+  onSubmit,
+  isLoading,
+}) {
   const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: initialData ? {
-      ...initialData,
-      intakes: initialData.intakes.join(", "),
-      requirements: initialData.requirements.join(", ")
-    } : {
-      name: "",
-      level: "",
-      duration: "",
-      tuitionFee: "",
-      description: "",
-      intakes: "",
-      requirements: "",
-      university: {
-        id: "",
-        name: "",
-        location: ""
+    resolver: zodResolver(programSchema),
+    defaultValues: {
+      name: initialData?.name || "",
+      field: initialData?.field || "",
+      level: initialData?.level || "",
+      duration: {
+        value: initialData?.duration?.value || 1,
+        unit: initialData?.duration?.unit || "years",
       },
-      status: "active"
-    }
+      tuitionFee: {
+        amount: initialData?.tuitionFee?.amount || 0,
+        currency: initialData?.tuitionFee?.currency || "USD",
+        period: initialData?.tuitionFee?.period || "per_year",
+      },
+      description: initialData?.description || "",
+      intakes: initialData?.intakes || [],
+      requirements: initialData?.requirements || [""],
+      language: {
+        name: initialData?.language?.name || "English",
+        level: initialData?.language?.level || "B2",
+      },
+      status: initialData?.status || "active",
+    },
   });
 
-  const onSubmit = async (data) => {
-    try {
-      setLoading(true);
-      
-      // Transform arrays back from strings
-      const transformedData = {
+  const handleSubmit = async (data) => {
+    // Format the data before submission
+    const formattedData = {
         ...data,
-        intakes: data.intakes.split(",").map(i => i.trim()),
-        requirements: data.requirements.split(",").map(r => r.trim())
-      };
+      duration: {
+        value: Number(data.duration.value),
+        unit: data.duration.unit,
+      },
+      tuitionFee: {
+        amount: Number(data.tuitionFee.amount),
+        currency: data.tuitionFee.currency,
+        period: data.tuitionFee.period,
+      },
+      requirements: data.requirements.filter(req => req.trim() !== ""),
+    };
 
-      const url = initialData
-        ? `/api/programs/${initialData.id}`
-        : "/api/programs";
-
-      const response = await fetch(url, {
-        method: initialData ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(transformedData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to save program");
-      }
-
-      router.refresh();
-      router.push("/private/dashboard/programs");
-      toast.success(toastMessage);
-    } catch (error) {
-      toast.error("Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onDelete = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/programs/${initialData.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete program");
-      }
-
-      router.refresh();
-      router.push("/private/dashboard/programs");
-      toast.success("Program deleted.");
-    } catch (error) {
-      toast.error("Something went wrong");
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    await onSubmit(formattedData);
   };
 
   return (
-    <>
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this program.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={onDelete}
-              disabled={loading}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {loading ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-bold tracking-tight">Create a new program</h2>
-          <p className="text-sm text-muted-foreground">Add a new academic program</p>
-        </div>
-        {initialData && (
-          <Button
-            disabled={loading}
-            variant="destructive"
-            size="sm"
-            onClick={() => setOpen(true)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-      <Separator />
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Program Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter program name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="field"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Field of Study</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select field of study" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {commonPrograms.map((program) => (
+                      <SelectItem key={program} value={program}>
+                        {program}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="level"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Program Level</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select program level" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Bachelor's">Bachelors</SelectItem>
+                    <SelectItem value="Master's">Masters</SelectItem>
+                    <SelectItem value="Doctoral">Doctoral</SelectItem>
+                    <SelectItem value="Certificate">Certificate</SelectItem>
+                    <SelectItem value="Diploma">Diploma</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="name"
+              name="duration.value"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Duration Value</FormLabel>
                   <FormControl>
-                    <Input disabled={loading} placeholder="Program name" {...field} />
+                    <Input
+                      type="number"
+                      min={1}
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(parseInt(e.target.value, 10) || 1)
+                      }
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
-              name="level"
+              name="duration.unit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Level</FormLabel>
+                  <FormLabel>Duration Unit</FormLabel>
                   <Select
-                    disabled={loading}
                     onValueChange={field.onChange}
-                    value={field.value}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue
-                          defaultValue={field.value}
-                          placeholder="Select level"
-                        />
+                        <SelectValue placeholder="Select unit" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Bachelor">Bachelor</SelectItem>
-                      <SelectItem value="Master">Master</SelectItem>
-                      <SelectItem value="PhD">PhD</SelectItem>
-                      <SelectItem value="Diploma">Diploma</SelectItem>
-                      <SelectItem value="Certificate">Certificate</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="duration"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Duration</FormLabel>
-                  <FormControl>
-                    <Input disabled={loading} placeholder="e.g., 3 years" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="tuitionFee"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tuition Fee (USD)</FormLabel>
-                  <FormControl>
-                    <Input type="number" disabled={loading} placeholder="Amount" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    disabled={loading}
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          defaultValue={field.value}
-                          placeholder="Select status"
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="years">Years</SelectItem>
+                      <SelectItem value="months">Months</SelectItem>
+                      <SelectItem value="semesters">Semesters</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -281,68 +198,223 @@ export function ProgramForm({ initialData = null }) {
               )}
             />
           </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="tuitionFee.amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tuition Amount</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={0}
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(parseInt(e.target.value, 10) || 0)
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="tuitionFee.currency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Currency</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                  <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                  </FormControl>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="GBP">GBP</SelectItem>
+                      <SelectItem value="CAD">CAD</SelectItem>
+                      <SelectItem value="AUD">AUD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="tuitionFee.period"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Period</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select period" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="per_year">Per Year</SelectItem>
+                      <SelectItem value="per_semester">Per Semester</SelectItem>
+                      <SelectItem value="total">Total</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="col-span-2">
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea
-                    disabled={loading}
-                    placeholder="Program description"
+                    placeholder="Enter program description"
                     {...field}
+                    rows={4}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="intakes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Intakes</FormLabel>
-                <FormControl>
-                  <Input
-                    disabled={loading}
-                    placeholder="Comma-separated list of intakes"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Enter intakes separated by commas (e.g., September, January)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+
           <FormField
             control={form.control}
             name="requirements"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="col-span-2">
                 <FormLabel>Requirements</FormLabel>
                 <FormControl>
+                  <div className="space-y-2">
+                    {field.value.map((req, index) => (
+                      <div key={index} className="flex gap-2">
                   <Input
-                    disabled={loading}
-                    placeholder="Comma-separated list of requirements"
-                    {...field}
-                  />
+                          value={req}
+                          onChange={(e) => {
+                            const newReqs = [...field.value];
+                            newReqs[index] = e.target.value;
+                            field.onChange(newReqs);
+                          }}
+                          placeholder="Enter requirement"
+                        />
+                        {field.value.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const newReqs = field.value.filter((_, i) => i !== index);
+                              field.onChange(newReqs);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => field.onChange([...field.value, ""])}
+                    >
+                      Add Requirement
+                    </Button>
+                  </div>
                 </FormControl>
-                <FormDescription>
-                  Enter requirements separated by commas (e.g., High school diploma, IELTS 6.5)
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button disabled={loading} className="ml-auto" type="submit">
-            {action}
+
+          <FormField
+            control={form.control}
+            name="language.name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Language</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter language" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="language.level"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Language Level</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="A1">A1</SelectItem>
+                    <SelectItem value="A2">A2</SelectItem>
+                    <SelectItem value="B1">B1</SelectItem>
+                    <SelectItem value="B2">B2</SelectItem>
+                    <SelectItem value="C1">C1</SelectItem>
+                    <SelectItem value="C2">C2</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save Program"}
           </Button>
         </form>
       </Form>
-    </>
   );
 } 

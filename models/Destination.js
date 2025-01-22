@@ -249,4 +249,3 @@ destinationSchema.index({ 'universities.status': 1 });
 const Destination = mongoose.models?.Destination || mongoose.model("Destination", destinationSchema);
 
 export default Destination;
-

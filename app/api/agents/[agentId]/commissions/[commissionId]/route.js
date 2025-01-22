@@ -15,7 +15,7 @@ export async function GET(req, { params }) {
     const agent = await Agent.findById(params.agentId)
       .populate({
         path: "leads",
-        select: "studentName program university",
+        select: "studentName program university status",
       })
       .select("commissions");
 
@@ -66,7 +66,7 @@ export async function PUT(req, { params }) {
     }
 
     // Validate that the lead exists if leadId is being updated
-    if (data.leadId) {
+    if (data.leadId && data.leadId !== commission.leadId.toString()) {
       const leadExists = agent.leads.some(
         (lead) => lead._id.toString() === data.leadId
       );
@@ -84,6 +84,20 @@ export async function PUT(req, { params }) {
 
     // Update commission fields
     Object.assign(commission, data);
+
+    // If status is changed to "paid", ensure payment details are provided
+    if (data.status === "paid" && (!data.paymentDate || !data.paymentReference)) {
+      return NextResponse.json(
+        { error: "Payment date and reference are required for paid commissions" },
+        { status: 400 }
+      );
+    }
+
+    // Update performance metrics
+    agent.performance.totalCommissionEarned = agent.commissions
+      .filter((c) => c.status === "paid")
+      .reduce((total, c) => total + c.amount, 0);
+
     await agent.save();
 
     return NextResponse.json(commission);
@@ -118,13 +132,17 @@ export async function DELETE(req, { params }) {
       );
     }
 
+    // Remove the commission
     commission.deleteOne();
+
+    // Update performance metrics
+    agent.performance.totalCommissionEarned = agent.commissions
+      .filter((c) => c.status === "paid")
+      .reduce((total, c) => total + c.amount, 0);
+
     await agent.save();
 
-    return NextResponse.json(
-      { message: "Commission deleted successfully" },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Commission deleted successfully" });
   } catch (error) {
     console.error("Error deleting commission:", error);
     return NextResponse.json(

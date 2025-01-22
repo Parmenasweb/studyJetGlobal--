@@ -44,7 +44,7 @@ export function CommissionsTable({ agent, commissions }) {
       header: "Lead",
       cell: ({ row }) => {
         const leadId = row.getValue("leadId");
-        const leadRef = agent.leads.find(l => l._id === leadId);
+        const leadRef = agent.leads?.find(l => l._id === leadId);
 
         return leadRef ? (
           <div>
@@ -195,7 +195,7 @@ export function CommissionsTable({ agent, commissions }) {
   ];
 
   const table = useReactTable({
-    data: commissions,
+    data: Array.isArray(commissions) ? commissions : [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -211,6 +211,23 @@ export function CommissionsTable({ agent, commissions }) {
       globalFilter,
     },
   });
+
+  // Handle empty states in render logic
+  if (!agent || !Array.isArray(agent.leads)) {
+    return (
+      <div className="rounded-md border p-8 text-center">
+        <p className="text-muted-foreground">Unable to load agent data.</p>
+      </div>
+    );
+  }
+
+  if (!Array.isArray(commissions)) {
+    return (
+      <div className="rounded-md border p-8 text-center">
+        <p className="text-muted-foreground">No commissions data available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -230,18 +247,16 @@ export function CommissionsTable({ agent, commissions }) {
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -268,7 +283,7 @@ export function CommissionsTable({ agent, commissions }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No commissions found.
+                  No results.
                 </TableCell>
               </TableRow>
             )}

@@ -78,7 +78,7 @@ const navItems = [
   },
   {
     title: "Finances",
-    href: "/private/dashboard/finances",
+    href: "/private/dashboard/finance",
     icon: DollarSign,
   },
   {

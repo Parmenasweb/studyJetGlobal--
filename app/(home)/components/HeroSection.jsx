@@ -263,10 +263,10 @@ export default function HeroSection() {
             </Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link href="/onBoarding/consultationForm">
-              Book Free Consultation
-            </Link>
-          </Button>
+                <Link href="/onBoarding/consultationForm">
+                  Book Free Consultation
+                </Link>
+              </Button>
         </motion.div>
 
         {/* Scroll Indicator */}

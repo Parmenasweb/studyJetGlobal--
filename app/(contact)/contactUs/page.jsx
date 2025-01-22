@@ -307,7 +307,7 @@ export default function Page() {
                       <p className="font-medium text-foreground">Global Presence</p>
                       <p className="text-sm text-muted-foreground">Serving students worldwide</p>
                     </div>
-                  </div>
+                </div>
                 </div>
               </div>
 
@@ -316,16 +316,16 @@ export default function Page() {
                 <h3 className="text-xl font-semibold mb-4 text-foreground">Connect With Us</h3>
                 <div className="flex gap-4">
                   {socialLinks.map((social, index) => (
-                    <Link
+                <Link
                       key={index}
                       href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                target="_blank"
+                rel="noopener noreferrer"
                       className={`w-10 h-10 ${social.bg} rounded-lg flex items-center justify-center transition-transform hover:scale-110`}
                       aria-label={`Follow us on ${social.icon.name}`}
-                    >
+                >
                       <social.icon className={`h-5 w-5 ${social.color}`} aria-hidden="true" />
-                    </Link>
+                </Link>
                   ))}
                 </div>
               </div>

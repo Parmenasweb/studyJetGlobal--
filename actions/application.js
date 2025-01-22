@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import connectDB from "@/lib/db";
-import Application from "@/models/Application";
+import { Application } from "@/models/Application";
 import { auth } from "@/auth";
 
 // Get all applications with filtering and pagination
@@ -113,6 +113,10 @@ export async function createApplication(data) {
 
 // Update application
 export async function updateApplication(id, data) {
+  if (!id || !data) {
+    return { error: "Invalid input data" };
+  }
+
   try {
     const session = await auth();
     if (!session) {
@@ -121,22 +125,51 @@ export async function updateApplication(id, data) {
 
     await connectDB();
 
-    // Add timeline event for status change if status is updated
-    if (data.status) {
-      data.timeline = {
-        $push: {
-          title: "Status Updated",
-          description: `Application status changed to ${data.status}`,
-          status: data.status,
-          updatedBy: session.user.email,
-        },
-      };
-    }
+    const updateData = {
+      status: data.status,
+      priority: data.priority,
+      destination: data.destination,
+      updatedAt: new Date()
+    };
 
+    // Create timeline event if status is changed
+    if (data.status) {
+      const timelineEvent = {
+        title: "Application Updated",
+        description: `Application status changed to ${data.status}`,
+        status: data.status,
+        updatedBy: session?.user?.firstName + " " + session?.user?.lastName,
+        date: new Date()
+      };
+
+      const application = await Application.findByIdAndUpdate(
+        id,
+        {
+          $set: updateData,
+          $push: { timeline: timelineEvent }
+        },
+        { new: true }
+      );
+
+      if (!application) {
+        return { error: "Application not found" };
+      }
+
+      revalidatePath("/private/dashboard/applications");
+      return { data: application };
+    }
+    const timelineEvent = {
+      title: "Application Updated",
+      description: `Application data updated`,
+      updatedBy: session?.user?.firstName + " " + session?.user?.lastName,
+      date: new Date()
+    };
+
+    // If no status change, just update the fields
     const application = await Application.findByIdAndUpdate(
       id,
-      { $set: data },
-      { new: true, runValidators: true }
+      { $set: updateData, $push: { timeline: timelineEvent } },
+      { new: true }
     );
 
     if (!application) {
@@ -145,13 +178,19 @@ export async function updateApplication(id, data) {
 
     revalidatePath("/private/dashboard/applications");
     return { data: application };
+
   } catch (error) {
-    return { error: "Failed to update application" };
+    console.error("Update application error:", error);
+    return { error: error.message || "Failed to update application" };
   }
 }
 
 // Delete application
 export async function deleteApplication(id) {
+  if (!id) {
+    return { error: "Invalid application ID" };
+  }
+
   try {
     const session = await auth();
     if (!session) {
@@ -159,6 +198,7 @@ export async function deleteApplication(id) {
     }
 
     await connectDB();
+    
     const application = await Application.findByIdAndDelete(id);
 
     if (!application) {
@@ -166,9 +206,10 @@ export async function deleteApplication(id) {
     }
 
     revalidatePath("/private/dashboard/applications");
-    return { success: true };
+    return { success: true, message: "Application deleted successfully" };
   } catch (error) {
-    return { error: "Failed to delete application" };
+    console.error("Delete application error:", error);
+    return { error: error.message || "Failed to delete application" };
   }
 }
 

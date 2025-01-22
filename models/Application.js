@@ -1,10 +1,16 @@
 import mongoose from "mongoose";
 
 const timelineSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+  },
+  description: String,
   status: {
     type: String,
     required: true,
     enum: [
+      "draft",
       "submitted",
       "under_review",
       "approved",
@@ -15,8 +21,30 @@ const timelineSchema = new mongoose.Schema({
   date: {
     type: Date,
     required: true,
+    default: Date.now,
   },
-  note: String,
+  updatedBy: {
+    type: String,
+    required: true,
+  },
+});
+
+const noteSchema = new mongoose.Schema({
+  content: {
+    type: String,
+    required: true,
+  },
+  author: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+  },
 });
 
 const languageSchema = new mongoose.Schema({
@@ -293,6 +321,7 @@ const applicationSchema = new mongoose.Schema(
         ref: "Document",
       },
     ],
+    notes: [noteSchema],
     timeline: [timelineSchema],
     submittedAt: {
       type: Date,

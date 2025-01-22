@@ -114,6 +114,7 @@ export default function FileUpload({ onSuccess, onError, existingUrl, onRemove, 
       publicKey={publicKey}
       urlEndpoint={urlEndpoint}
       authenticator={authenticator}
+     
     >
       <div className="space-y-4">
         <IKUpload

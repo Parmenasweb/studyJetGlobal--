@@ -3,7 +3,6 @@
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,31 +13,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
 import Link from "next/link";
+import { getStatusConfig } from "@/app/lib/status-config";
 
 export function getColumns({ onDeleteAgent }) {
   return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
     {
       accessorKey: "name",
       header: "Agent Details",
@@ -111,18 +89,12 @@ export function getColumns({ onDeleteAgent }) {
       header: "Status",
       cell: ({ row }) => {
         const status = row.getValue("status");
+        const statusConfig = getStatusConfig(status, "agent");
+        
         return (
           <div className="flex flex-col gap-1">
-            <Badge
-              variant={
-                status === "active"
-                  ? "success"
-                  : status === "inactive"
-                  ? "secondary"
-                  : "destructive"
-              }
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+            <Badge variant={statusConfig.color} className={`${statusConfig.bgColor} ${statusConfig.textColor}`}>
+              {statusConfig.label}
             </Badge>
             <span className="text-xs text-muted-foreground">
               Since {format(new Date(row.original.createdAt), "MMM d, yyyy")}
@@ -132,29 +104,33 @@ export function getColumns({ onDeleteAgent }) {
       },
     },
     {
-      accessorKey: "performance.totalCommissionEarned",
+      accessorKey: "commissions",
       header: "Earnings",
       cell: ({ row }) => {
-        const amount = row.getValue("performance.totalCommissionEarned");
-        const totalLeads = row.original.performance.totalLeads;
-        const avgPerLead = totalLeads
-          ? amount / totalLeads
+        const commissions = row.original.commissions || [];
+        const paidCommissions = commissions.filter(c => c.status === "paid");
+        const totalPaid = paidCommissions.reduce((sum, c) => sum + (c.amount || 0), 0);
+        const averagePaid = paidCommissions.length > 0 
+          ? totalPaid / paidCommissions.length 
           : 0;
+
         return (
           <div className="flex flex-col">
             <span className="font-medium">
-              {amount?.toLocaleString("en-US", {
+              {totalPaid.toLocaleString("en-US", {
                 style: "currency",
                 currency: "USD",
               })}
             </span>
             <span className="text-xs text-muted-foreground">
-              Avg {avgPerLead.toLocaleString("en-US", {
-                style: "currency",
-                currency: "USD",
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })} per lead
+              {paidCommissions.length > 0 
+                ? `Avg ${averagePaid.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })} per commission` 
+                : "No paid commissions"}
             </span>
           </div>
         );

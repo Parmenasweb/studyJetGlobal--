@@ -99,12 +99,12 @@ export default function Footer() {
               >
                 <div className="mt-1 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <item.icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
+          </div>
+          <div>
                   <p className="font-medium text-white">{item.label}</p>
                   <p className="text-gray-400">{item.value}</p>
-                </div>
-              </div>
+          </div>
+          </div>
             ))}
           </motion.div>
 
@@ -127,21 +127,21 @@ export default function Footer() {
                       prefetch={false}
                     >
                       {link.name}
-                    </Link>
+            </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+          </div>
             <div>
               <h3 className="font-semibold text-lg mb-4 text-white">Resources</h3>
               <ul className="space-y-3">
                 {footerLinks.resources.map((link, index) => (
                   <li key={index}>
-                    <Link 
+            <Link
                       href={link.href}
                       className="text-gray-400 hover:text-primary transition-colors"
-                      prefetch={false}
-                    >
+              prefetch={false}
+            >
                       {link.name}
                     </Link>
                   </li>
@@ -161,7 +161,7 @@ export default function Footer() {
                       rel="noopener noreferrer"
                     >
                       {link.name}
-                    </Link>
+            </Link>
                   </li>
                 ))}
               </ul>
@@ -171,13 +171,13 @@ export default function Footer() {
               <ul className="space-y-3">
                 {footerLinks.legal.map((link, index) => (
                   <li key={index}>
-                    <Link 
+            <Link
                       href={link.href}
                       className="text-gray-400 hover:text-primary transition-colors"
-                      prefetch={false}
-                    >
+              prefetch={false}
+            >
                       {link.name}
-                    </Link>
+            </Link>
                   </li>
                 ))}
               </ul>

@@ -117,28 +117,28 @@ export default async function DestinationPage({ params }) {
             {[
               { 
                 icon: Building2, 
-                label: "Universities",
+                label: "Universities", 
                 value: destination.overview.totalUniversities,
                 color: "text-blue-500",
                 bg: "bg-blue-500/10"
               },
               { 
                 icon: Users, 
-                label: "International Students",
+                label: "International Students", 
                 value: destination.overview.internationalStudents,
                 color: "text-green-500",
                 bg: "bg-green-500/10"
               },
               { 
                 icon: Clock, 
-                label: "Post Study Work",
+                label: "Post Study Work", 
                 value: destination.overview.postStudyWork,
                 color: "text-orange-500",
                 bg: "bg-orange-500/10"
               },
               { 
                 icon: DollarSign, 
-                label: "Avg. Tuition",
+                label: "Avg. Tuition", 
                 value: destination.overview.averageTuitionRange,
                 color: "text-purple-500",
                 bg: "bg-purple-500/10"
@@ -224,7 +224,7 @@ export default async function DestinationPage({ params }) {
                   <Heart className="w-3 h-3 md:w-4 md:h-4 text-pink-500" />
                 </div>
                 <span>Life</span>
-              </TabsTrigger>
+                </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-8 animate-fade-in">
@@ -265,14 +265,14 @@ export default async function DestinationPage({ params }) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-blue-400" />
-                        <span className="text-muted-foreground">Top Universities</span>
+                      <span className="text-muted-foreground">Top Universities</span>
                       </div>
                       <span>{destination.overview.topRankedUniversities}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-blue-400" />
-                        <span className="text-muted-foreground">Acceptance Rate</span>
+                      <span className="text-muted-foreground">Acceptance Rate</span>
                       </div>
                       <span>{destination.overview.averageAcceptanceRate}</span>
                     </div>
@@ -336,7 +336,7 @@ export default async function DestinationPage({ params }) {
                   </div>
                 </div>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {destination.popularPrograms?.map((program, index) => (
+                {destination.popularPrograms?.map((program, index) => (
                     <Card key={index} className="p-4 hover:shadow-lg transition-all duration-300">
                       <h3 className="font-semibold mb-2">{program.name}</h3>
                       <div className="space-y-2 text-sm text-muted-foreground">
@@ -382,7 +382,7 @@ export default async function DestinationPage({ params }) {
                   <div className="grid md:grid-cols-2 gap-8">
                     <div>
                       <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                        <BookOpen className="h-5 w-5 text-primary" />
+                      <BookOpen className="h-5 w-5 text-primary" />
                         Undergraduate Requirements
                       </h3>
                       <ul className="space-y-2">
@@ -398,7 +398,7 @@ export default async function DestinationPage({ params }) {
                       <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                         <GraduationCap className="h-5 w-5 text-primary" />
                         Postgraduate Requirements
-                      </h3>
+                    </h3>
                       <ul className="space-y-2">
                         {destination.admissionRequirements?.postgraduate.map((req, index) => (
                           <li key={index} className="flex items-start gap-2">
@@ -614,7 +614,7 @@ export default async function DestinationPage({ params }) {
                         </p>
                         <div>
                           <p className="text-muted-foreground mb-2">Coverage:</p>
-                          <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2">
                             {destination.livingInfo?.healthcare?.insurance?.coverage.map((item, index) => (
                               <Badge key={index} variant="secondary">{item}</Badge>
                             ))}
@@ -632,9 +632,9 @@ export default async function DestinationPage({ params }) {
                           </li>
                         ))}
                       </ul>
+                      </div>
                     </div>
-                  </div>
-                </Card>
+                  </Card>
               </div>
             </TabsContent>
           </Tabs>

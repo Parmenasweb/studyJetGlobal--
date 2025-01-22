@@ -266,7 +266,7 @@ export default function AboutPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              About StudyJetGlobal
+            About StudyJetGlobal
             </motion.h1>
 
             {/* Subtitle */}
@@ -348,8 +348,8 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold tracking-tight mb-4 text-foreground">Our Values</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               The principles that guide our mission to transform international education
-            </p>
-          </div>
+                </p>
+              </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {values.map((value, index) => (
               <motion.div
@@ -363,14 +363,14 @@ export default function AboutPage() {
                 <Card className="p-6 h-full hover:shadow-lg transition-all duration-300 bg-card">
                   <div className={`w-12 h-12 ${value.bg} rounded-lg flex items-center justify-center mb-4`}>
                     <value.icon className={`h-6 w-6 ${value.color}`} />
-                  </div>
+              </div>
                   <h3 className="text-xl font-bold mb-2 text-foreground">{value.title}</h3>
                   <p className="text-muted-foreground">{value.description}</p>
                 </Card>
               </motion.div>
             ))}
-          </div>
-        </div>
+              </div>
+                </div>
       </section>
 
       {/* Roadmap Section */}
@@ -412,15 +412,15 @@ export default function AboutPage() {
                       <h4 className="text-lg font-semibold text-foreground/80 mb-2">{item.title}</h4>
                       <p className="text-muted-foreground">{item.description}</p>
                     </Card>
-                  </div>
+              </div>
                   {/* Timeline Dot */}
                   <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full bg-primary" />
                 </motion.div>
               ))}
             </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
       {/* Goals Section */}
       <section className="py-12 md:py-20 bg-background">
@@ -458,7 +458,7 @@ export default function AboutPage() {
               </motion.div>
             ))}
           </div>
-        </div>
+              </div>
       </section>
 
       {/* CTA Section */}
@@ -489,8 +489,8 @@ export default function AboutPage() {
               </Button>
             </div>
           </motion.div>
-        </div>
-      </section>
+          </div>
+        </section>
       <Footer />
     </div>
   );

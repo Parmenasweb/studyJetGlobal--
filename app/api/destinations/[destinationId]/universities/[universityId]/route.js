@@ -13,6 +13,26 @@ export async function PATCH(req, { params }) {
     const data = await req.json();
 
     await connectDB();
+    
+    // First, get the existing university data
+    const existingDestination = await Destination.findById(params.destinationId);
+    const existingUniversity = existingDestination.universities.id(params.universityId);
+
+    if (!existingUniversity) {
+      return NextResponse.json({ error: "University not found" }, { status: 404 });
+    }
+
+    // Preserve existing programs and scholarships
+    const updatedData = {
+      ...existingUniversity.toObject(),  // Keep all existing data
+      ...data,  // Override with new data
+      _id: params.universityId,  // Ensure ID is preserved
+      updatedAt: new Date(),
+      // Preserve arrays if they exist in the original but not in the update
+      programs: data.programs || existingUniversity.programs || [],
+      scholarships: data.scholarships || existingUniversity.scholarships || []
+    };
+
     const destination = await Destination.findOneAndUpdate(
       { 
         _id: params.destinationId,
@@ -20,19 +40,14 @@ export async function PATCH(req, { params }) {
       },
       { 
         $set: {
-          "universities.$": {
-            ...data,
-            _id: params.universityId,
-            
-            updatedAt: new Date(),
-          }
+          "universities.$": updatedData
         }
       },
       { new: true }
     );
 
     if (!destination) {
-      return NextResponse.json({ error: "University not found" }, { status: 404 });
+      return NextResponse.json({ error: "Failed to update university" }, { status: 404 });
     }
 
     const university = destination.universities.find(

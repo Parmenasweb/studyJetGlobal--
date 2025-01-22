@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "@/components/ui/data-table";
 import { getColumns } from "./components/columns";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, DollarSign, UserCheck, Globe, CheckCircle } from "lucide-react";
+import { Plus, Users, DollarSign, UserCheck, Globe, CheckCircle, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -45,7 +45,6 @@ async function deleteAgent(id) {
 export default function AgentsPage() {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState("all");
-  const [selectedAgents, setSelectedAgents] = useState([]);
   const queryClient = useQueryClient();
 
   const {
@@ -76,19 +75,6 @@ export default function AgentsPage() {
     }
   };
 
-  const handleBulkDelete = async () => {
-    try {
-      await Promise.all(
-        selectedAgents.map((id) => deleteMutation.mutateAsync(id))
-      );
-      setSelectedAgents([]);
-      toast.success("Selected agents deleted successfully");
-    } catch (error) {
-      console.error("Error deleting agents:", error);
-      toast.error("Failed to delete some agents");
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex h-[200px] w-full items-center justify-center">
@@ -114,7 +100,6 @@ export default function AgentsPage() {
     if (selectedTab === "all") return true;
     if (selectedTab === "active") return agent.status === "active";
     if (selectedTab === "inactive") return agent.status === "inactive";
-    if (selectedTab === "suspended") return agent.status === "suspended";
     return true;
   });
 
@@ -123,47 +108,22 @@ export default function AgentsPage() {
     active: agents.filter((a) => a.status === "active").length,
     totalLeads: agents.reduce((sum, a) => sum + a.performance.totalLeads, 0),
     totalCommission: agents
-      .reduce((sum, a) => sum + a.performance.totalCommissionEarned, 0)
+      .reduce((sum, a) => {
+        const paidCommissions = a.commissions?.filter(c => c.status === "paid") || [];
+        return sum + paidCommissions.reduce((total, c) => total + (c.amount || 0), 0);
+      }, 0)
       .toLocaleString("en-US", {
         style: "currency",
         currency: "USD",
       }),
-    countries: new Set(agents.map((a) => a.country)).size,
-    successfulApplications: 0,
+    successfulApplications: agents.reduce((sum, a) => sum + a.performance.successfulApplications, 0),
   };
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Agents</h2>
+        <h2 className="text-3xl font-bold tracking-tight">StudyjetGlobal Agents</h2>
         <div className="flex items-center gap-2">
-          {selectedAgents.length > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                  Delete Selected ({selectedAgents.length})
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Agents</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete {selectedAgents.length}{" "}
-                    selected agents? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleBulkDelete}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
           <Button onClick={() => router.push("/private/dashboard/agents/new")}>
             <Plus className="mr-2 h-4 w-4" />
             Add Agent
@@ -172,10 +132,10 @@ export default function AgentsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className=" p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
@@ -184,10 +144,10 @@ export default function AgentsPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className=" p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <UserCheck className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalLeads}</div>
@@ -196,70 +156,84 @@ export default function AgentsPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className=" p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Commission</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+            <DollarSign className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalCommission}</div>
             <p className="text-xs text-muted-foreground">
-              Average {(stats.totalCommissionEarned / stats.active).toLocaleString("en-US", {
-                style: "currency",
-                currency: "USD",
-              })} per active agent
+              From {stats.totalLeads} total leads
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className=" p-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Unpaid Commissions</CardTitle>
+            <Wallet className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {((stats.successfulApplications / stats.totalLeads) * 100).toFixed(1)}%
+              {agents
+                .reduce((sum, agent) => {
+                  const unpaidAmount = agent.commissions
+                    ?.filter(c => c.status === "pending" || c.status === "approved")
+                    ?.reduce((total, c) => total + (c.amount || 0), 0) || 0;
+                  return sum + unpaidAmount;
+                }, 0)
+                .toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                })}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.successfulApplications} out of {stats.totalLeads} leads
+              {agents.reduce((count, agent) => 
+                count + (agent.commissions?.filter(c => 
+                  c.status === "pending" || c.status === "approved"
+                ).length || 0), 0)} pending payments
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="all" onValueChange={setSelectedTab}>
+      <Tabs defaultValue={selectedTab} onValueChange={setSelectedTab} className="mt-4">
         <TabsList>
-          <TabsTrigger value="all">All Agents</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="inactive">Inactive</TabsTrigger>
-          <TabsTrigger value="suspended">Suspended</TabsTrigger>
+          <TabsTrigger value="all" className="relative">
+            All Agents
+            <span className="ml-2 rounded-sm bg-primary/10 px-1 text-xs">
+              {stats.total}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="active" className="relative">
+            Active
+            <span className="ml-2 rounded-sm bg-green-50 px-1 text-xs">
+              {stats.active}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="inactive" className="relative">
+            Inactive
+            <span className="ml-2 rounded-sm bg-primary/10 px-1 text-xs">
+              {stats.total - stats.active}
+            </span>
+          </TabsTrigger>
         </TabsList>
-        <TabsContent value="all" className="space-y-4">
+        <TabsContent value="all" className="border-none p-0">
           <DataTable
             columns={getColumns({ onDeleteAgent: handleDeleteAgent })}
             data={filteredAgents}
-            onRowSelectionChange={setSelectedAgents}
           />
         </TabsContent>
-        <TabsContent value="active" className="space-y-4">
+        <TabsContent value="active" className="border-none p-0">
           <DataTable
             columns={getColumns({ onDeleteAgent: handleDeleteAgent })}
             data={filteredAgents}
-            onRowSelectionChange={setSelectedAgents}
           />
         </TabsContent>
-        <TabsContent value="inactive" className="space-y-4">
+        <TabsContent value="inactive" className="border-none p-0">
           <DataTable
             columns={getColumns({ onDeleteAgent: handleDeleteAgent })}
             data={filteredAgents}
-            onRowSelectionChange={setSelectedAgents}
-          />
-        </TabsContent>
-        <TabsContent value="suspended" className="space-y-4">
-          <DataTable
-            columns={getColumns({ onDeleteAgent: handleDeleteAgent })}
-            data={filteredAgents}
-            onRowSelectionChange={setSelectedAgents}
           />
         </TabsContent>
       </Tabs>

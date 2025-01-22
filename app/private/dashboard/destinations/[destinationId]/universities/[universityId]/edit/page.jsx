@@ -17,6 +17,7 @@ export default function EditUniversityPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [university, setUniversity] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchUniversity();
@@ -38,6 +39,51 @@ export default function EditUniversityPage({ params }) {
       });
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onSubmit(data) {
+    try {
+      setIsLoading(true);
+      
+      // Only send basic university details for update
+      const updateData = {
+        name: data.name,
+        description: data.description,
+        website: data.website,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        country: data.country,
+        logo: data.logo,
+        images: data.images,
+        ranking: data.ranking,
+        type: data.type,
+        status: data.status
+      };
+
+      const response = await fetch(
+        `/api/destinations/${params.destinationId}/universities/${params.universityId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updateData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update university");
+      }
+
+      toast.success("University updated successfully");
+      router.push(`/private/dashboard/destinations/${params.destinationId}`);
+    } catch (error) {
+      console.error("Error updating university:", error);
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -75,6 +121,8 @@ export default function EditUniversityPage({ params }) {
         <UniversityForm
           destinationId={destinationId}
           initialData={university}
+          onSubmit={onSubmit}
+          isLoading={isLoading}
         />
       </div>
     </div>

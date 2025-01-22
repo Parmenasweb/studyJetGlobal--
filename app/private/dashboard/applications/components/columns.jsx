@@ -8,9 +8,23 @@ import {
   FileEdit,
   MessageSquare,
   Trash2,
+  Save,
+  GraduationCap,
+  Briefcase,
+  MapPin,
+  Calendar,
+  FileText,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +33,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,14 +43,131 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { typeConfig, statusConfig, priorityConfig } from "../config/colors";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { updateApplication } from "@/actions/application";
+
+// Color variants for different types of badges
+const typeVariants = {
+  study: {
+    variant: "default",
+    icon: <GraduationCap className="mr-2 h-4 w-4 text-blue-500" />,
+    label: "Study"
+  },
+  work: {
+    variant: "default",
+    icon: <Briefcase className="mr-2 h-4 w-4 text-purple-500" />,
+    label: "Work"
+  },
+};
+
+const statusVariants = {
+  draft: {
+    variant: "secondary",
+    label: "Draft",
+    icon: <FileText className="mr-2 h-4 w-4 text-gray-500" />
+  },
+  submitted: {
+    variant: "info",
+    label: "Submitted",
+    icon: <Clock className="mr-2 h-4 w-4 text-blue-500" />
+  },
+  under_review: {
+    variant: "warning",
+    label: "Under Review",
+    icon: <Clock className="mr-2 h-4 w-4 text-yellow-500" />
+  },
+  approved: {
+    variant: "success",
+    label: "Approved",
+    icon: <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+  },
+  rejected: {
+    variant: "destructive",
+    label: "Rejected",
+    icon: <XCircle className="mr-2 h-4 w-4 text-red-500" />
+  },
+  pending_documents: {
+    variant: "warning",
+    label: "Pending Documents",
+    icon: <AlertCircle className="mr-2 h-4 w-4 text-yellow-500" />
+  },
+};
+
+const priorityVariants = {
+  low: {
+    variant: "secondary",
+    label: "Low",
+    icon: <ArrowDown className="mr-2 h-4 w-4 text-gray-500" />
+  },
+  medium: {
+    variant: "warning",
+    label: "Medium",
+    icon: <ArrowRight className="mr-2 h-4 w-4 text-yellow-500" />
+  },
+  high: {
+    variant: "destructive",
+    label: "High",
+    icon: <ArrowUp className="mr-2 h-4 w-4 text-red-500" />
+  },
+};
+
+const editSchema = z.object({
+  status: z.enum(["draft", "submitted", "under_review", "approved", "rejected", "pending_documents"]),
+  priority: z.enum(["low", "medium", "high"]),
+  destination: z.string().min(1, "Destination is required"),
+});
 
 function formatValue(value) {
   if (!value) return "N/A";
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatDate(date) {
+  if (!date) return "N/A";
+  try {
+    // Handle both ISO strings and timestamps
+    const parsedDate = typeof date === 'string' ? new Date(date) : new Date(Number(date));
+    
+    // Check if the date is valid
+    if (isNaN(parsedDate.getTime())) {
+      console.log('Invalid date:', date);
+      return "N/A";
+    }
+    
+    return format(parsedDate, "MMM d, yyyy");
+  } catch (error) {
+    console.log('Date parsing error:', error, date);
+    return "N/A";
+  }
 }
 
 async function deleteApplication(id) {
@@ -62,19 +192,36 @@ const CellActions = ({ row }) => {
   const router = useRouter();
   const application = row.original;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const form = useForm({
+    resolver: zodResolver(editSchema),
+    defaultValues: {
+      status: application.status || "draft",
+      priority: application.priority || "medium",
+      destination: application.destination || "",
+    },
+  });
 
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await deleteApplication(application.id);
+      const result = await deleteApplication(application.id);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
       toast.success("Application deleted successfully");
-      router.refresh();
+      setShowDeleteDialog(false);
+      // Use window.location.href to ensure a complete page reload
+      window.location.href = "/private/dashboard/applications";
     } catch (error) {
       toast.error(error.message || "Failed to delete application");
     } finally {
       setIsDeleting(false);
-      setShowDeleteDialog(false);
     }
   };
 
@@ -82,12 +229,24 @@ const CellActions = ({ row }) => {
     router.push(`/private/dashboard/applications/${application.id}`);
   };
 
-  const handleEdit = () => {
-    router.push(`/private/dashboard/applications/${application.id}/edit`);
-  };
+  const onSubmit = async (data) => {
+    try {
+      setIsUpdating(true);
+      const result = await updateApplication(application.id, data);
+      
+      if (result.error || !result.success) {
+        throw new Error(result.error);
+      }
 
-  const handleNotes = () => {
-    router.push(`/private/dashboard/applications/${application.id}/notes`);
+      toast.success("Application updated successfully");
+      setShowEditDialog(false);
+      // Use window.location.href to ensure a complete page reload
+      router.refresh();
+    } catch (error) {
+      toast.error(error.message || "Failed to update application");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -105,15 +264,12 @@ const CellActions = ({ row }) => {
             <Eye className="mr-2 h-4 w-4" />
             View Details
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleEdit}>
+          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
             <FileEdit className="mr-2 h-4 w-4" />
-            Edit Application
+            Quick Edit
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleNotes}>
-            <MessageSquare className="mr-2 h-4 w-4" />
-            View Notes
-          </DropdownMenuItem>
+     
+         
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => setShowDeleteDialog(true)}
@@ -125,6 +281,7 @@ const CellActions = ({ row }) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Delete Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -146,6 +303,105 @@ const CellActions = ({ row }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Application</DialogTitle>
+            <DialogDescription>
+              Update the application status, priority, and destination.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="submitted">Submitted</SelectItem>
+                        <SelectItem value="under_review">Under Review</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                        <SelectItem value="pending_documents">Pending Documents</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="destination"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Destination</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  onClick={() => setShowEditDialog(false)}
+                  disabled={isUpdating}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isUpdating}>
+                  {isUpdating ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm mr-2"></span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
@@ -173,51 +429,57 @@ export const columns = [
     accessorKey: "type",
     header: "Type",
     cell: ({ row }) => {
-      const type = row.getValue("type")?.toLowerCase();
-      const config = typeConfig[type] || typeConfig.study;
+      const type = row.getValue("type");
+      const variant = typeVariants[type] || { variant: "secondary", icon: null, label: type };
       return (
-        <div className="flex items-center gap-2">
-          <span className={cn(
-            "flex items-center gap-2 text-sm font-medium",
-            config.color
-          )}>
-            <span className={cn(
-              "h-2 w-2 rounded-full",
-              config.bgColor
-            )} />
-            {config.label}
-          </span>
-        </div>
+        <Badge variant={variant.variant} className="flex items-center gap-1">
+          {variant.icon}
+          {variant.label || formatValue(type)}
+        </Badge>
       );
     },
   },
   {
     accessorKey: "destination",
     header: "Destination",
+    cell: ({ row }) => {
+      const destination = row.getValue("destination");
+      return (
+        <div className="flex items-center">
+          <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+          {destination || "N/A"}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "program",
     header: "Program",
+    cell: ({ row }) => {
+      const program = row.getValue("program");
+      const type = row.getValue("type");
+      const icon = type === "study" ? 
+        <GraduationCap className="mr-2 h-4 w-4 text-muted-foreground" /> : 
+        <Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />;
+      return (
+        <div className="flex items-center">
+          {icon}
+          {program || "N/A"}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const status = row.getValue("status")?.toLowerCase();
-      const config = statusConfig[status] || statusConfig.draft;
+      const status = row.getValue("status");
+      const variant = statusVariants[status] || { variant: "secondary", icon: null, label: "Unknown" };
       return (
-        <div className="flex items-center gap-2">
-          <span className={cn(
-            "flex items-center gap-2 text-sm font-medium",
-            config.color
-          )}>
-            <span className={cn(
-              "h-2 w-2 rounded-full",
-              config.bgColor
-            )} />
-            {config.label}
-          </span>
-        </div>
+        <Badge variant={variant.variant} className="flex items-center gap-1">
+          {variant.icon}
+          {variant.label}
+        </Badge>
       );
     },
   },
@@ -225,21 +487,13 @@ export const columns = [
     accessorKey: "priority",
     header: "Priority",
     cell: ({ row }) => {
-      const priority = row.getValue("priority")?.toLowerCase();
-      const config = priorityConfig[priority] || priorityConfig.low;
+      const priority = row.getValue("priority");
+      const variant = priorityVariants[priority] || { variant: "secondary", icon: null, label: "None" };
       return (
-        <div className="flex items-center gap-2">
-          <span className={cn(
-            "flex items-center gap-2 text-sm font-medium",
-            config.color
-          )}>
-            <span className={cn(
-              "h-2 w-2 rounded-full",
-              config.bgColor
-            )} />
-            {config.label}
-          </span>
-        </div>
+        <Badge variant={variant.variant} className="flex items-center gap-1">
+          {variant.icon}
+          {variant.label}
+        </Badge>
       );
     },
   },
@@ -256,6 +510,15 @@ export const columns = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+      const date = row.getValue("submittedAt");
+      return (
+        <div className="flex items-center">
+          <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+          {date}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "updatedAt",
@@ -268,6 +531,15 @@ export const columns = [
           Last Updated
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const date = row.getValue("updatedAt");
+      return (
+        <div className="flex items-center">
+          <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+          {date}
+        </div>
       );
     },
   },
